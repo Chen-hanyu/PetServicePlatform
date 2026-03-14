@@ -14,6 +14,8 @@
 - [x] 帖子详情页设计
 - [x] 宠物详情页设计
 - [x] 购物车与结算页设计
+
+
 - [x] 个人中心设计
 - [x] 添加宠物档案页面设计
 
@@ -26,7 +28,23 @@
 ### 3. 文档编写
 - 编写设计说明文档 `docs/design-spec.md`
 - 编写信息架构文档 `docs/information-architecture.md`
+- 编写用户调研文档 `docs/user-research.md`
 - 梳理核心页面结构、交互流程和前端实现建议
+
+### 4. 设计过程与 AI 辅助
+- 使用 ChatGPT 进行需求挖掘，整理宠物综合服务平台的目标用户、核心功能和页面范围
+- 通过与 ChatGPT 的多轮沟通，生成 `information-architecture.md` 和 `design-spec.md` 初稿
+- 将信息架构文档和设计规范导入 Google Stitch，生成首页、社区、领养、服务、商城、个人中心等核心页面
+- 针对二级页面继续细化，并结合 Stitch 生成的变体选择更合适的布局方案
+- 将生成结果导出到 Figma，在 Figma 中对版式、视觉层级、配色和细节组件做图形化调整
+- 输出最终设计稿，并同步整理为团队可用的设计说明、信息架构和个人贡献文档
+
+## 设计成果对应
+- 设计说明：`docs/design-spec.md`
+- 信息架构：`docs/information-architecture.md`
+- 用户调研：`docs/user-research.md`
+- 页面设计稿：`docs/design/`
+- 个人贡献说明：`docs/contributions/02-ui/chenhanyu.md`
 
 ## Figma 链接
 https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%E9%9D%A2?node-id=0-1&t=6aHvhBAU7GApTcti-1
@@ -41,5 +59,11 @@ https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%
 3. 问题：课程项目时间有限，设计既要完整又不能过度复杂。
 解决：采用卡片式布局和轻量动效，优先完成核心页面与关键交互，控制实现成本。
 
+4. 问题：从文字需求直接进入页面设计时，容易遗漏模块之间的跳转关系和字段承载。
+解决：先利用 ChatGPT 输出结构化文档，再把文档导入 Google Stitch 生成页面原型，最后在 Figma 中人工校正。
+
+5. 问题：AI 生成页面虽然速度快，但局部组件和视觉层级不一定完全符合课程项目展示需求。
+解决：将 AI 生成结果作为初稿，在 Figma 中继续优化间距、配色、卡片样式、标签层级和交互提示。
+
 ## 心得体会
-这次 UI 设计让我更清楚地理解了从需求、信息架构到视觉规范再到页面落地的完整流程。相比只画单个页面，先整理设计说明和结构文档能明显减少返工，也更方便后续前端实现和团队协作。
+这次 UI 设计让我更清楚地理解了从需求分析、信息架构、设计规范到页面落地的完整流程。相比直接画页面，先整理结构化文档再进行设计能明显减少返工，也更方便前端开发理解页面逻辑。通过 ChatGPT、Google Stitch 和 Figma 的组合，我也体会到 AI 工具更适合提升前期整理和原型生成效率，而最终质量仍然需要设计者手动判断和细化。
