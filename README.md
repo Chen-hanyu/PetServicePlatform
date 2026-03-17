@@ -9,6 +9,9 @@
 | 陈涵予 | 2320100624 | 前端 |
 | 朱安琪 | 2305100206 | 测试 |
 
+## Figma 链接
+https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%E9%9D%A2?node-id=0-1&t=6aHvhBAU7GApTcti-1
+
 ## 项目简介
 宠物综合服务平台面向养宠用户和平台运营人员，核心功能包括：
 - 用户 Web 前台：社区交流、领养申请、宠物服务预约、商品购买、宠物档案管理、消息中心。
