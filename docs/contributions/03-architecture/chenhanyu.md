@@ -41,7 +41,7 @@
 - 编写并精简根目录 `AGENTS.md`，为后续 AI 辅助开发约束技术栈、目录结构、接口规范和禁止事项。
 
 ## PR 链接
-- 暂无公开 PR 链接，待远程仓库协作流程建立后补充。
+- PR #14: https://github.com/Chen-hanyu/PetServicePlatform/pull/14
 
 ## 遇到的问题和解决
 1. 问题：后端最初只有 IDEA 默认生成的最小 Spring Boot 模板，和设计文档中的结构、依赖、包名不一致。  
