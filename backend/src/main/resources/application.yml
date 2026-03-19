@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: pet-service-platform
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/pet_service_platform?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+jwt:
+  secret: replace-with-a-secure-secret-key
+  expiration-seconds: 7200
+
+file:
+  storage:
+    type: local
+    local-path: uploads/
