@@ -38,7 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -161,7 +160,7 @@ public class CommunityService {
         communityPostMapper.insert(post);
 
         if (!CollectionUtils.isEmpty(request.tagIds())) {
-            List<Tag> tags = tagMapper.selectBatchIds(request.tagIds());
+            List<Tag> tags = tagMapper.selectByIds(request.tagIds());
             Set<Long> activeTagIds = tags.stream()
                     .filter(tag -> "ACTIVE".equals(tag.getStatus()))
                     .map(Tag::getId)
@@ -291,7 +290,7 @@ public class CommunityService {
         if (distinctUserIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return userMapper.selectBatchIds(distinctUserIds).stream()
+        return userMapper.selectByIds(distinctUserIds).stream()
                 .collect(Collectors.toMap(User::getId, user -> user, (left, right) -> left, LinkedHashMap::new));
     }
 
@@ -306,7 +305,7 @@ public class CommunityService {
             return Collections.emptyMap();
         }
 
-        Map<Long, Tag> tags = tagMapper.selectBatchIds(postTags.stream().map(PostTag::getTagId).distinct().toList()).stream()
+        Map<Long, Tag> tags = tagMapper.selectByIds(postTags.stream().map(PostTag::getTagId).distinct().toList()).stream()
                 .collect(Collectors.toMap(Tag::getId, tag -> tag));
 
         return postTags.stream()
@@ -354,3 +353,4 @@ public class CommunityService {
         return value == null ? 0 : value;
     }
 }
+

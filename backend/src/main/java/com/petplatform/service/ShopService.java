@@ -187,7 +187,7 @@ public class ShopService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "购物车项不能为空");
         }
 
-        List<CartItem> cartItems = cartItemMapper.selectBatchIds(itemIds);
+        List<CartItem> cartItems = cartItemMapper.selectByIds(itemIds);
         if (cartItems.size() != itemIds.size() || cartItems.stream().anyMatch(item -> !item.getUserId().equals(userId))) {
             throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "购物车项不存在");
         }
@@ -300,7 +300,7 @@ public class ShopService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return productMapper.selectBatchIds(distinctIds).stream()
+        return productMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(Product::getId, Function.identity()));
     }
 
@@ -323,3 +323,4 @@ public class ShopService {
         return "PSP" + LocalDateTime.now().format(ORDER_NO_TIME_FORMATTER) + suffix;
     }
 }
+

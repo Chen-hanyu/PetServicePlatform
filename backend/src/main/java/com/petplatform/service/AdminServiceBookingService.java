@@ -110,7 +110,7 @@ public class AdminServiceBookingService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return merchantMapper.selectBatchIds(distinctIds).stream()
+        return merchantMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(Merchant::getId, Function.identity()));
     }
 
@@ -119,7 +119,7 @@ public class AdminServiceBookingService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return merchantServiceMapper.selectBatchIds(distinctIds).stream()
+        return merchantServiceMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(MerchantService::getId, Function.identity()));
     }
 
@@ -128,7 +128,8 @@ public class AdminServiceBookingService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return userMapper.selectBatchIds(distinctIds).stream()
+        return userMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 }
+

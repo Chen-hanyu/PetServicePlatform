@@ -2,10 +2,6 @@ package com.petplatform.service;
 
 import com.petplatform.common.PageResponse;
 import com.petplatform.dto.search.SearchResultResponse;
-import com.petplatform.entity.AdoptionPet;
-import com.petplatform.entity.CommunityPost;
-import com.petplatform.entity.Merchant;
-import com.petplatform.entity.Product;
 import com.petplatform.mapper.AdoptionPetMapper;
 import com.petplatform.mapper.CommunityPostMapper;
 import com.petplatform.mapper.MerchantMapper;

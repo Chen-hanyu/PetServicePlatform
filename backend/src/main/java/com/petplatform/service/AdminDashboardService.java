@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.petplatform.dto.admin.DashboardOverviewResponse;
 import com.petplatform.entity.AdoptionApplication;
 import com.petplatform.entity.CommunityPost;
-import com.petplatform.entity.ServiceBooking;
-import com.petplatform.entity.ShopOrder;
 import com.petplatform.entity.User;
 import com.petplatform.mapper.AdoptionApplicationMapper;
 import com.petplatform.mapper.CommunityPostMapper;

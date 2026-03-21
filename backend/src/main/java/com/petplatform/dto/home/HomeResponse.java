@@ -1,7 +1,6 @@
 package com.petplatform.dto.home;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.petplatform.dto.adoption.AdoptionPetSummaryResponse;
 import com.petplatform.dto.community.PostSummaryResponse;
 import com.petplatform.dto.service.MerchantSummaryResponse;
 import com.petplatform.dto.shop.ProductSummaryResponse;

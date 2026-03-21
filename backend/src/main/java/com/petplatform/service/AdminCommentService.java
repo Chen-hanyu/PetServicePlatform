@@ -106,7 +106,7 @@ public class AdminCommentService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return communityPostMapper.selectBatchIds(distinctIds).stream()
+        return communityPostMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(CommunityPost::getId, Function.identity()));
     }
 
@@ -115,7 +115,7 @@ public class AdminCommentService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return userMapper.selectBatchIds(distinctIds).stream()
+        return userMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 
@@ -123,3 +123,4 @@ public class AdminCommentService {
         return value.replace("\\", "\\\\").replace("'", "''");
     }
 }
+

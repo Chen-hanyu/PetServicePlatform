@@ -118,7 +118,7 @@ public class AdminAdoptionService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return adoptionPetMapper.selectBatchIds(distinctIds).stream()
+        return adoptionPetMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(AdoptionPet::getId, Function.identity()));
     }
 
@@ -127,7 +127,8 @@ public class AdminAdoptionService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return userMapper.selectBatchIds(distinctIds).stream()
+        return userMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 }
+

@@ -89,7 +89,8 @@ public class AdminOrderService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return userMapper.selectBatchIds(distinctIds).stream()
+        return userMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 }
+

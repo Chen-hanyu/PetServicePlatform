@@ -144,7 +144,7 @@ public class HomeService {
         List<Long> recommendationIds = getRecommendationBizIds("HOME_POST", "post", HOME_POST_LIMIT);
         List<CommunityPost> configured = orderedBatchQuery(
                 recommendationIds,
-                ids -> communityPostMapper.selectBatchIds(ids),
+                ids -> communityPostMapper.selectByIds(ids),
                 CommunityPost::getId
         ).stream().filter(post -> "APPROVED".equals(post.getStatus())).toList();
 
@@ -171,7 +171,7 @@ public class HomeService {
         List<Long> recommendationIds = getRecommendationBizIds("HOME_SERVICE", "service", HOME_SERVICE_LIMIT);
         List<Merchant> configured = orderedBatchQuery(
                 recommendationIds,
-                ids -> merchantMapper.selectBatchIds(ids),
+                ids -> merchantMapper.selectByIds(ids),
                 Merchant::getId
         ).stream().filter(merchant -> "ACTIVE".equals(merchant.getStatus())).toList();
 
@@ -198,7 +198,7 @@ public class HomeService {
         List<Long> recommendationIds = getRecommendationBizIds("HOME_PRODUCT", "product", HOME_PRODUCT_LIMIT);
         List<Product> configured = orderedBatchQuery(
                 recommendationIds,
-                ids -> productMapper.selectBatchIds(ids),
+                ids -> productMapper.selectByIds(ids),
                 Product::getId
         ).stream().filter(product -> "ON_SALE".equals(product.getStatus())).toList();
 
@@ -252,7 +252,7 @@ public class HomeService {
         if (distinctUserIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return userMapper.selectBatchIds(distinctUserIds).stream()
+        return userMapper.selectByIds(distinctUserIds).stream()
                 .collect(Collectors.toMap(User::getId, user -> user, (left, right) -> left, LinkedHashMap::new));
     }
 
@@ -265,3 +265,4 @@ public class HomeService {
         return normalized.length() <= 80 ? normalized : normalized.substring(0, 80);
     }
 }
+

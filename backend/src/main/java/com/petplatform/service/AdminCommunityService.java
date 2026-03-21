@@ -28,7 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -120,7 +119,7 @@ public class AdminCommunityService {
         if (distinctUserIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        return userMapper.selectBatchIds(distinctUserIds).stream()
+        return userMapper.selectByIds(distinctUserIds).stream()
                 .collect(Collectors.toMap(User::getId, user -> user, (left, right) -> left, LinkedHashMap::new));
     }
 
@@ -133,7 +132,7 @@ public class AdminCommunityService {
         if (postTags.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<Long, Tag> tags = tagMapper.selectBatchIds(postTags.stream().map(PostTag::getTagId).distinct().toList()).stream()
+        Map<Long, Tag> tags = tagMapper.selectByIds(postTags.stream().map(PostTag::getTagId).distinct().toList()).stream()
                 .collect(Collectors.toMap(Tag::getId, tag -> tag));
         return postTags.stream()
                 .filter(postTag -> tags.containsKey(postTag.getTagId()))
@@ -156,3 +155,4 @@ public class AdminCommunityService {
         return value.replace("\\", "\\\\").replace("'", "''");
     }
 }
+
