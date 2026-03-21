@@ -363,6 +363,26 @@ Authorization: Bearer <token>
 }
 ```
 
+### 6.1.1A 发送用户登录验证码
+
+- 方法：`POST`
+- 路径：`/api/v1/auth/verify-code`
+- 认证：否
+
+请求体：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `phone` | string | 是 | 手机号 |
+
+成功响应 `data`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `phone` | string | 手机号 |
+| `expires_in` | int | 验证码有效秒数 |
+| `debug_code` | string | 当前 MVP 联调用调试验证码 |
+
 ### 6.1.2 当前用户信息
 
 - 方法：`GET`
@@ -389,6 +409,28 @@ Authorization: Bearer <token>
 | `booking_count` | int | 预约数 |
 | `adoption_application_count` | int | 领养申请数 |
 | `unread_message_count` | int | 未读消息数 |
+
+### 6.1.4 文件上传
+
+- 方法：`POST`
+- 路径：`/api/v1/files/upload`
+- 认证：是
+- Content-Type：`multipart/form-data`
+
+表单字段：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `file` | file | 是 | 图片文件，当前支持 `jpg` / `png` / `webp` / `gif`，大小不超过 5MB |
+
+成功响应 `data`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `url` | string | 文件访问地址 |
+| `file_name` | string | 原始文件名 |
+| `content_type` | string | 文件 MIME 类型 |
+| `size` | long | 文件大小，单位字节 |
 
 ## 6.2 首页与搜索
 
@@ -733,7 +775,43 @@ Authorization: Bearer <token>
 | `services` | array | 服务项目列表 |
 | `reviews` | array | 评价列表 |
 
-### 6.5.4 创建预约
+`reviews` 列表项建议字段：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | bigint | 评价 ID |
+| `score` | int | 评分，1-5 |
+| `content` | string | 评价内容 |
+| `author` | object | 评价用户简要信息 |
+| `created_at` | datetime | 评价时间 |
+
+### 6.5.4 提交商家评价
+
+- 方法：`POST`
+- 路径：`/api/v1/services/merchants/{merchant_id}/reviews`
+- 认证：是
+
+请求体：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `score` | int | 是 | 评分，1-5 |
+| `content` | string | 是 | 评价内容 |
+
+成功响应 `data`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | bigint | 评价 ID |
+| `score` | int | 本次评分 |
+| `merchant_score` | number | 商家最新平均分 |
+
+说明：
+
+- 当前 MVP 要求用户存在该商家的 `COMPLETED` 预约记录后才可评价
+- 同一用户对同一商家仅允许提交一次评价
+
+### 6.5.5 创建预约
 
 - 方法：`POST`
 - 路径：`/api/v1/services/bookings`
@@ -757,7 +835,7 @@ Authorization: Bearer <token>
 | `id` | bigint | 预约 ID |
 | `status` | string | `PENDING` |
 
-### 6.5.5 我的预约记录
+### 6.5.6 我的预约记录
 
 - 方法：`GET`
 - 路径：`/api/v1/services/bookings`
@@ -781,7 +859,7 @@ Authorization: Bearer <token>
 | `booking_time` | datetime | 预约时间 |
 | `status` | string | 预约状态 |
 
-### 6.5.6 取消预约
+### 6.5.7 取消预约
 
 - 方法：`POST`
 - 路径：`/api/v1/services/bookings/{booking_id}/cancel`
@@ -1030,6 +1108,19 @@ Authorization: Bearer <token>
 | `next_due_at` | date | 否 | 下次接种日期 |
 | `remark` | string | 否 | 备注 |
 
+### 6.7.7 新增宠物相册
+
+- 方法：`POST`
+- 路径：`/api/v1/pets/{pet_id}/albums`
+- 认证：是
+
+请求体：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `image_url` | string | 是 | 相册图片地址 |
+| `caption` | string | 否 | 图片说明 |
+
 ### 6.7.7 体重记录列表
 
 - 方法：`GET`
@@ -1082,6 +1173,20 @@ Authorization: Bearer <token>
 | `verify_code` | string | 是 | 验证码或登录口令占位字段 |
 
 成功响应：同用户登录，但 `user.role = ADMIN`
+
+### 7.1.1A 发送管理员登录验证码
+
+- 方法：`POST`
+- 路径：`/api/v1/admin/auth/verify-code`
+- 认证：否
+
+请求体：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `phone` | string | 是 | 管理员账号手机号 |
+
+成功响应：同用户端发送验证码接口
 
 ### 7.1.2 仪表盘统计
 
@@ -1226,6 +1331,62 @@ Banner 新增/更新请求体建议：
 | `status` | string | 是 | 上下线状态 |
 | `sort` | int | 否 | 排序 |
 
+### 7.3.6 标签管理
+
+- 标签列表：`GET /api/v1/admin/tags`
+- 新增标签：`POST /api/v1/admin/tags`
+- 更新标签：`PUT /api/v1/admin/tags/{tag_id}`
+
+标签列表查询参数：
+
+| 参数 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `type` | string | 否 | 标签类型，当前 MVP 固定为 `community` |
+| `status` | string | 否 | 标签状态 |
+| `keyword` | string | 否 | 标签名称关键字 |
+| `page` | int | 否 | 页码 |
+| `page_size` | int | 否 | 每页数量 |
+
+标签新增/更新请求体：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `name` | string | 是 | 标签名称 |
+| `type` | string | 是 | 标签类型，当前支持 `community` |
+| `status` | string | 是 | `ACTIVE` / `DISABLED` |
+| `sort` | int | 否 | 排序 |
+
+### 7.3.7 推荐位管理
+
+- 推荐位列表：`GET /api/v1/admin/recommendations`
+- 新增推荐位：`POST /api/v1/admin/recommendations`
+- 更新推荐位：`PUT /api/v1/admin/recommendations/{recommendation_id}`
+
+推荐位列表查询参数：
+
+| 参数 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `slot_code` | string | 否 | 推荐位编码 |
+| `biz_type` | string | 否 | 推荐对象类型 |
+| `status` | string | 否 | 状态 |
+| `page` | int | 否 | 页码 |
+| `page_size` | int | 否 | 每页数量 |
+
+推荐位新增/更新请求体：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `biz_type` | string | 是 | 推荐对象类型：`post` / `service` / `product` |
+| `biz_id` | bigint | 是 | 推荐对象 ID |
+| `slot_code` | string | 是 | 推荐位编码：`HOME_POST` / `HOME_SERVICE` / `HOME_PRODUCT` |
+| `status` | string | 是 | `ACTIVE` / `DISABLED` |
+| `sort` | int | 否 | 排序 |
+
+说明：
+
+- 首页 `recommended_posts`、`recommended_services`、`recommended_products` 会优先读取对应推荐位配置
+- 若某个推荐位未配置足够数据，后端会自动回退到默认排序结果，保证首页可正常展示
+
 ## 7.4 领养管理
 
 ### 7.4.1 待领养宠物列表
@@ -1297,13 +1458,35 @@ Banner 新增/更新请求体建议：
 - 路径：`/api/v1/admin/services/categories`
 - 认证：管理员
 
-### 7.5.2 商家列表
+### 7.5.2 新增服务分类
+
+- 方法：`POST`
+- 路径：`/api/v1/admin/services/categories`
+- 认证：管理员
+
+请求体字段：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `name` | string | 是 | 分类名称 |
+| `sort` | int | 否 | 排序 |
+| `status` | string | 是 | `ACTIVE` / `DISABLED` |
+
+### 7.5.3 更新服务分类
+
+- 方法：`PUT`
+- 路径：`/api/v1/admin/services/categories/{category_id}`
+- 认证：管理员
+
+请求体同“新增服务分类”
+
+### 7.5.4 商家列表
 
 - 方法：`GET`
 - 路径：`/api/v1/admin/services/merchants`
 - 认证：管理员
 
-### 7.5.3 新增商家
+### 7.5.5 新增商家
 
 - 方法：`POST`
 - 路径：`/api/v1/admin/services/merchants`
@@ -1320,13 +1503,55 @@ Banner 新增/更新请求体建议：
 | `business_hours` | string | 是 | 营业时间 |
 | `status` | string | 是 | 状态 |
 
-### 7.5.4 更新商家
+### 7.5.6 更新商家
 
 - 方法：`PUT`
 - 路径：`/api/v1/admin/services/merchants/{merchant_id}`
 - 认证：管理员
 
-### 7.5.5 预约单列表
+### 7.5.7 服务项目列表
+
+- 方法：`GET`
+- 路径：`/api/v1/admin/services/items`
+- 认证：管理员
+
+查询参数：
+
+| 参数 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `merchant_id` | bigint | 否 | 商家 ID |
+| `category_id` | bigint | 否 | 服务分类 ID |
+| `status` | string | 否 | 状态 |
+| `keyword` | string | 否 | 服务项目名称关键字 |
+| `page` | int | 否 | 页码 |
+| `page_size` | int | 否 | 每页数量 |
+
+### 7.5.8 新增服务项目
+
+- 方法：`POST`
+- 路径：`/api/v1/admin/services/items`
+- 认证：管理员
+
+请求体字段：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `merchant_id` | bigint | 是 | 商家 ID |
+| `category_id` | bigint | 是 | 服务分类 ID |
+| `name` | string | 是 | 服务项目名称 |
+| `price` | number | 是 | 价格 |
+| `duration_minutes` | int | 是 | 服务时长（分钟） |
+| `status` | string | 是 | `ACTIVE` / `DISABLED` |
+
+### 7.5.9 更新服务项目
+
+- 方法：`PUT`
+- 路径：`/api/v1/admin/services/items/{service_id}`
+- 认证：管理员
+
+请求体同“新增服务项目”
+
+### 7.5.10 预约单列表
 
 - 方法：`GET`
 - 路径：`/api/v1/admin/services/bookings`
@@ -1341,7 +1566,7 @@ Banner 新增/更新请求体建议：
 | `page` | int | 否 | 页码 |
 | `page_size` | int | 否 | 每页数量 |
 
-### 7.5.6 处理预约单
+### 7.5.11 处理预约单
 
 - 方法：`PUT`
 - 路径：`/api/v1/admin/services/bookings/{booking_id}`
@@ -1353,6 +1578,27 @@ Banner 新增/更新请求体建议：
 |---|---|---|---|
 | `status` | string | 是 | `CONFIRMED` / `COMPLETED` / `CANCELLED` |
 | `remark` | string | 否 | 处理备注 |
+
+### 7.5.12 商家评价列表
+
+- 方法：`GET`
+- 路径：`/api/v1/admin/services/reviews`
+- 认证：管理员
+
+查询参数：
+
+| 参数 | 类型 | 是否必填 | 说明 |
+|---|---|---|---|
+| `merchant_id` | bigint | 否 | 商家 ID |
+| `keyword` | string | 否 | 商家名称 / 用户昵称 / 手机号 / 评价内容 |
+| `page` | int | 否 | 页码 |
+| `page_size` | int | 否 | 每页数量 |
+
+### 7.5.13 删除商家评价
+
+- 方法：`DELETE`
+- 路径：`/api/v1/admin/services/reviews/{review_id}`
+- 认证：管理员
 
 ## 7.6 商城管理
 

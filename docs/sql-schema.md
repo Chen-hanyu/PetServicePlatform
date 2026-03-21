@@ -5,6 +5,7 @@
 本文档用于补充宠物综合服务平台的数据库落地脚本说明，对应实际建表文件：
 
 - [schema.sql](/D:/Code/PetServicePlatform/backend/src/main/resources/sql/schema.sql)
+- [seed.sql](/D:/Code/PetServicePlatform/backend/src/main/resources/sql/seed.sql)
 
 当前版本为 **MVP 阶段核心表建表脚本**，主要覆盖以下业务闭环：
 
@@ -42,6 +43,7 @@
 - `service_categories`
 - `merchants`
 - `merchant_services`
+- `merchant_reviews`
 - `service_bookings`
 - `product_categories`
 - `products`
@@ -75,6 +77,7 @@
 
 ```sql
 SOURCE backend/src/main/resources/sql/schema.sql;
+SOURCE backend/src/main/resources/sql/seed.sql;
 ```
 
 或者直接在数据库客户端打开并运行 [schema.sql](/D:/Code/PetServicePlatform/backend/src/main/resources/sql/schema.sql)。
@@ -111,6 +114,8 @@ SOURCE backend/src/main/resources/sql/schema.sql;
 - 已设计核心数据表
 - 已绘制 ER 图
 - 已提供建表 SQL
+- 社区帖子表已包含审核备注字段 `review_remark`，以对齐管理员审核接口文档
+- 已提供演示初始化脚本 `seed.sql`
 
 如后续需要，我可以继续补：
 

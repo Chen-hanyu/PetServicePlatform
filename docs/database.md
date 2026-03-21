@@ -286,6 +286,7 @@ erDiagram
 | `content` | text | 正文 |
 | `cover_url` | varchar(255) | 封面图 |
 | `status` | varchar(20) | `PENDING` / `APPROVED` / `REJECTED` |
+| `review_remark` | varchar(255) | 审核备注 |
 | `like_count` | int | 点赞数冗余 |
 | `favorite_count` | int | 收藏数冗余 |
 | `comment_count` | int | 评论数冗余 |
@@ -450,7 +451,16 @@ erDiagram
 #### `merchant_reviews`
 
 - 记录用户对商家的评价
-- 字段可包含：`merchant_id`, `user_id`, `score`, `content`, `created_at`
+- 当前实现采用“一位用户对同一商家仅允许一条评价”的约束，避免重复刷分
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | bigint | 主键 |
+| `merchant_id` | bigint | 商家 ID |
+| `user_id` | bigint | 用户 ID |
+| `score` | int | 评分，1-5 |
+| `content` | varchar(255) | 评价内容 |
+| `created_at` | datetime | 创建时间 |
 
 ### 6.6 商城模块
 
