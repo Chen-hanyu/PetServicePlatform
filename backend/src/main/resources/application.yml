@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: pet-service-platform
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/pet_service_platform?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
     username: root
@@ -19,10 +23,16 @@ springdoc:
     path: /swagger-ui.html
 
 jwt:
-  secret: replace-with-a-secure-secret-key
+  secret: replace-with-a-secure-secret-key-1234567890
   expiration-seconds: 7200
+
+verify-code:
+  expiration-seconds: 300
+  allow-default-code: true
+  default-code: 123456
 
 file:
   storage:
     type: local
     local-path: uploads/
+    access-path: /uploads/

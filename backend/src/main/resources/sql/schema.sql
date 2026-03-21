@@ -91,6 +91,7 @@ CREATE TABLE community_posts (
     content TEXT NOT NULL,
     cover_url VARCHAR(255),
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    review_remark VARCHAR(255),
     like_count INT NOT NULL DEFAULT 0,
     favorite_count INT NOT NULL DEFAULT 0,
     comment_count INT NOT NULL DEFAULT 0,
@@ -231,6 +232,20 @@ CREATE TABLE merchant_services (
     KEY idx_merchant_services_category_id (category_id),
     CONSTRAINT fk_merchant_services_merchant_id FOREIGN KEY (merchant_id) REFERENCES merchants(id),
     CONSTRAINT fk_merchant_services_category_id FOREIGN KEY (category_id) REFERENCES service_categories(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE merchant_reviews (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    merchant_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    score INT NOT NULL,
+    content VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_merchant_reviews_merchant_user (merchant_id, user_id),
+    KEY idx_merchant_reviews_merchant_created (merchant_id, created_at),
+    KEY idx_merchant_reviews_user_id (user_id),
+    CONSTRAINT fk_merchant_reviews_merchant_id FOREIGN KEY (merchant_id) REFERENCES merchants(id),
+    CONSTRAINT fk_merchant_reviews_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE service_bookings (
