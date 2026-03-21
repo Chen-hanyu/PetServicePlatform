@@ -1,0 +1,10 @@
+package com.petplatform.dto.admin;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record PostReviewResponse(
+        Long id,
+        String status,
+        @JsonProperty("review_remark") String reviewRemark
+) {
+}
