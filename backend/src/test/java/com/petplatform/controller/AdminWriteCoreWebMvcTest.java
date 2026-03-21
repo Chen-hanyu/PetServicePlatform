@@ -33,7 +33,7 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -54,31 +54,33 @@ class AdminWriteCoreWebMvcTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private AdminAdoptionService adminAdoptionService;
 
-    @MockBean
+    @MockitoBean
     private AdminCommentService adminCommentService;
 
-    @MockBean
+    @MockitoBean
     private AdminCommunityService adminCommunityService;
 
-    @MockBean
+    @MockitoBean
     private AdminMerchantReviewService adminMerchantReviewService;
 
-    @MockBean
+    @MockitoBean
     private AdminOrderService adminOrderService;
 
-    @MockBean
+    @MockitoBean
     private AdminServiceBookingService adminServiceBookingService;
 
-    @MockBean
+    @MockitoBean
     private AdminUserService adminUserService;
 
-    @MockBean
+    @MockitoBean
+    @SuppressWarnings("unused")
     private JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
+    @SuppressWarnings("unused")
     private UserMapper userMapper;
 
     @SpringBootConfiguration

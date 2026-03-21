@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -31,6 +31,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -51,19 +52,21 @@ class SecurityRoutingWebMvcTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private AuthService authService;
 
-    @MockBean
+    @MockitoBean
     private PetService petService;
 
-    @MockBean
+    @MockitoBean
     private AdminUserService adminUserService;
 
-    @MockBean
+    @MockitoBean
+    @SuppressWarnings("unused")
     private JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
+    @SuppressWarnings("unused")
     private UserMapper userMapper;
 
     @SpringBootConfiguration
@@ -182,12 +185,13 @@ class SecurityRoutingWebMvcTest {
     void authenticatedUserShouldCreatePetAlbum() throws Exception {
         when(petService.createAlbum(any(Long.class), any())).thenReturn(new PetAlbumResponse(9L, "/uploads/pet.png", "成长记录"));
 
+        Map<String, String> requestBody = Map.of(
+                "image_url", "/uploads/pet.png",
+                "caption", "成长记录"
+        );
         mockMvc.perform(post("/api/v1/pets/1/albums")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new Object() {
-                            public final String image_url = "/uploads/pet.png";
-                            public final String caption = "成长记录";
-                        })))
+                        .content(objectMapper.writeValueAsString(requestBody)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.id").value(9))

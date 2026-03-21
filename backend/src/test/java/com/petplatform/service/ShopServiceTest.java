@@ -66,7 +66,7 @@ class ShopServiceTest {
     void shouldRejectOrderWhenCartItemsAreUnchecked() {
         mockCurrentUser(7L);
         CartItem cartItem = cartItem(1L, 7L, 101L, 2, false);
-        when(cartItemMapper.selectBatchIds(List.of(1L))).thenReturn(List.of(cartItem));
+        when(cartItemMapper.selectByIds(List.of(1L))).thenReturn(List.of(cartItem));
 
         assertThatThrownBy(() -> shopService.createOrder(new CreateOrderRequest(
                 List.of(1L),
@@ -89,8 +89,8 @@ class ShopServiceTest {
         Product firstProduct = product(101L, "猫粮", "39.90", 10);
         Product secondProduct = product(102L, "猫砂", "29.90", 5);
 
-        when(cartItemMapper.selectBatchIds(List.of(1L, 2L))).thenReturn(List.of(firstItem, secondItem));
-        when(productMapper.selectBatchIds(List.of(101L, 102L))).thenReturn(List.of(firstProduct, secondProduct));
+        when(cartItemMapper.selectByIds(List.of(1L, 2L))).thenReturn(List.of(firstItem, secondItem));
+        when(productMapper.selectByIds(List.of(101L, 102L))).thenReturn(List.of(firstProduct, secondProduct));
         ShopOrder persistedOrder = new ShopOrder();
         doAnswer(invocation -> {
             ShopOrder order = invocation.getArgument(0);
@@ -162,3 +162,4 @@ class ShopServiceTest {
         return product;
     }
 }
+

@@ -26,7 +26,7 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -51,19 +51,21 @@ class BusinessFlowWebMvcTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private CommunityService communityService;
 
-    @MockBean
+    @MockitoBean
     private AdoptionService adoptionService;
 
-    @MockBean
+    @MockitoBean
     private ShopService shopService;
 
-    @MockBean
+    @MockitoBean
+    @SuppressWarnings("unused")
     private JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
+    @SuppressWarnings("unused")
     private UserMapper userMapper;
 
     @SpringBootConfiguration
