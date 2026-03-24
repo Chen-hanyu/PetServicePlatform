@@ -36,7 +36,7 @@
 - 推进用户端核心页面骨架与后台核心页面骨架，确保后续前端任务可以在同一架构上持续迭代。
 
 ## PR 链接
-- PR #X: https://github.com/Chen-hanyu/PetServicePlatform/pull/X
+- PR #18: https://github.com/Chen-hanyu/PetServicePlatform/pull/18
 
 ## 遇到的问题和解决
 1. 问题：前端初始阶段只有目录占位，缺少可运行的工程骨架，无法高效并行开发。  
