@@ -1,0 +1,118 @@
+﻿@use "./tokens.scss";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Nunito", "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 8% 4%, #ffe8d5 0%, transparent 28%),
+    radial-gradient(circle at 92% 6%, #ffeed6 0%, transparent 24%),
+    linear-gradient(180deg, #fffaf5 0%, #fff6ee 45%, #fff4ea 100%);
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-shell {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 22px;
+}
+
+.card {
+  background: linear-gradient(180deg, #fffefe 0%, #fffaf6 100%);
+  border: 1px solid #f0dfd2;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: transform 0.18s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(241, 124, 83, 0.25);
+}
+
+.btn-secondary {
+  background: #fff1e5;
+  color: #8a4f33;
+  border: 1px solid #ffd5b8;
+}
+
+.input {
+  border: 1px solid #eddacc;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  min-height: 40px;
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+}
+
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 157, 122, 0.2);
+}
+
+@media (max-width: 768px) {
+  .page-shell {
+    padding: 14px;
+  }
+
+  .section-title {
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
