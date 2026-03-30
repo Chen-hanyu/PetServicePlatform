@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 
 const router = createRouter({
@@ -11,9 +11,14 @@ const router = createRouter({
       { path: "adoption", component: () => import("@/pages/web/adoption/AdoptionPage.vue") },
       { path: "services", component: () => import("@/pages/web/services/ServicesPage.vue") },
       { path: "shop", component: () => import("@/pages/web/shop/ShopPage.vue") },
-      { path: "profile", component: () => import("@/pages/web/profile/ProfilePage.vue"), meta: { requiresAuth: true } }
+      { path: "profile", component: () => import("@/pages/web/profile/ProfilePage.vue"), meta: { requiresAuth: true } },
+      { path: "profile/pets", component: () => import("@/pages/web/profile/PetsPage.vue"), meta: { requiresAuth: true } },
+      { path: "profile/orders", component: () => import("@/pages/web/profile/OrdersPage.vue"), meta: { requiresAuth: true } },
+      { path: "profile/bookings", component: () => import("@/pages/web/profile/BookingsPage.vue"), meta: { requiresAuth: true } },
+      { path: "profile/settings", component: () => import("@/pages/web/profile/SettingsPage.vue"), meta: { requiresAuth: true } }
     ] },
     { path: "/login", component: () => import("@/pages/web/auth/LoginPage.vue") },
+    { path: "/register", component: () => import("@/pages/web/auth/RegisterPage.vue") },
     { path: "/admin/login", component: () => import("@/pages/admin/auth/AdminLoginPage.vue") },
     { path: "/admin", component: () => import("@/layout/AdminLayout.vue"), meta: { requiresAuth: true, role: "ADMIN" }, children: [
       { path: "", redirect: "/admin/dashboard" },
