@@ -1,7 +1,12 @@
-/** 商品缩略图飞向右侧购物车图标的动效（目标节点 id=commerce-cart-target） */
-export function flyImageToCart(imageUrl: string, fromEl: HTMLElement | null) {
+/** 缩略图飞向页面内固定目标（如购物车 / 预约单图标） */
+export function flyImageToTarget(
+  imageUrl: string,
+  fromEl: HTMLElement | null,
+  targetId: string,
+  bumpClass: string
+) {
   if (!fromEl || typeof document === "undefined") return;
-  const target = document.getElementById("commerce-cart-target");
+  const target = document.getElementById(targetId);
   if (!target) return;
 
   const from = fromEl.getBoundingClientRect();
@@ -13,7 +18,7 @@ export function flyImageToCart(imageUrl: string, fromEl: HTMLElement | null) {
   const endLeft = to.left + to.width / 2 - size / 2;
   const endTop = to.top + to.height / 2 - size / 2;
 
-  target.classList.add("commerce-cart-bump");
+  target.classList.add(bumpClass);
 
   const wrap = document.createElement("div");
   wrap.setAttribute("data-fly-to-cart", "1");
@@ -45,7 +50,12 @@ export function flyImageToCart(imageUrl: string, fromEl: HTMLElement | null) {
   });
 
   window.setTimeout(() => {
-    target.classList.remove("commerce-cart-bump");
+    target.classList.remove(bumpClass);
     wrap.remove();
   }, 650);
+}
+
+/** 商品缩略图飞向右侧购物车图标（id=commerce-cart-target） */
+export function flyImageToCart(imageUrl: string, fromEl: HTMLElement | null) {
+  flyImageToTarget(imageUrl, fromEl, "commerce-cart-target", "commerce-cart-bump");
 }

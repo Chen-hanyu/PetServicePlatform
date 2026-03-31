@@ -1,14 +1,20 @@
 <template>
   <section class="services-page">
+    <p class="promo-strip">
+      <span class="strip-ico" aria-hidden="true">💈</span>
+      点击商家进入详情，再点右下角「点击预约」进入预约页；右侧「预约单」可查看当前草稿（与商城多页体验一致）
+    </p>
+
     <div class="card page-hero">
       <h1>宠物服务</h1>
       <p>专业、可靠的宠物服务，守护爱宠健康成长</p>
     </div>
 
     <div class="category-nav">
-      <button 
-        v-for="cat in categories" 
+      <button
+        v-for="cat in categories"
         :key="cat.id"
+        type="button"
         :class="['cat-btn', { active: selectedCategory === cat.name }]"
         @click="selectCategory(cat.name)"
       >
@@ -17,127 +23,122 @@
       </button>
     </div>
 
-    <div class="content-grid">
-      <main class="merchant-list">
-        <div class="list-header">
-          <h2>{{ selectedCategory || '全部' }}商家</h2>
-          <span class="count">共 {{ filteredMerchants.length }} 家</span>
-        </div>
+    <main class="merchant-list">
+      <div class="list-header">
+        <h2>{{ selectedCategory || "全部" }}商家</h2>
+        <span class="count">共 {{ filteredMerchants.length }} 家</span>
+      </div>
 
-        <DataState :loading="loading" :error="error" :empty="filteredMerchants.length === 0" empty-text="暂无商家">
-          <div class="merchants-grid">
-            <article 
-              v-for="merchant in filteredMerchants" 
-              :key="merchant.id" 
-              class="merchant-card"
-              @click="selectMerchant(merchant)"
-            >
-              <div class="merchant-image">
-                <img :src="merchant.cover_url" :alt="merchant.name" />
-                <div class="rating-badge">⭐ {{ merchant.rating }}</div>
-              </div>
-              <div class="merchant-info">
-                <h3>{{ merchant.name }}</h3>
-                <p class="desc">{{ merchant.description }}</p>
-                <div class="meta-row">
-                  <span class="location">📍 {{ merchant.district }}</span>
-                  <span class="status" :class="merchant.status === '营业中' ? 'open' : 'closed'">
-                    {{ merchant.status }}
-                  </span>
-                </div>
-              </div>
-            </article>
-          </div>
-        </DataState>
-      </main>
-
-      <!-- Merchant Detail Sidebar -->
-      <aside v-if="selectedMerchant" class="detail-sidebar card">
-        <div class="detail-header">
-          <button class="back-btn" @click="selectedMerchant = null">← 返回列表</button>
-          <h3>{{ selectedMerchant.name }}</h3>
-          <div class="detail-meta">
-            <span>📍 {{ selectedMerchant.address }}</span>
-            <span>📞 {{ selectedMerchant.phone }}</span>
-            <span>🕘 {{ selectedMerchant.business_hours }}</span>
-          </div>
-        </div>
-
-        <div class="services-list">
-          <h4>服务项目</h4>
-          <div v-for="service in selectedMerchant.services" :key="service.id" class="service-item">
-            <div class="service-info">
-              <span class="service-name">{{ service.name }}</span>
-              <span class="service-duration">{{ service.duration }}</span>
+      <DataState :loading="loading" :error="error" :empty="filteredMerchants.length === 0" empty-text="暂无商家">
+        <div class="merchants-grid">
+          <article
+            v-for="m in filteredMerchants"
+            :key="m.id"
+            class="merchant-card"
+            role="link"
+            tabindex="0"
+            @click="goDetail(m.id)"
+            @keydown.enter.prevent="goDetail(m.id)"
+          >
+            <div class="merchant-image">
+              <img :src="m.cover_url" :alt="m.name" />
+              <div class="rating-badge">⭐ {{ m.rating }}</div>
             </div>
-            <div class="service-price">
-              ¥{{ service.price }}
-              <button class="book-btn" @click="openBooking(service)">预约</button>
+            <div class="merchant-info">
+              <h3>{{ m.name }}</h3>
+              <p class="desc">{{ m.description }}</p>
+              <div class="meta-row">
+                <span class="location">📍 {{ m.district }}</span>
+                <span class="status" :class="m.status === '营业中' ? 'open' : 'closed'">
+                  {{ m.status }}
+                </span>
+              </div>
+              <span class="enter-hint">进入详情 →</span>
             </div>
-          </div>
+          </article>
         </div>
+      </DataState>
+    </main>
 
-        <div class="booking-form" v-if="bookingService">
-          <h4>预约 {{ bookingService.name }}</h4>
-          <div class="form-group">
-            <label>预约时间</label>
-            <input v-model="bookingForm.booking_time" type="datetime-local" class="input" />
-          </div>
-          <div class="form-group">
-            <label>联系人</label>
-            <input v-model="bookingForm.contact_name" class="input" placeholder="请输入您的姓名" />
-          </div>
-          <div class="form-group">
-            <label>联系电话</label>
-            <input v-model="bookingForm.contact_phone" class="input" placeholder="请输入您的手机号" />
-          </div>
-          <div class="form-group">
-            <label>备注</label>
-            <textarea v-model="bookingForm.remark" class="input textarea" placeholder="宠物年龄、品种等信息"></textarea>
-          </div>
-          <button class="btn btn-primary btn-block" @click="submitBooking">确认预约</button>
-        </div>
-      </aside>
-    </div>
+    <ServiceBookingDock />
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, computed } from "vue";
+import { onMounted, ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
-import { fetchMerchants, fetchServiceCategories, createBooking } from "@/services/modules/services";
+import ServiceBookingDock from "@/components/services/ServiceBookingDock.vue";
+import { fetchMerchants } from "@/services/modules/services";
 import { mockMerchants } from "@/mocks/services";
-import { toErrorMessage } from "@/services/http";
+
+const router = useRouter();
 
 const loading = ref(false);
 const error = ref("");
-const categories = ref<any[]>([]);
-const merchants = ref<any[]>([]);
+const categories = ref<Array<{ id: number; name: string }>>([]);
+const merchants = ref<
+  Array<{
+    id: number;
+    name: string;
+    district: string;
+    description?: string;
+    cover_url: string;
+    rating: number;
+    status: string;
+    category?: string;
+  }>
+>([]);
 const selectedCategory = ref("");
-const selectedMerchant = ref<any>(null);
-const bookingService = ref<any>(null);
-
-const bookingForm = reactive({
-  booking_time: "",
-  contact_name: "",
-  contact_phone: "",
-  remark: ""
-});
 
 const filteredMerchants = computed(() => {
   if (!selectedCategory.value) return merchants.value;
-  return merchants.value.filter(m => m.category === selectedCategory.value);
+  return merchants.value.filter((m) => m.category === selectedCategory.value);
 });
+
+function enrichFromMock(
+  list: Array<{
+    id: number;
+    name: string;
+    district?: string;
+    description?: string;
+    cover_url?: string;
+    rating?: number;
+    status: string;
+    category?: string;
+  }>
+) {
+  return list.map((row) => {
+    const mock = mockMerchants.find((x) => x.id === row.id);
+    return {
+      ...row,
+      district: row.district || mock?.district || "",
+      description: row.description ?? mock?.description,
+      cover_url: row.cover_url || mock?.cover_url || "",
+      rating: row.rating ?? mock?.rating ?? 0,
+      category: row.category || mock?.category
+    };
+  });
+}
 
 const loadMerchants = async () => {
   loading.value = true;
   error.value = "";
   try {
     const data = await fetchMerchants({ page: 1, page_size: 20 });
-    merchants.value = data.list || [];
+    merchants.value = enrichFromMock((data.list || []) as typeof merchants.value);
   } catch (e) {
     console.warn("Failed to fetch merchants, using mock data", e);
-    merchants.value = mockMerchants;
+    merchants.value = mockMerchants.map((m) => ({
+      id: m.id,
+      name: m.name,
+      district: m.district,
+      description: m.description,
+      cover_url: m.cover_url,
+      rating: m.rating,
+      status: m.status,
+      category: m.category
+    }));
   } finally {
     loading.value = false;
   }
@@ -147,31 +148,11 @@ const selectCategory = (name: string) => {
   selectedCategory.value = selectedCategory.value === name ? "" : name;
 };
 
-const selectMerchant = (merchant: any) => {
-  selectedMerchant.value = merchant;
-  bookingService.value = null;
-  resetForm();
-};
-
-const openBooking = (service: any) => {
-  bookingService.value = service;
-};
-
-const submitBooking = () => {
-  alert(`预约成功！\n服务：${bookingService.value.name}\n时间：${bookingForm.booking_time}\n我们将尽快与您联系确认。`);
-  bookingService.value = null;
-  resetForm();
-};
-
-const resetForm = () => {
-  bookingForm.booking_time = "";
-  bookingForm.contact_name = "";
-  bookingForm.contact_phone = "";
-  bookingForm.remark = "";
+const goDetail = (id: number) => {
+  router.push(`/services/merchant/${id}`);
 };
 
 onMounted(async () => {
-  // Mock categories
   categories.value = [
     { id: 1, name: "宠物美容" },
     { id: 2, name: "宠物医院" },
@@ -187,6 +168,24 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-bottom: 32px;
+}
+
+.promo-strip {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #fff4e8 0%, #fff9f2 100%);
+  border: 1px solid var(--border-warm);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-heading-soft);
+}
+
+.strip-ico {
+  margin-right: 8px;
 }
 
 .category-nav {
@@ -209,12 +208,12 @@ onMounted(async () => {
   transition: all 0.2s;
   color: var(--muted);
   font-weight: 600;
-  
+
   &:hover {
     background: var(--chip-active-bg);
     border-color: var(--chip-border);
   }
-  
+
   &.active {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
     color: #fff;
@@ -223,11 +222,28 @@ onMounted(async () => {
   }
 }
 
-.content-grid {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 24px;
-  align-items: start;
+.merchant-list {
+  width: 100%;
+}
+
+.list-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .count {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 600;
+  }
 }
 
 .merchants-grid {
@@ -243,17 +259,22 @@ onMounted(async () => {
   border: 1px solid #f0dccb;
   cursor: pointer;
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(128, 84, 52, 0.1);
+    box-shadow: 0 12px 24px rgba(128, 84, 52, 0.12);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
   }
 }
 
 .merchant-image {
   height: 180px;
   position: relative;
-  
+
   img {
     width: 100%;
     height: 100%;
@@ -275,13 +296,13 @@ onMounted(async () => {
 
 .merchant-info {
   padding: 16px;
-  
+
   h3 {
     margin: 0 0 8px;
     font-size: 18px;
     color: #2f2a26;
   }
-  
+
   .desc {
     margin: 0 0 12px;
     font-size: 13px;
@@ -299,22 +320,22 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
-  
+
   .location {
     color: var(--on-white-text);
   }
-  
+
   .status {
     padding: 2px 8px;
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
-    
+
     &.open {
       background: #e8f5e9;
       color: #4caf50;
     }
-    
+
     &.closed {
       background: #ffebee;
       color: #f44336;
@@ -322,149 +343,11 @@ onMounted(async () => {
   }
 }
 
-.detail-sidebar {
-  position: sticky;
-  top: 20px;
-  padding: 20px;
-}
-
-.detail-header {
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0dccb;
-  
-  .back-btn {
-    background: none;
-    border: none;
-    color: #ff9d7a;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 0;
-    margin-bottom: 8px;
-  }
-  
-  h3 {
-    margin: 0 0 12px;
-    font-size: 20px;
-    color: #2f2a26;
-  }
-  
-  .detail-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-size: 13px;
-    color: #7d7068;
-  }
-}
-
-.services-list {
-  margin-bottom: 24px;
-  
-  h4 {
-    margin: 0 0 12px;
-    font-size: 16px;
-    color: #2f2a26;
-  }
-}
-
-.service-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f5f0eb;
-  
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.service-info {
-  display: flex;
-  flex-direction: column;
-  
-  .service-name {
-    font-weight: 600;
-    color: #2f2a26;
-  }
-  
-  .service-duration {
-    font-size: 12px;
-    color: var(--on-white-text);
-  }
-}
-
-.service-price {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-  color: #ff9d7a;
-}
-
-.book-btn {
-  padding: 4px 12px;
-  background: #fff1e5;
-  color: #8a4f33;
-  border: 1px solid #ffd5b8;
-  border-radius: 12px;
-  font-size: 12px;
-  cursor: pointer;
-  
-  &:hover {
-    background: #ffe9d7;
-  }
-}
-
-.booking-form {
-  background: #fffaf5;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #ffd9bc;
-  
-  h4 {
-    margin: 0 0 16px;
-    color: #8d4d30;
-  }
-}
-
-.form-group {
-  margin-bottom: 12px;
-  
-  label {
-    display: block;
-    font-size: 13px;
-    color: #7d7068;
-    margin-bottom: 6px;
-  }
-}
-
-.textarea {
-  min-height: 60px;
-}
-
-.btn-block {
-  width: 100%;
+.enter-hint {
+  display: block;
   margin-top: 12px;
-}
-
-@media (max-width: 1024px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .detail-sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    max-width: 400px;
-    z-index: 100;
-    border-radius: 0;
-    overflow-y: auto;
-    box-shadow: -4px 0 20px rgba(102, 72, 48, 0.12);
-  }
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary-strong);
 }
 </style>
