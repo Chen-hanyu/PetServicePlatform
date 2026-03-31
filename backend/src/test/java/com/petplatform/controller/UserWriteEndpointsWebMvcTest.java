@@ -44,7 +44,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -99,7 +101,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("create comment should return id")
+    @DisplayName("创建评论时应返回评论编号")
     void createCommentShouldReturnId() throws Exception {
         when(communityService.createComment(any(), any())).thenReturn(new CreateCommentResponse(12L));
 
@@ -117,7 +119,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("toggle like should return new state and count")
+    @DisplayName("切换点赞时应返回最新状态和数量")
     void toggleLikeShouldReturnState() throws Exception {
         when(communityService.toggleLike(1L)).thenReturn(new ToggleLikeResponse(true, 13));
 
@@ -130,7 +132,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("toggle favorite should return new state and count")
+    @DisplayName("切换收藏时应返回最新状态和数量")
     void toggleFavoriteShouldReturnState() throws Exception {
         when(communityService.toggleFavorite(1L)).thenReturn(new ToggleFavoriteResponse(true, 6));
 
@@ -143,7 +145,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("create merchant review should return id and score")
+    @DisplayName("创建商家评价时应返回评价编号和评分")
     void createMerchantReviewShouldReturnPayload() throws Exception {
         when(serviceBookingService.createReview(any(), any())).thenReturn(
                 new CreateMerchantReviewResponse(7L, 5, new BigDecimal("4.9"))
@@ -165,7 +167,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("create service booking should return id and status")
+    @DisplayName("创建服务预约时应返回预约编号和状态")
     void createServiceBookingShouldReturnPayload() throws Exception {
         when(serviceBookingService.createBooking(any())).thenReturn(new CreateServiceBookingResponse(9L, "PENDING"));
 
@@ -189,7 +191,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("cancel service booking should return cancelled state")
+    @DisplayName("取消服务预约时应返回已取消状态")
     void cancelServiceBookingShouldReturnPayload() throws Exception {
         when(serviceBookingService.cancelBooking(9L)).thenReturn(new CancelServiceBookingResponse(9L, "CANCELLED"));
 
@@ -201,7 +203,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("add cart item should return refreshed cart")
+    @DisplayName("添加购物车商品时应返回最新购物车")
     void addCartItemShouldReturnCart() throws Exception {
         when(shopService.addCartItem(any())).thenReturn(new CartResponse(
                 List.of(new CartItemResponse(
@@ -234,7 +236,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("update cart item should return refreshed cart")
+    @DisplayName("更新购物车商品时应返回最新购物车")
     void updateCartItemShouldReturnCart() throws Exception {
         when(shopService.updateCartItem(any(), any())).thenReturn(new CartResponse(
                 List.of(new CartItemResponse(
@@ -266,7 +268,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("create pet should return pet profile")
+    @DisplayName("创建宠物档案时应返回宠物详情")
     void createPetShouldReturnProfile() throws Exception {
         when(petService.createPet(any())).thenReturn(new PetProfileResponse(
                 1L,
@@ -294,14 +296,25 @@ class UserWriteEndpointsWebMvcTest {
                                   "description": "Likes sleeping on the sofa"
                                 }
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.name").value("Mochi"));
     }
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("update pet should return updated profile")
+    @DisplayName("删除宠物档案时应返回统一成功响应")
+    void deletePetShouldReturnSuccess() throws Exception {
+        mockMvc.perform(delete("/api/v1/pets/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        verify(petService).deletePet(1L);
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    @DisplayName("更新宠物档案时应返回更新后的详情")
     void updatePetShouldReturnProfile() throws Exception {
         when(petService.updatePet(any(), any())).thenReturn(new PetProfileResponse(
                 1L,
@@ -336,7 +349,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("create pet vaccine should return vaccine record")
+    @DisplayName("新增宠物疫苗记录时应返回疫苗记录")
     void createPetVaccineShouldReturnRecord() throws Exception {
         when(petService.createVaccine(any(), any())).thenReturn(new PetVaccineResponse(
                 1L,
@@ -363,7 +376,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("create pet album should return album record")
+    @DisplayName("新增宠物相册记录时应返回相册记录")
     void createPetAlbumShouldReturnRecord() throws Exception {
         when(petService.createAlbum(any(), any())).thenReturn(new PetAlbumResponse(
                 1L,
@@ -386,7 +399,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("create pet weight should return weight record")
+    @DisplayName("新增宠物体重记录时应返回体重记录")
     void createPetWeightShouldReturnRecord() throws Exception {
         when(petService.createWeight(any(), any())).thenReturn(new PetWeightResponse(
                 1L,
@@ -409,7 +422,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("mark message as read should return read state")
+    @DisplayName("消息标记已读时应返回已读状态")
     void markMessageAsReadShouldReturnPayload() throws Exception {
         when(messageService.markAsRead(1L)).thenReturn(new MarkMessageReadResponse(1L, true));
 
@@ -421,7 +434,7 @@ class UserWriteEndpointsWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("add cart item should validate quantity")
+    @DisplayName("添加购物车商品时应校验数量")
     void addCartItemShouldValidateQuantity() throws Exception {
         mockMvc.perform(post("/api/v1/shop/cart/items")
                         .contentType(MediaType.APPLICATION_JSON)

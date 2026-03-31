@@ -1,5 +1,5 @@
-INSERT INTO users (id, role, phone, nickname, avatar_url, gender, status, bio, created_at, updated_at) VALUES
-    (1, 'USER', '13800000001', 'Alice', '/uploads/u1.png', 'FEMALE', 'ACTIVE', 'Pet lover', '2026-03-01 09:00:00', '2026-03-01 09:00:00');
+INSERT INTO users (id, role, phone, password_hash, nickname, avatar_url, gender, status, bio, created_at, updated_at) VALUES
+    (1, 'USER', '13800000001', '$2a$10$oQ9TueFaM3LFV8M6jfIh.O0nwr2aC5mlOeUtclblsY9yuoHmXc7VC', 'Alice', '/uploads/u1.png', 'FEMALE', 'ACTIVE', 'Pet lover', '2026-03-01 09:00:00', '2026-03-01 09:00:00');
 
 INSERT INTO banners (id, title, image_url, link_url, status, sort, created_by, created_at, updated_at) VALUES
     (1, 'Spring Care Week', '/uploads/banner-1.png', '/campaign/spring', 'ACTIVE', 1, 1, '2026-03-20 08:00:00', '2026-03-20 08:00:00'),
