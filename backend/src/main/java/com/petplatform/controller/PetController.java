@@ -13,6 +13,9 @@ import com.petplatform.dto.pet.PetAlbumResponse;
 import com.petplatform.dto.pet.SavePetRequest;
 import com.petplatform.service.PetService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,8 +42,8 @@ public class PetController {
     }
 
     @PostMapping
-    public ApiResponse<PetProfileResponse> createPet(@Valid @RequestBody SavePetRequest request) {
-        return ApiResponse.success(petService.createPet(request));
+    public ResponseEntity<ApiResponse<PetProfileResponse>> createPet(@Valid @RequestBody SavePetRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(petService.createPet(request)));
     }
 
     @GetMapping("/{petId}")
@@ -54,6 +57,12 @@ public class PetController {
             @Valid @RequestBody SavePetRequest request
     ) {
         return ApiResponse.success(petService.updatePet(petId, request));
+    }
+
+    @DeleteMapping("/{petId}")
+    public ApiResponse<Void> deletePet(@PathVariable Long petId) {
+        petService.deletePet(petId);
+        return ApiResponse.success();
     }
 
     @GetMapping("/{petId}/vaccines")

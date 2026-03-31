@@ -19,6 +19,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -93,5 +94,16 @@ class PetControllerIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(10005))
                 .andExpect(jsonPath("$.message").value("无权访问该宠物档案"));
+    }
+    @Test
+    @DisplayName("删除宠物档案时应同步删除关联记录")
+    void deletePetShouldRemovePetAndRelatedRecords() throws Exception {
+        mockMvc.perform(delete("/api/v1/pets/1")
+                        .with(currentUser(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        assertThat(petMapper.selectById(1L)).isNull();
+        assertThat(petWeightMapper.selectList(null)).isEmpty();
     }
 }

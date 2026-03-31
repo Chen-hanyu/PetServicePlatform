@@ -4,6 +4,7 @@ import com.petplatform.common.ResultCode;
 import com.petplatform.common.exception.BusinessException;
 import com.petplatform.dto.auth.LoginRequest;
 import com.petplatform.dto.auth.LoginResponse;
+import com.petplatform.dto.auth.RegisterRequest;
 import com.petplatform.dto.auth.SendVerifyCodeRequest;
 import com.petplatform.dto.auth.SendVerifyCodeResponse;
 import com.petplatform.entity.User;
@@ -35,27 +36,40 @@ public class AuthService {
         return verifyCodeService.sendAdminLoginCode(request.phone());
     }
 
+    public LoginResponse registerUser(RegisterRequest request) {
+        User user = userService.createUser(request.phone(), request.password(), request.nickname());
+        return buildLoginResponse(user);
+    }
+
     public LoginResponse loginUser(LoginRequest request) {
-        verifyCodeService.validateUserLoginCode(request.phone(), request.verifyCode());
         User user = userService.findByPhone(request.phone());
         if (user == null) {
-            user = userService.createUserByPhone(request.phone());
+            throw new BusinessException(ResultCode.UNAUTHORIZED, "Invalid phone or password");
         }
         if (!"USER".equals(user.getRole())) {
-            throw new BusinessException(ResultCode.FORBIDDEN, "当前账号不是用户角色");
+            throw new BusinessException(ResultCode.FORBIDDEN, "Current account is not a user");
+        }
+        if (!userService.matchesPassword(user, request.password())) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED, "Invalid phone or password");
         }
         userService.ensureActive(user);
         return buildLoginResponse(user);
     }
 
     public LoginResponse loginAdmin(LoginRequest request) {
-        verifyCodeService.validateAdminLoginCode(request.phone(), request.verifyCode());
         User user = userService.findByPhone(request.phone());
         if (user == null || !"ADMIN".equals(user.getRole())) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "管理员账号或验证码错误");
+            throw new BusinessException(ResultCode.UNAUTHORIZED, "Invalid phone or password");
+        }
+        if (!userService.matchesPassword(user, request.password())) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED, "Invalid phone or password");
         }
         userService.ensureActive(user);
         return buildLoginResponse(user);
+    }
+
+    public void logoutUser() {
+        // JWT is stateless. Current logout behavior is client-side token discard.
     }
 
     private LoginResponse buildLoginResponse(User user) {

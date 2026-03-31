@@ -25,6 +25,7 @@ CREATE TABLE users (
     id BIGINT PRIMARY KEY,
     role VARCHAR(20) NOT NULL,
     phone VARCHAR(20) NOT NULL,
+    password_hash VARCHAR(100) NOT NULL,
     nickname VARCHAR(50) NOT NULL,
     avatar_url VARCHAR(255),
     gender VARCHAR(20),

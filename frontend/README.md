@@ -15,6 +15,7 @@ frontend/
 │   │   └── admin/
 │   ├── router/
 │   ├── store/
+│   ├── mocks/
 │   ├── services/
 │   ├── styles/
 │   ├── utils/
@@ -32,4 +33,5 @@ frontend/
 ## 开发说明
 - `pages/web`：普通用户访问页面
 - `pages/admin`：管理员后台页面
+- `mocks`：前端静态复现或联调前阶段的本地模拟数据
 - 前后台共用请求层、权限模型和设计 Token

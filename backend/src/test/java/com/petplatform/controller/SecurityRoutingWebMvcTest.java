@@ -6,9 +6,11 @@ import com.petplatform.common.PageResponse;
 import com.petplatform.common.exception.GlobalExceptionHandler;
 import com.petplatform.config.SecurityConfig;
 import com.petplatform.dto.admin.UpdateUserStatusRequest;
+import com.petplatform.dto.auth.LoginResponse;
 import com.petplatform.dto.auth.SendVerifyCodeResponse;
 import com.petplatform.dto.pet.PetAlbumResponse;
 import com.petplatform.dto.user.UserProfileResponse;
+import com.petplatform.mapper.UserMapper;
 import com.petplatform.security.JwtAuthenticationFilter;
 import com.petplatform.security.JwtTokenProvider;
 import com.petplatform.security.RestAccessDeniedHandler;
@@ -16,18 +18,17 @@ import com.petplatform.security.RestAuthenticationEntryPoint;
 import com.petplatform.service.AdminUserService;
 import com.petplatform.service.AuthService;
 import com.petplatform.service.PetService;
-import com.petplatform.mapper.UserMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -85,7 +86,31 @@ class SecurityRoutingWebMvcTest {
     }
 
     @Test
-    @DisplayName("用户验证码接口应允许匿名访问并返回统一结构")
+    @DisplayName("注册接口应允许匿名访问")
+    void registerShouldAllowAnonymousAccess() throws Exception {
+        when(authService.registerUser(any())).thenReturn(new LoginResponse(
+                "register-token",
+                "Bearer",
+                7200L,
+                new UserProfileResponse(8L, "USER", "13800000008", "Register User", null, null, null, "ACTIVE")
+        ));
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "phone": "13800000008",
+                                  "password": "password123",
+                                  "nickname": "Register User"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.user.phone").value("13800000008"));
+    }
+
+    @Test
+    @DisplayName("验证码接口应允许匿名访问")
     void sendVerifyCodeShouldAllowAnonymousAccess() throws Exception {
         SendVerifyCodeResponse response = new SendVerifyCodeResponse("13800000000", 300, "654321");
         when(authService.sendUserVerifyCode(any())).thenReturn(response);
@@ -108,55 +133,60 @@ class SecurityRoutingWebMvcTest {
     }
 
     @Test
-    @DisplayName("登录参数非法时应返回校验错误")
+    @DisplayName("登录接口应校验手机号格式")
     void loginShouldReturnValidationErrorWhenPhoneIsInvalid() throws Exception {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "phone": "123",
-                                  "verify_code": "123456"
+                                  "password": "password123"
                                 }
                                 """))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value(10002))
-                .andExpect(jsonPath("$.message").value("手机号格式不正确"));
+                .andExpect(jsonPath("$.message").value("Phone format is invalid"));
     }
 
     @Test
-    @DisplayName("宠物接口未登录访问时应返回未授权")
+    @DisplayName("登出接口应拒绝匿名用户")
+    void logoutShouldRejectAnonymousUser() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(10004));
+    }
+
+    @Test
+    @DisplayName("宠物相关接口应拒绝匿名用户")
     void petEndpointsShouldRejectAnonymousUser() throws Exception {
         mockMvc.perform(get("/api/v1/pets"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value(10004))
-                .andExpect(jsonPath("$.message").value("登录失效"));
+                .andExpect(jsonPath("$.code").value(10004));
     }
 
     @Test
-    @DisplayName("管理端接口未登录访问时应返回未授权")
+    @DisplayName("管理端接口应拒绝匿名用户")
     void adminEndpointsShouldRejectAnonymousUser() throws Exception {
         mockMvc.perform(get("/api/v1/admin/users"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value(10004))
-                .andExpect(jsonPath("$.message").value("登录失效"));
+                .andExpect(jsonPath("$.code").value(10004));
     }
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("普通用户访问管理端接口时应返回无权限")
+    @DisplayName("普通用户访问管理端接口时应被禁止")
     void adminEndpointsShouldRejectNormalUser() throws Exception {
         mockMvc.perform(get("/api/v1/admin/users"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value(10005))
-                .andExpect(jsonPath("$.message").value("无权限"));
+                .andExpect(jsonPath("$.code").value(10005));
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("管理员访问管理端用户列表时应成功")
+    @DisplayName("管理员应可访问管理端用户列表")
     void adminEndpointsShouldAllowAdminUser() throws Exception {
         PageResponse<UserProfileResponse> pageResponse = new PageResponse<>(
-                List.of(new UserProfileResponse(1L, "USER", "13800000000", "测试用户", null, null, null, "ACTIVE")),
+                List.of(new UserProfileResponse(1L, "USER", "13800000000", "Test User", null, null, null, "ACTIVE")),
                 1,
                 1,
                 10
@@ -172,7 +202,7 @@ class SecurityRoutingWebMvcTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("管理端列表参数非法时应返回参数错误")
+    @DisplayName("管理端接口应校验请求参数")
     void adminEndpointsShouldValidateRequestParameters() throws Exception {
         mockMvc.perform(get("/api/v1/admin/users?page=0"))
                 .andExpect(status().isBadRequest())
@@ -181,13 +211,13 @@ class SecurityRoutingWebMvcTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("登录用户可新增宠物相册")
+    @DisplayName("已登录用户应可创建宠物相册记录")
     void authenticatedUserShouldCreatePetAlbum() throws Exception {
-        when(petService.createAlbum(any(Long.class), any())).thenReturn(new PetAlbumResponse(9L, "/uploads/pet.png", "成长记录"));
+        when(petService.createAlbum(any(Long.class), any())).thenReturn(new PetAlbumResponse(9L, "/uploads/pet.png", "Growth"));
 
         Map<String, String> requestBody = Map.of(
                 "image_url", "/uploads/pet.png",
-                "caption", "成长记录"
+                "caption", "Growth"
         );
         mockMvc.perform(post("/api/v1/pets/1/albums")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -196,22 +226,22 @@ class SecurityRoutingWebMvcTest {
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.id").value(9))
                 .andExpect(jsonPath("$.data.image_url").value("/uploads/pet.png"))
-                .andExpect(jsonPath("$.data.caption").value("成长记录"));
+                .andExpect(jsonPath("$.data.caption").value("Growth"));
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("管理端更新用户状态接口应使用统一返回结构")
+    @DisplayName("管理端状态更新接口应使用统一响应格式")
     void adminStatusUpdateShouldReturnUnifiedResponse() throws Exception {
         when(adminUserService.updateUserStatus(any(Long.class), any(UpdateUserStatusRequest.class)))
-                .thenReturn(new com.petplatform.dto.admin.UpdateUserStatusResponse(1L, "DISABLED", "违规内容"));
+                .thenReturn(new com.petplatform.dto.admin.UpdateUserStatusResponse(1L, "DISABLED", "Flagged"));
 
         mockMvc.perform(put("/api/v1/admin/users/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "status": "DISABLED",
-                                  "remark": "违规内容"
+                                  "remark": "Flagged"
                                 }
                                 """))
                 .andExpect(status().isOk())

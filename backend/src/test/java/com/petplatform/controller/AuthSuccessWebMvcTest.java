@@ -19,12 +19,14 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -63,7 +65,32 @@ class AuthSuccessWebMvcTest {
     }
 
     @Test
-    @DisplayName("user verify code should return phone and debug code")
+    @DisplayName("用户注册成功时应返回 201、令牌和用户信息")
+    void userRegisterShouldReturnPayload() throws Exception {
+        when(authService.registerUser(any())).thenReturn(new LoginResponse(
+                "register-token",
+                "Bearer",
+                7200L,
+                new UserProfileResponse(5L, "USER", "13800000009", "New User", null, null, null, "ACTIVE")
+        ));
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "phone": "13800000009",
+                                  "password": "password123",
+                                  "nickname": "New User"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.token").value("register-token"))
+                .andExpect(jsonPath("$.data.user.role").value("USER"));
+    }
+
+    @Test
+    @DisplayName("用户获取验证码时应返回手机号和调试验证码")
     void userVerifyCodeShouldReturnPayload() throws Exception {
         when(authService.sendUserVerifyCode(any())).thenReturn(new SendVerifyCodeResponse(
                 "13800000001", 300L, "123456"
@@ -83,7 +110,7 @@ class AuthSuccessWebMvcTest {
     }
 
     @Test
-    @DisplayName("user login should return token and user profile")
+    @DisplayName("用户密码登录成功时应返回令牌和用户信息")
     void userLoginShouldReturnPayload() throws Exception {
         when(authService.loginUser(any())).thenReturn(new LoginResponse(
                 "user-token",
@@ -97,7 +124,7 @@ class AuthSuccessWebMvcTest {
                         .content("""
                                 {
                                   "phone": "13800000001",
-                                  "verify_code": "123456"
+                                  "password": "password123"
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -107,7 +134,18 @@ class AuthSuccessWebMvcTest {
     }
 
     @Test
-    @DisplayName("admin verify code should return phone and debug code")
+    @WithMockUser(roles = "USER")
+    @DisplayName("用户登出时应返回成功响应")
+    void userLogoutShouldReturnSuccess() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        verify(authService).logoutUser();
+    }
+
+    @Test
+    @DisplayName("管理员获取验证码时应返回手机号和调试验证码")
     void adminVerifyCodeShouldReturnPayload() throws Exception {
         when(authService.sendAdminVerifyCode(any())).thenReturn(new SendVerifyCodeResponse(
                 "13900000000", 300L, "654321"
@@ -127,7 +165,7 @@ class AuthSuccessWebMvcTest {
     }
 
     @Test
-    @DisplayName("admin login should return token and admin profile")
+    @DisplayName("管理员密码登录成功时应返回令牌和管理员信息")
     void adminLoginShouldReturnPayload() throws Exception {
         when(authService.loginAdmin(any())).thenReturn(new LoginResponse(
                 "admin-token",
@@ -141,7 +179,7 @@ class AuthSuccessWebMvcTest {
                         .content("""
                                 {
                                   "phone": "13900000000",
-                                  "verify_code": "654321"
+                                  "password": "admin123"
                                 }
                                 """))
                 .andExpect(status().isOk())
