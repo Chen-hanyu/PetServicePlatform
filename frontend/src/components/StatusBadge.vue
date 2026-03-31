@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <span class="status" :class="variantClass"><slot /></span>
 </template>
 
@@ -23,6 +23,6 @@ const variantClass = computed(() => `is-${props.variant || "neutral"}`);
 .is-success { background: #e6f7ef; color: #2a865f; }
 .is-warning { background: #fff7e3; color: #ad7b15; }
 .is-danger { background: #fdeceb; color: #b94d4d; }
-.is-info { background: #eaf3ff; color: #3f79c8; }
-.is-neutral { background: #edf3f1; color: #5e746d; }
+.is-info { background: #fdf3e8; color: #9a6540; }
+.is-neutral { background: #f5ede6; color: #7d6a5e; }
 </style>
