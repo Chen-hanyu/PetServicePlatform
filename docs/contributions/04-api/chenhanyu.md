@@ -31,7 +31,7 @@
 - [x] 测试用例数量：147 个
 
 ## PR 链接
-- 暂无
+- https://github.com/Chen-hanyu/PetServicePlatform/pull/20
 
 ## 遇到的问题和解决
 1. 问题：原有认证流程以验证码为主，与本次作业要求的注册、登录、登出接口不完全一致。
