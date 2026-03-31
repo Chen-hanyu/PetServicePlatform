@@ -1,0 +1,2799 @@
+openapi: 3.0.3
+info:
+  title: Pet Service Platform API
+  version: 1.0.0
+  description: 宠物综合服务平台后端接口规范
+servers:
+  - url: http://127.0.0.1:8080
+    description: Local development server
+tags:
+  - name: Home
+    description: 首页接口
+  - name: Search
+    description: 搜索接口
+  - name: Auth
+    description: 用户认证接口
+  - name: Profile
+    description: 个人中心接口
+  - name: Community
+    description: 社区接口
+  - name: Adoption
+    description: 领养接口
+  - name: Services
+    description: 服务接口
+  - name: Shop
+    description: 商城接口
+  - name: Messages
+    description: 消息接口
+  - name: Pets
+    description: 宠物档案接口
+  - name: Files
+    description: 文件接口
+  - name: Admin Auth
+    description: 管理员认证接口
+  - name: Admin Dashboard
+    description: 管理端仪表盘接口
+  - name: Admin Users
+    description: 管理端用户接口
+  - name: Admin Community
+    description: 管理端社区审核接口
+  - name: Admin Adoption
+    description: 管理端领养接口
+  - name: Admin Services
+    description: 管理端服务接口
+  - name: Admin Shop
+    description: 管理端商城接口
+  - name: Admin Content
+    description: 管理端 Banner、标签与推荐位接口
+paths:
+  /api/v1/home:
+    get:
+      tags: [Home]
+      summary: 获取首页聚合数据
+      security: []
+      responses:
+        '200':
+          description: 成功，data 为 HomeResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/search:
+    get:
+      tags: [Search]
+      summary: 全站搜索
+      security: []
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: module
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [community, adoption, services, shop]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<SearchResultResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: 用户注册
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: 手机号已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseError'
+
+  /api/v1/auth/verify-code:
+    post:
+      tags: [Auth]
+      summary: 发送验证码
+      description: 当前系统已切换为密码登录，验证码接口保留用于调试与联调
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendVerifyCodeRequest'
+      responses:
+        '200':
+          description: 发送成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVerifyCodeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: 用户密码登录
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: 用户登出
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/profile/me:
+    get:
+      tags: [Profile]
+      summary: 获取当前用户信息
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 UserProfileResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/profile/overview:
+    get:
+      tags: [Profile]
+      summary: 获取个人中心概览
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 ProfileOverviewResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/community/posts:
+    get:
+      tags: [Community]
+      summary: 获取帖子列表
+      security: []
+      parameters:
+        - name: tab
+          in: query
+          schema:
+            type: string
+            enum: [recommended, latest]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<PostSummaryResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags: [Community]
+      summary: 发布帖子
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '200':
+          description: 成功，data 为 CreatePostResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/community/posts/{postId}:
+    get:
+      tags: [Community]
+      summary: 获取帖子详情
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: 成功，data 为 PostDetailResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/community/posts/{postId}/comments:
+    get:
+      tags: [Community]
+      summary: 获取评论列表
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize100'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<PostCommentResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+    post:
+      tags: [Community]
+      summary: 发表评论
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+      responses:
+        '200':
+          description: 成功，data 为 CreateCommentResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/community/posts/{postId}/like:
+    post:
+      tags: [Community]
+      summary: 点赞或取消点赞
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: 成功，data 为 ToggleLikeResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/community/posts/{postId}/favorite:
+    post:
+      tags: [Community]
+      summary: 收藏或取消收藏
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: 成功，data 为 ToggleFavoriteResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/adoption/pets:
+    get:
+      tags: [Adoption]
+      summary: 获取待领养宠物列表
+      security: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: gender
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdoptionPetSummaryResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/adoption/pets/{petId}:
+    get:
+      tags: [Adoption]
+      summary: 获取待领养宠物详情
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      responses:
+        '200':
+          description: 成功，data 为 AdoptionPetDetailResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/adoption/process:
+    get:
+      tags: [Adoption]
+      summary: 获取领养流程说明
+      security: []
+      responses:
+        '200':
+          description: 成功，data 为 AdoptionProcessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/adoption/applications:
+    post:
+      tags: [Adoption]
+      summary: 提交领养申请
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAdoptionApplicationRequest'
+      responses:
+        '200':
+          description: 成功，data 为 CreateAdoptionApplicationResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags: [Adoption]
+      summary: 获取我的领养申请列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdoptionApplicationSummaryResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/services/categories:
+    get:
+      tags: [Services]
+      summary: 获取服务分类
+      security: []
+      responses:
+        '200':
+          description: 成功，data 为 ServiceCategoryResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+
+  /api/v1/services/merchants:
+    get:
+      tags: [Services]
+      summary: 获取商家列表
+      security: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: district
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<MerchantSummaryResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/services/merchants/{merchantId}:
+    get:
+      tags: [Services]
+      summary: 获取商家详情
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      responses:
+        '200':
+          description: 成功，data 为 MerchantDetailResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/services/merchants/{merchantId}/reviews:
+    post:
+      tags: [Services]
+      summary: 发表商家评价
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMerchantReviewRequest'
+      responses:
+        '200':
+          description: 成功，data 为 CreateMerchantReviewResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/services/bookings:
+    post:
+      tags: [Services]
+      summary: 创建服务预约
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceBookingRequest'
+      responses:
+        '200':
+          description: 成功，data 为 CreateServiceBookingResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags: [Services]
+      summary: 获取我的预约列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<ServiceBookingSummaryResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/services/bookings/{bookingId}/cancel:
+    post:
+      tags: [Services]
+      summary: 取消预约
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+      responses:
+        '200':
+          description: 成功，data 为 CancelServiceBookingResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/shop/categories:
+    get:
+      tags: [Shop]
+      summary: 获取商品分类
+      security: []
+      responses:
+        '200':
+          description: 成功，data 为 ProductCategoryResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+
+  /api/v1/shop/products:
+    get:
+      tags: [Shop]
+      summary: 获取商品列表
+      security: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: pet_type
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<ProductSummaryResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/shop/products/{productId}:
+    get:
+      tags: [Shop]
+      summary: 获取商品详情
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: 成功，data 为 ProductDetailResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/shop/cart:
+    get:
+      tags: [Shop]
+      summary: 获取购物车
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 CartResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/shop/cart/items:
+    post:
+      tags: [Shop]
+      summary: 添加购物车商品
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCartItemRequest'
+      responses:
+        '200':
+          description: 成功，data 为 CartResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/shop/cart/items/{itemId}:
+    put:
+      tags: [Shop]
+      summary: 更新购物车商品
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: 成功，data 为 CartResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/shop/orders:
+    post:
+      tags: [Shop]
+      summary: 创建订单
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          description: 成功，data 为 OrderSummaryResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags: [Shop]
+      summary: 获取我的订单列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<OrderSummaryResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/shop/orders/{orderId}:
+    get:
+      tags: [Shop]
+      summary: 获取订单详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 成功，data 为 OrderDetailResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/messages:
+    get:
+      tags: [Messages]
+      summary: 获取消息列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<MessageResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/messages/{messageId}/read:
+    post:
+      tags: [Messages]
+      summary: 标记消息已读
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MessageId'
+      responses:
+        '200':
+          description: 成功，data 为 MarkMessageReadResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/pets:
+    get:
+      tags: [Pets]
+      summary: 获取我的宠物列表
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 PetProfileResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Pets]
+      summary: 创建宠物档案
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavePetRequest'
+      responses:
+        '201':
+          description: 创建成功，data 为 PetProfileResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/pets/{petId}:
+    get:
+      tags: [Pets]
+      summary: 获取宠物档案详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      responses:
+        '200':
+          description: 成功，data 为 PetDetailResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Pets]
+      summary: 更新宠物档案
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavePetRequest'
+      responses:
+        '200':
+          description: 更新成功，data 为 PetProfileResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Pets]
+      summary: 删除宠物档案
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/pets/{petId}/vaccines:
+    get:
+      tags: [Pets]
+      summary: 获取疫苗记录列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      responses:
+        '200':
+          description: 成功，data 为 PetVaccineResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+    post:
+      tags: [Pets]
+      summary: 新增疫苗记录
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePetVaccineRequest'
+      responses:
+        '200':
+          description: 成功，data 为 PetVaccineResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/pets/{petId}/weights:
+    get:
+      tags: [Pets]
+      summary: 获取体重记录列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      responses:
+        '200':
+          description: 成功，data 为 PetWeightResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+    post:
+      tags: [Pets]
+      summary: 新增体重记录
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePetWeightRequest'
+      responses:
+        '200':
+          description: 成功，data 为 PetWeightResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/pets/{petId}/timeline:
+    get:
+      tags: [Pets]
+      summary: 获取成长时间轴
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      responses:
+        '200':
+          description: 成功，data 为 PetTimelineResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/pets/{petId}/albums:
+    post:
+      tags: [Pets]
+      summary: 新增相册记录
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePetAlbumRequest'
+      responses:
+        '200':
+          description: 成功，data 为 PetAlbumResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/files/upload:
+    post:
+      tags: [Files]
+      summary: 上传文件
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required: [file]
+      responses:
+        '200':
+          description: 成功，data 为 FileUploadResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/admin/auth/verify-code:
+    post:
+      tags: [Admin Auth]
+      summary: 发送管理员验证码
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendVerifyCodeRequest'
+      responses:
+        '200':
+          description: 发送成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVerifyCodeResponse'
+
+  /api/v1/admin/auth/login:
+    post:
+      tags: [Admin Auth]
+      summary: 管理员密码登录
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/admin/auth/logout:
+    post:
+      tags: [Admin Auth]
+      summary: 管理员登出
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
+
+  /api/v1/admin/dashboard:
+    get:
+      tags: [Admin Dashboard]
+      summary: 获取仪表盘概览
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 DashboardOverviewResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/users:
+    get:
+      tags: [Admin Users]
+      summary: 获取用户列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<UserProfileResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/admin/users/{userId}:
+    get:
+      tags: [Admin Users]
+      summary: 获取用户详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: 成功，data 为 AdminUserDetailResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/admin/users/{userId}/status:
+    put:
+      tags: [Admin Users]
+      summary: 更新用户状态
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserStatusRequest'
+      responses:
+        '200':
+          description: 成功，data 为 UpdateUserStatusResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/posts:
+    get:
+      tags: [Admin Community]
+      summary: 获取帖子审核列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<PostSummaryResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/admin/posts/{postId}/review:
+    put:
+      tags: [Admin Community]
+      summary: 审核帖子
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostReviewRequest'
+      responses:
+        '200':
+          description: 成功，data 为 PostReviewResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/comments:
+    get:
+      tags: [Admin Community]
+      summary: 获取评论列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminCommentResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/admin/comments/{commentId}:
+    delete:
+      tags: [Admin Community]
+      summary: 删除评论
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CommentId'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
+
+  /api/v1/admin/adoption/applications:
+    get:
+      tags: [Admin Adoption]
+      summary: 获取领养申请列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: pet_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminAdoptionApplicationResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/admin/adoption/applications/{applicationId}/review:
+    put:
+      tags: [Admin Adoption]
+      summary: 审核领养申请
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewAdoptionApplicationRequest'
+      responses:
+        '200':
+          description: 成功，data 为 ReviewAdoptionApplicationResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/adoption/pets:
+    get:
+      tags: [Admin Adoption]
+      summary: 获取待领养宠物列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminAdoptionPetResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+    post:
+      tags: [Admin Adoption]
+      summary: 创建待领养宠物
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAdoptionPetRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminAdoptionPetResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/adoption/pets/{petId}:
+    put:
+      tags: [Admin Adoption]
+      summary: 更新待领养宠物
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAdoptionPetRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminAdoptionPetResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/services/bookings:
+    get:
+      tags: [Admin Services]
+      summary: 获取预约单列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: merchant_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminServiceBookingResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/admin/services/bookings/{bookingId}:
+    put:
+      tags: [Admin Services]
+      summary: 更新预约单状态
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServiceBookingRequest'
+      responses:
+        '200':
+          description: 成功，data 为 UpdateServiceBookingResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/services/reviews:
+    get:
+      tags: [Admin Services]
+      summary: 获取商家评价列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: merchant_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminMerchantReviewResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/admin/services/reviews/{reviewId}:
+    delete:
+      tags: [Admin Services]
+      summary: 删除商家评价
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
+
+  /api/v1/admin/services/categories:
+    get:
+      tags: [Admin Services]
+      summary: 获取服务分类
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 ServiceCategoryResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+    post:
+      tags: [Admin Services]
+      summary: 创建服务分类
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveServiceCategoryRequest'
+      responses:
+        '200':
+          description: 成功，data 为 ServiceCategoryResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/services/categories/{categoryId}:
+    put:
+      tags: [Admin Services]
+      summary: 更新服务分类
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveServiceCategoryRequest'
+      responses:
+        '200':
+          description: 成功，data 为 ServiceCategoryResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/services/merchants:
+    get:
+      tags: [Admin Services]
+      summary: 获取商家列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminMerchantResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+    post:
+      tags: [Admin Services]
+      summary: 创建商家
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveMerchantRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminMerchantResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/services/merchants/{merchantId}:
+    put:
+      tags: [Admin Services]
+      summary: 更新商家
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveMerchantRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminMerchantResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/services/items:
+    get:
+      tags: [Admin Services]
+      summary: 获取服务项目列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: merchant_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminMerchantServiceResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+    post:
+      tags: [Admin Services]
+      summary: 创建服务项目
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveMerchantServiceRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminMerchantServiceResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/services/items/{serviceId}:
+    put:
+      tags: [Admin Services]
+      summary: 更新服务项目
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ServiceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveMerchantServiceRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminMerchantServiceResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/shop/orders:
+    get:
+      tags: [Admin Shop]
+      summary: 获取订单列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminOrderResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+
+  /api/v1/admin/shop/orders/{orderId}:
+    put:
+      tags: [Admin Shop]
+      summary: 更新订单状态
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderRequest'
+      responses:
+        '200':
+          description: 成功，data 为 UpdateOrderResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/shop/categories:
+    get:
+      tags: [Admin Shop]
+      summary: 获取商品分类
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 ProductCategoryResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+
+  /api/v1/admin/shop/products:
+    get:
+      tags: [Admin Shop]
+      summary: 获取商品列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminProductResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+    post:
+      tags: [Admin Shop]
+      summary: 创建商品
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveProductRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminProductResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/shop/products/{productId}:
+    put:
+      tags: [Admin Shop]
+      summary: 更新商品
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveProductRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminProductResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/shop/products/{productId}/status:
+    put:
+      tags: [Admin Shop]
+      summary: 更新商品状态
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductStatusRequest'
+      responses:
+        '200':
+          description: 成功，data 为 UpdateProductStatusResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/banners:
+    get:
+      tags: [Admin Content]
+      summary: 获取 Banner 列表
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 AdminBannerResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+    post:
+      tags: [Admin Content]
+      summary: 创建 Banner
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveBannerRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminBannerResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/banners/{bannerId}:
+    put:
+      tags: [Admin Content]
+      summary: 更新 Banner
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BannerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveBannerRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminBannerResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/tags:
+    get:
+      tags: [Admin Content]
+      summary: 获取标签列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminTagResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+    post:
+      tags: [Admin Content]
+      summary: 创建标签
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveTagRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminTagResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/tags/{tagId}:
+    put:
+      tags: [Admin Content]
+      summary: 更新标签
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveTagRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminTagResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/recommendations:
+    get:
+      tags: [Admin Content]
+      summary: 获取推荐位列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: slot_code
+          in: query
+          schema:
+            type: string
+        - name: biz_type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminRecommendationResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+    post:
+      tags: [Admin Content]
+      summary: 创建推荐位
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveRecommendationRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminRecommendationResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/recommendations/{recommendationId}:
+    put:
+      tags: [Admin Content]
+      summary: 更新推荐位
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RecommendationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveRecommendationRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AdminRecommendationResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: 页码
+    PageSize50:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 10
+      description: 每页数量
+    PageSize100:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+      description: 每页数量
+    PostId:
+      name: postId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    PetId:
+      name: petId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    MerchantId:
+      name: merchantId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    BookingId:
+      name: bookingId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    MessageId:
+      name: messageId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    ApplicationId:
+      name: applicationId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    ReviewId:
+      name: reviewId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    CategoryId:
+      name: categoryId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    ServiceId:
+      name: serviceId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    BannerId:
+      name: bannerId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    TagId:
+      name: tagId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    RecommendationId:
+      name: recommendationId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+    Unauthorized:
+      description: 未登录或登录失效
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+    Forbidden:
+      description: 无权限访问
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+  schemas:
+    ApiResponseVoid:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          nullable: true
+          example: null
+      required: [code, message, data]
+    ApiResponseError:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 10001
+        message:
+          type: string
+          example: 参数错误
+        data:
+          nullable: true
+          example: null
+      required: [code, message, data]
+    ApiResponseObject:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          $ref: '#/components/schemas/GenericObject'
+      required: [code, message, data]
+    ApiResponseArray:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericObject'
+      required: [code, message, data]
+    ApiResponsePage:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          $ref: '#/components/schemas/PageData'
+      required: [code, message, data]
+    ApiResponseLoginResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          $ref: '#/components/schemas/LoginResponse'
+      required: [code, message, data]
+    ApiResponseVerifyCodeResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          $ref: '#/components/schemas/SendVerifyCodeResponse'
+      required: [code, message, data]
+    GenericObject:
+      type: object
+      additionalProperties: true
+    PageData:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericObject'
+        total:
+          type: integer
+          format: int64
+          example: 0
+        page:
+          type: integer
+          example: 1
+        page_size:
+          type: integer
+          example: 10
+      required: [list, total, page, page_size]
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiJ9.xxx
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          format: int64
+          example: 7200
+        user:
+          $ref: '#/components/schemas/GenericObject'
+      required: [token, token_type, expires_in, user]
+    SendVerifyCodeResponse:
+      type: object
+      properties:
+        phone:
+          type: string
+          example: '13800000000'
+        expires_in:
+          type: integer
+          format: int64
+          example: 300
+        debug_code:
+          type: string
+          example: '123456'
+      required: [phone, expires_in, debug_code]
+    LoginRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          pattern: '^1\d{10}$'
+          example: '13800000000'
+        password:
+          type: string
+          minLength: 6
+          maxLength: 20
+          example: password123
+      required: [phone, password]
+    RegisterRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          pattern: '^1\d{10}$'
+          example: '13800000000'
+        password:
+          type: string
+          minLength: 6
+          maxLength: 20
+          example: password123
+        nickname:
+          type: string
+          maxLength: 50
+          example: 团子妈
+      required: [phone, password]
+    SendVerifyCodeRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          pattern: '^1\d{10}$'
+          example: '13800000000'
+      required: [phone]
+    CreateAdoptionApplicationRequest:
+      type: object
+      properties:
+        pet_id:
+          type: integer
+          format: int64
+        contact_phone:
+          type: string
+          pattern: '^1\d{10}$'
+        experience_desc:
+          type: string
+        living_condition_desc:
+          type: string
+      required: [pet_id, contact_phone, experience_desc, living_condition_desc]
+    CreatePostRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        content:
+          type: string
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+      required: [title, content, category]
+    CreateCommentRequest:
+      type: object
+      properties:
+        content:
+          type: string
+      required: [content]
+    CreateMerchantReviewRequest:
+      type: object
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        content:
+          type: string
+      required: [score, content]
+    CreateServiceBookingRequest:
+      type: object
+      properties:
+        merchant_id:
+          type: integer
+          format: int64
+        merchant_service_id:
+          type: integer
+          format: int64
+        booking_time:
+          type: string
+          format: date-time
+        contact_name:
+          type: string
+        contact_phone:
+          type: string
+          pattern: '^1\d{10}$'
+        remark:
+          type: string
+          nullable: true
+      required: [merchant_id, merchant_service_id, booking_time, contact_name, contact_phone]
+    AddCartItemRequest:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          minimum: 1
+      required: [product_id, quantity]
+    UpdateCartItemRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+        checked:
+          type: boolean
+          nullable: true
+      required: [quantity]
+    CreateOrderRequest:
+      type: object
+      properties:
+        item_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+        receiver_name:
+          type: string
+        receiver_phone:
+          type: string
+          pattern: '^1\d{10}$'
+        receiver_address:
+          type: string
+        remark:
+          type: string
+          nullable: true
+      required: [item_ids, receiver_name, receiver_phone, receiver_address]
+    SavePetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        type:
+          type: string
+        breed:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        birthday:
+          type: string
+          format: date
+          nullable: true
+        weight:
+          type: number
+          format: double
+          nullable: true
+        avatar_url:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+      required: [name, type]
+    CreatePetVaccineRequest:
+      type: object
+      properties:
+        vaccine_name:
+          type: string
+        vaccinated_at:
+          type: string
+          format: date
+        next_due_at:
+          type: string
+          format: date
+          nullable: true
+        remark:
+          type: string
+          nullable: true
+      required: [vaccine_name, vaccinated_at]
+    CreatePetAlbumRequest:
+      type: object
+      properties:
+        image_url:
+          type: string
+        caption:
+          type: string
+          nullable: true
+      required: [image_url]
+    CreatePetWeightRequest:
+      type: object
+      properties:
+        weight:
+          type: number
+          format: double
+          minimum: 0.01
+        recorded_at:
+          type: string
+          format: date-time
+          nullable: true
+      required: [weight]
+    UpdateUserStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        remark:
+          type: string
+          nullable: true
+      required: [status]
+    PostReviewRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        remark:
+          type: string
+          nullable: true
+      required: [status]
+    ReviewAdoptionApplicationRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        review_remark:
+          type: string
+          nullable: true
+      required: [status]
+    UpdateServiceBookingRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        remark:
+          type: string
+          nullable: true
+      required: [status]
+    UpdateOrderRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        remark:
+          type: string
+          nullable: true
+      required: [status]
+    SaveAdoptionPetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        breed:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        age_desc:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        health_status:
+          type: string
+          nullable: true
+        personality:
+          type: string
+          nullable: true
+        adoption_requirements:
+          type: string
+          nullable: true
+        story:
+          type: string
+          nullable: true
+        cover_url:
+          type: string
+          nullable: true
+        status:
+          type: string
+      required: [name, type, status]
+    SaveBannerRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        image_url:
+          type: string
+        link_url:
+          type: string
+          nullable: true
+        status:
+          type: string
+        sort:
+          type: integer
+          nullable: true
+      required: [title, image_url, status]
+    SaveMerchantRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        district:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        business_hours:
+          type: string
+        status:
+          type: string
+      required: [name, district, address, phone, business_hours, status]
+    SaveMerchantServiceRequest:
+      type: object
+      properties:
+        merchant_id:
+          type: integer
+          format: int64
+        category_id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        price:
+          type: number
+          format: double
+        duration_minutes:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+      required: [merchant_id, category_id, name, price, duration_minutes, status]
+    SaveProductRequest:
+      type: object
+      properties:
+        category_id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        subtitle:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+        price:
+          type: number
+          format: double
+        stock:
+          type: integer
+          minimum: 0
+        pet_type:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+      required: [category_id, name, image_url, price, stock, status]
+    UpdateProductStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+    SaveServiceCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        sort:
+          type: integer
+          nullable: true
+        status:
+          type: string
+      required: [name, status]
+    SaveTagRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        sort:
+          type: integer
+          nullable: true
+      required: [name, type, status]
+    SaveRecommendationRequest:
+      type: object
+      properties:
+        biz_type:
+          type: string
+        biz_id:
+          type: integer
+          format: int64
+        slot_code:
+          type: string
+        status:
+          type: string
+        sort:
+          type: integer
+          nullable: true
+      required: [biz_type, biz_id, slot_code, status]
