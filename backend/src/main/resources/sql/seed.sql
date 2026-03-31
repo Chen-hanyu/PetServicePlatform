@@ -62,6 +62,9 @@ INSERT INTO users (id, role, phone, nickname, avatar_url, gender, status, bio) V
 (3, 'USER', '13800000002', '柴犬研究员', 'https://example.com/user2.jpg', 'MALE', 'ACTIVE', '热爱宠物护理和训练'),
 (4, 'USER', '13800000003', '猫咪观察员', 'https://example.com/user3.jpg', 'FEMALE', 'ACTIVE', '喜欢记录毛孩子的日常');
 
+UPDATE users SET password_hash = '$2a$10$tlnMMJ2lktQPQ6wSxcD5o.AXnU.yP61/.rCjZwO3MhVWfW3NC2WwS' WHERE id = 1;
+UPDATE users SET password_hash = '$2a$10$oQ9TueFaM3LFV8M6jfIh.O0nwr2aC5mlOeUtclblsY9yuoHmXc7VC' WHERE id IN (2, 3, 4);
+
 INSERT INTO messages (user_id, type, title, content, is_read) VALUES
 (2, 'SYSTEM', '领养申请已提交', '你提交的领养申请已进入审核流程，请保持电话畅通。', 0),
 (2, 'INTERACTION', '收到新的评论', '你的帖子《幼猫疫苗时间表整理》收到了新评论。', 0),

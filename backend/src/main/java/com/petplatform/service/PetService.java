@@ -70,6 +70,15 @@ public class PetService {
         return PetProfileResponse.from(petMapper.selectById(pet.getId()));
     }
 
+    @Transactional
+    public void deletePet(Long petId) {
+        getOwnedPetOrThrow(petId);
+        petAlbumMapper.delete(new LambdaQueryWrapper<PetAlbum>().eq(PetAlbum::getPetId, petId));
+        petWeightMapper.delete(new LambdaQueryWrapper<PetWeight>().eq(PetWeight::getPetId, petId));
+        petVaccineMapper.delete(new LambdaQueryWrapper<PetVaccine>().eq(PetVaccine::getPetId, petId));
+        petMapper.deleteById(petId);
+    }
+
     public PetDetailResponse getPetDetail(Long petId) {
         Pet pet = getOwnedPetOrThrow(petId);
         return new PetDetailResponse(

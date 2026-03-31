@@ -10,6 +10,7 @@ public class User {
     private Long id;
     private String role;
     private String phone;
+    private String passwordHash;
     private String nickname;
     private String avatarUrl;
     private String gender;
@@ -40,6 +41,14 @@ public class User {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getNickname() {

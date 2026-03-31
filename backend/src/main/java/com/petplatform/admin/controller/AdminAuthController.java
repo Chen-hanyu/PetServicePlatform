@@ -31,4 +31,10 @@ public class AdminAuthController {
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.success(authService.loginAdmin(request));
     }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout() {
+        authService.logoutUser();
+        return ApiResponse.success();
+    }
 }

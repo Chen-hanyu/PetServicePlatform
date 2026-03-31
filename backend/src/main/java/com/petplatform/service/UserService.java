@@ -6,6 +6,7 @@ import com.petplatform.common.exception.BusinessException;
 import com.petplatform.dto.user.UserProfileResponse;
 import com.petplatform.entity.User;
 import com.petplatform.mapper.UserMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserMapper userMapper) {
+    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User findByPhone(String phone) {
@@ -31,14 +34,22 @@ public class UserService {
     }
 
     @Transactional
-    public User createUserByPhone(String phone) {
+    public User createUser(String phone, String rawPassword, String nickname) {
+        if (findByPhone(phone) != null) {
+            throw new BusinessException(ResultCode.DUPLICATE_DATA, "Phone already registered");
+        }
         User user = new User();
         user.setRole("USER");
         user.setPhone(phone);
-        user.setNickname(buildDefaultNickname(phone));
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
+        user.setNickname((nickname == null || nickname.isBlank()) ? buildDefaultNickname(phone) : nickname.trim());
         user.setStatus("ACTIVE");
         userMapper.insert(user);
         return userMapper.selectById(user.getId());
+    }
+
+    public boolean matchesPassword(User user, String rawPassword) {
+        return user.getPasswordHash() != null && passwordEncoder.matches(rawPassword, user.getPasswordHash());
     }
 
     public void ensureActive(User user) {
