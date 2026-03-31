@@ -1,4 +1,4 @@
-﻿import { adminHttp, unwrap } from "@/services/http";
+﻿import { adminHttp, unwrap } from "@/api/http";
 import type { ApiResponse, PageResult } from "@/types/api";
 import type { DashboardOverview } from "@/types/admin";
 import type { PostSummary } from "@/types/community";

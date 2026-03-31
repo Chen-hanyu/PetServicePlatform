@@ -1,4 +1,4 @@
-﻿import { webHttp, unwrap } from "@/services/http";
+﻿import { webHttp, unwrap } from "@/api/http";
 import type { ApiResponse, PageResult } from "@/types/api";
 import type { CreatePostPayload, PostComment, PostDetail, PostSummary } from "@/types/community";
 

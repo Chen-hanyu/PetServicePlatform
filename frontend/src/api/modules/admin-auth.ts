@@ -1,4 +1,4 @@
-﻿import { adminHttp, unwrap } from "@/services/http";
+﻿import { adminHttp, unwrap } from "@/api/http";
 import type { ApiResponse } from "@/types/api";
 import type { LoginResult } from "@/types/auth";
 

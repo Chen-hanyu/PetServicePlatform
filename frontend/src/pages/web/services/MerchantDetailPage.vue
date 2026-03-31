@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="merchant-detail">
     <nav class="breadcrumb card" aria-label="面包屑导航">
       <RouterLink to="/home">首页</RouterLink>
@@ -53,7 +53,7 @@ import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import ServiceBookingDock from "@/components/services/ServiceBookingDock.vue";
-import { fetchMerchantDetail } from "@/services/modules/services";
+import { fetchMerchantDetail } from "@/api/modules/services";
 import { getMockMerchantById } from "@/mocks/services";
 
 type MerchantVm = {

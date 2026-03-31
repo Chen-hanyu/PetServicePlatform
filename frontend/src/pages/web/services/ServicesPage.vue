@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="services-page">
     <p class="promo-strip">
       <span class="strip-ico" aria-hidden="true">💈</span>
@@ -69,7 +69,7 @@ import { onMounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import ServiceBookingDock from "@/components/services/ServiceBookingDock.vue";
-import { fetchMerchants } from "@/services/modules/services";
+import { fetchMerchants } from "@/api/modules/services";
 import { mockMerchants } from "@/mocks/services";
 
 const router = useRouter();

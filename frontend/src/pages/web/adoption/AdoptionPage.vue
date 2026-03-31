@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="adoption-page">
     <div class="card page-hero">
       <h1>领养代替购买</h1>
@@ -109,9 +109,9 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, computed } from "vue";
 import DataState from "@/components/DataState.vue";
-import { createAdoptionApplication, fetchAdoptionPets } from "@/services/modules/adoption";
+import { createAdoptionApplication, fetchAdoptionPets } from "@/api/modules/adoption";
 import { mockAdoptionPets } from "@/mocks/adoption";
-import { toErrorMessage } from "@/services/http";
+import { toErrorMessage } from "@/api/http";
 import type { AdoptionPetDetail, AdoptionPetSummary } from "@/types/adoption";
 
 const loading = ref(false);

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <AuthSplitShell>
     <template #aside-title>欢迎回到宠物之家</template>
     <template #aside-desc>
@@ -79,7 +79,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
-import { loginUser } from "@/services/modules/auth";
+import { loginUser } from "@/api/modules/auth";
 import { mockUser } from "@/mocks/auth";
 import AuthSplitShell from "@/components/auth/AuthSplitShell.vue";
 

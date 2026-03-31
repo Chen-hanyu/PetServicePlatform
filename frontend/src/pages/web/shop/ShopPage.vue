@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="shop-page">
     <!-- 淘宝式顶栏：左标识 + 中置搜索（宝贝下拉 + 输入 + 搜索按钮） -->
     <header class="tb-top card">
@@ -229,7 +229,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import DataState from "@/components/DataState.vue";
-import { fetchProducts } from "@/services/modules/shop";
+import { fetchProducts } from "@/api/modules/shop";
 import { mockProducts } from "@/mocks/shop";
 import CommerceDock from "@/components/shop/CommerceDock.vue";
 

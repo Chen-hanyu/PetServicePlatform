@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="community-page">
     <div class="card page-hero">
       <h1>宠物社区</h1>
@@ -111,9 +111,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import DataState from "@/components/DataState.vue";
-import { createPost, fetchPosts, toggleLike } from "@/services/modules/community";
+import { createPost, fetchPosts, toggleLike } from "@/api/modules/community";
 import { mockPosts } from "@/mocks/community";
-import { toErrorMessage } from "@/services/http";
+import { toErrorMessage } from "@/api/http";
 import type { PostSummary } from "@/types/community";
 
 const loading = ref(false);

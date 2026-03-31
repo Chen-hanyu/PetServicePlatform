@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="checkout-page">
     <nav class="breadcrumb card" aria-label="面包屑导航">
       <RouterLink to="/home">首页</RouterLink>
@@ -68,7 +68,7 @@ import { useRoute, useRouter } from "vue-router";
 import CommerceDock from "@/components/shop/CommerceDock.vue";
 import { useShopCartStore } from "@/store/shopCart";
 import { getMockProductById } from "@/mocks/shop";
-import { fetchProduct } from "@/services/modules/shop";
+import { fetchProduct } from "@/api/modules/shop";
 
 const route = useRoute();
 const router = useRouter();

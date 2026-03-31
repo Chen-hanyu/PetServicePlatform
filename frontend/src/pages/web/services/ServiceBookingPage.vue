@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="booking-page">
     <nav class="breadcrumb card" aria-label="面包屑导航">
       <RouterLink to="/home">首页</RouterLink>
@@ -167,7 +167,7 @@ import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import ServiceBookingDock from "@/components/services/ServiceBookingDock.vue";
-import { fetchMerchantDetail } from "@/services/modules/services";
+import { fetchMerchantDetail } from "@/api/modules/services";
 import { getMockMerchantById, getMockPackagesByMerchantId, mockServiceAddons } from "@/mocks/services";
 import { useServiceBookingStore } from "@/store/serviceBooking";
 import type { ServiceBookingAddon, ServiceBookingMain } from "@/store/serviceBooking";

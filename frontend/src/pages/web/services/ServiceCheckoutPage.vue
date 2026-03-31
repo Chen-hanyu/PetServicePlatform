@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="svc-checkout">
     <nav class="breadcrumb card" aria-label="面包屑导航">
       <RouterLink to="/home">首页</RouterLink>
@@ -100,7 +100,7 @@
 import { ref, watch } from "vue";
 import ServiceBookingDock from "@/components/services/ServiceBookingDock.vue";
 import { useServiceBookingStore } from "@/store/serviceBooking";
-import { createBooking } from "@/services/modules/services";
+import { createBooking } from "@/api/modules/services";
 
 const booking = useServiceBookingStore();
 

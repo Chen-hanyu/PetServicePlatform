@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="detail-page">
     <nav class="breadcrumb card" aria-label="面包屑导航">
       <RouterLink to="/home">首页</RouterLink>
@@ -89,7 +89,7 @@ import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import CommerceDock from "@/components/shop/CommerceDock.vue";
-import { fetchProduct } from "@/services/modules/shop";
+import { fetchProduct } from "@/api/modules/shop";
 import { getMockProductById } from "@/mocks/shop";
 import type { ProductDetail } from "@/types/shop";
 import { useShopCartStore } from "@/store/shopCart";

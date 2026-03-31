@@ -19,8 +19,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import DataState from "@/components/DataState.vue";
-import { fetchAdminDashboard } from "@/services/modules/admin";
-import { toErrorMessage } from "@/services/http";
+import { fetchAdminDashboard } from "@/api/modules/admin";
+import { toErrorMessage } from "@/api/http";
 import type { DashboardOverview } from "@/types/admin";
 
 const loading = ref(false);

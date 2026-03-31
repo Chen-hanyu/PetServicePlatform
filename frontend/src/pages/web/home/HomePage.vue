@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="home-page">
     <!-- Hero Section -->
     <section class="hero-section">
@@ -131,10 +131,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import DataState from "@/components/DataState.vue";
-import { fetchHomeData } from "@/services/modules/home";
+import { fetchHomeData } from "@/api/modules/home";
 import { mockHomeData } from "@/mocks/home";
 import type { HomeBanner, HomeQuickEntry, HomeTip } from "@/types/home";
-import { toErrorMessage } from "@/services/http";
+import { toErrorMessage } from "@/api/http";
 
 const loading = ref(false);
 const error = ref("");
