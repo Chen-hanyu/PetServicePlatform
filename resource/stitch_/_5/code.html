@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7ECFBC",
+                        "secondary": "#FFD66B",
+                        "accent": "#FF9EAA",
+                        "background-light": "#F7FAF9",
+                        "background-dark": "#1A2421",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Public Sans', sans-serif;
+        }
+        .custom-radio:checked + label {
+            background-color: #7ECFBC;
+            color: white;
+            border-color: #7ECFBC;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-6 py-4 bg-white dark:bg-slate-900 sticky top-0 z-10">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-400">arrow_back_ios</span>
+</button>
+<h2 class="text-xl font-bold leading-tight tracking-tight">添加宠物档案</h2>
+</div>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary text-white text-sm font-bold shadow-sm hover:opacity-90 transition-opacity">
+<span>保存档案</span>
+</button>
+</header>
+<main class="flex flex-1 justify-center py-8 px-4">
+<div class="layout-content-container flex flex-col max-w-[600px] flex-1 gap-8">
+<!-- Avatar Upload Section -->
+<div class="flex flex-col items-center gap-4 py-4">
+<div class="relative group cursor-pointer">
+<div class="bg-slate-200 dark:bg-slate-800 bg-center bg-no-repeat aspect-square bg-cover rounded-full h-32 w-32 border-4 border-white dark:border-slate-700 shadow-md flex items-center justify-center overflow-hidden" data-alt="Cute puppy profile placeholder image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC_n9OhZQ_EeIKOOjiPBnYAqJ4crvOcLTxzzvfWLDO2RTWVg0sKNQRpyedndm9CwWA_fhdAcqEOSFbBNlrvXVmYPa-HFDu4ttE_Kn2JeZeux3YJCLU0oPh-hosDDd0UxP9vMXMuXaFGHjr5NNyVWV73GFB6TIoILsHf2rY5Kz9vyiS3XrzY6Qv-YaUF0iyCYYe8d0Hox0plmUTM9-tEJKA0PGF7aeytPXgXXWfGKh2qUpcqWOxM5JwkSLnqNQgbPrmXkamDl71zZBo");'>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
+</div>
+</div>
+<div class="absolute bottom-0 right-0 bg-secondary p-2 rounded-full shadow-lg border-2 border-white dark:border-slate-700">
+<span class="material-symbols-outlined text-white text-sm">edit</span>
+</div>
+</div>
+<div class="text-center">
+<p class="text-lg font-bold">点击更换头像</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm">让宝贝的可爱瞬间被记住</p>
+</div>
+</div>
+<!-- Form Content -->
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col gap-6">
+<!-- Name Input -->
+<div class="flex flex-col gap-2">
+<label class="text-base font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">pets</span>
+                                宠物名字
+                            </label>
+<input class="form-input flex w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-primary focus:ring-primary h-12 px-4" placeholder="请输入宠物可爱的名字" type="text"/>
+</div>
+<!-- Breed Select -->
+<div class="flex flex-col gap-2">
+<label class="text-base font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">category</span>
+                                宠物品种
+                            </label>
+<select class="form-select flex w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-primary focus:ring-primary h-12 px-4">
+<option disabled="" selected="" value="">选择品种</option>
+<option value="cat">可爱猫咪 (狸花/英短/美短等)</option>
+<option value="dog">忠诚狗狗 (金毛/柯基/柴犬等)</option>
+<option value="rabbit">软萌兔兔</option>
+<option value="hamster">迷你仓鼠</option>
+<option value="other">其他萌宠</option>
+</select>
+</div>
+<!-- Gender and Birthday (Grid) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex flex-col gap-2">
+<label class="text-base font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">transgender</span>
+                                    性别
+                                </label>
+<div class="flex gap-2">
+<input checked="" class="hidden peer/male" id="male" name="gender" type="radio"/>
+<label class="flex-1 flex items-center justify-center h-12 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer peer-checked/male:bg-primary/20 peer-checked/male:border-primary peer-checked/male:text-primary transition-all" for="male">
+<span class="material-symbols-outlined mr-1">male</span> 男孩子
+                                    </label>
+<input class="hidden peer/female" id="female" name="gender" type="radio"/>
+<label class="flex-1 flex items-center justify-center h-12 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer peer-checked/female:bg-accent/20 peer-checked/female:border-accent peer-checked/female:text-accent transition-all" for="female">
+<span class="material-symbols-outlined mr-1">female</span> 女孩子
+                                    </label>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-base font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">cake</span>
+                                    出生日期
+                                </label>
+<input class="form-input flex w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-primary focus:ring-primary h-12 px-4" type="date"/>
+</div>
+</div>
+<!-- Weight Input -->
+<div class="flex flex-col gap-2">
+<label class="text-base font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">fitness_center</span>
+                                体重 (kg)
+                            </label>
+<input class="form-input flex w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-primary focus:ring-primary h-12 px-4" placeholder="例如: 4.5" step="0.1" type="number"/>
+</div>
+<!-- Health Status -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">vaccines</span>
+<span class="font-medium">已接种疫苗</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">content_cut</span>
+<span class="font-medium">已绝育</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Bio Input -->
+<div class="flex flex-col gap-2">
+<label class="text-base font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">description</span>
+                                宠物简介
+                            </label>
+<textarea class="form-textarea flex w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-primary focus:ring-primary p-4 resize-none" placeholder="分享一下宝贝的性格、喜好或者是你们之间的小故事吧..." rows="4"></textarea>
+</div>
+</div>
+<!-- Decorative Bottom Info -->
+<div class="flex items-center justify-center gap-2 text-slate-400 dark:text-slate-500 pb-10">
+<span class="material-symbols-outlined text-base">favorite</span>
+<span class="text-sm">每个生命都值得温柔以待</span>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

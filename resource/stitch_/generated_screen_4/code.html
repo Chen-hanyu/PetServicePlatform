@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>宠物服务 - 宠物综合服务平台</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7ECFBC',
+            secondary: '#F7FAF9',
+            accent: '#FFD66B',
+            'text-main': '#2F3A38',
+            'text-sub': '#66706E',
+            'text-weak': '#98A3A0',
+            'border-light': '#E4ECE9',
+            'block-bg': '#F2F7F5',
+            success: '#5BB98C',
+          },
+          borderRadius: {
+            'card-lg': '20px',
+            'card': '16px',
+            'input': '12px',
+          },
+          boxShadow: {
+            'soft': '0 8px 24px rgba(34, 60, 52, 0.08)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom Typography and Global Styles -->
+<style data-purpose="typography">
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      color: #2F3A38;
+      background-color: #F7FAF9;
+    }
+    h1, h2, h3 {
+      font-weight: 600;
+      line-height: 1.4;
+    }
+  </style>
+<style data-purpose="animations">
+    .hover-up {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-up:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
+    }
+    .btn-transition {
+      transition: all 0.2s ease;
+    }
+    .btn-transition:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-50 bg-white border-b border-border-light">
+<div class="container mx-auto px-4 h-20 flex items-center justify-between">
+<!-- Logo -->
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-xl font-bold tracking-tight text-text-main">宠爱有家</span>
+</div>
+<!-- Navigation -->
+<nav class="hidden md:flex items-center space-x-8">
+<a class="text-text-sub hover:text-primary transition-colors" href="#">首页</a>
+<a class="text-text-sub hover:text-primary transition-colors" href="#">社区</a>
+<a class="text-text-sub hover:text-primary transition-colors" href="#">领养</a>
+<a class="text-primary font-medium" href="#">宠物服务</a>
+<a class="text-text-sub hover:text-primary transition-colors" href="#">商城</a>
+</nav>
+<!-- User Entry -->
+<div class="flex items-center gap-4">
+<button class="p-2 text-text-sub hover:text-primary">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<div class="w-10 h-10 rounded-full bg-block-bg border border-border-light overflow-hidden cursor-pointer">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0chIojs9Q7GEQSmRbQ0a9kM0iEkSQbaOvM45kF1o7oD8C2dFFqbSOkK9fPSoOFD0s8pRAjJO7Hid_tEG-1QT72wd-I296aObQOszUc-ujx7NmMeVwkdFUOla4ZxXL2uZpA4S465Y_n6kJnYQiXis7HSQuApbTKC2qaDYoH-aQ4SQTbo5fi3SrTwM19RVKu9HeVJ75xwFJz6WO8uQxNpelo4FmWrNvAXoh7C55zLSrI_zhWjKqEGMIECOA-z4YfMPWJCwrw8e1Esg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: HeroSection -->
+<section class="bg-white py-12 border-b border-border-light">
+<div class="container mx-auto px-4">
+<div class="max-w-3xl mx-auto text-center">
+<h1 class="text-3xl md:text-4xl text-text-main mb-4">寻找最贴心的宠物服务</h1>
+<p class="text-text-sub mb-8">汇集周边优质医院、美容、寄养与训练，给TA最好的关怀</p>
+<!-- Search Bar -->
+<div class="relative max-w-2xl mx-auto">
+<input class="w-full h-14 pl-14 pr-32 rounded-input border-border-light focus:ring-primary focus:border-primary shadow-sm text-lg" placeholder="搜索附近的服务或商家..." type="text"/>
+<div class="absolute left-5 top-1/2 -translate-y-1/2 text-text-weak">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.657 16.657L13.414 12.414M12 14a2 2 0 110-4 2 2 0 010 4zM19 10a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<button class="absolute right-2 top-2 bottom-2 px-6 bg-primary text-white rounded-lg font-medium btn-transition hover:bg-opacity-90">
+            搜索商家
+          </button>
+</div>
+<div class="mt-4 flex flex-wrap justify-center gap-3 text-sm text-text-sub">
+<span>热门：</span>
+<a class="hover:text-primary underline underline-offset-4" href="#">猫咪洗澡</a>
+<a class="hover:text-primary underline underline-offset-4" href="#">全天候寄养</a>
+<a class="hover:text-primary underline underline-offset-4" href="#">新手体检</a>
+</div>
+</div>
+</div>
+</section>
+<!-- END: HeroSection -->
+<main class="container mx-auto px-4 py-12">
+<!-- BEGIN: ServiceCategories -->
+<section class="mb-16">
+<h2 class="text-2xl text-text-main mb-8 flex items-center gap-2">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+        服务分类
+      </h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<!-- Hospital -->
+<div class="bg-white p-6 rounded-card border border-border-light text-center hover-up cursor-pointer group">
+<div class="w-16 h-16 mx-auto mb-4 bg-red-50 text-red-400 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+<svg class="h-10 w-10" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-lg font-medium text-text-main">宠物医院</h3>
+<p class="text-sm text-text-weak mt-1">医疗体检/急诊</p>
+</div>
+<!-- Grooming -->
+<div class="bg-white p-6 rounded-card border border-border-light text-center hover-up cursor-pointer group">
+<div class="w-16 h-16 mx-auto mb-4 bg-blue-50 text-blue-400 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+<svg class="h-10 w-10" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-lg font-medium text-text-main">洗护美容</h3>
+<p class="text-sm text-text-weak mt-1">洗澡/剪毛/SPA</p>
+</div>
+<!-- Boarding -->
+<div class="bg-white p-6 rounded-card border border-border-light text-center hover-up cursor-pointer group">
+<div class="w-16 h-16 mx-auto mb-4 bg-orange-50 text-orange-400 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+<svg class="h-10 w-10" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-lg font-medium text-text-main">寄养服务</h3>
+<p class="text-sm text-text-weak mt-1">家庭寄养/酒店</p>
+</div>
+<!-- Training -->
+<div class="bg-white p-6 rounded-card border border-border-light text-center hover-up cursor-pointer group">
+<div class="w-16 h-16 mx-auto mb-4 bg-green-50 text-green-400 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+<svg class="h-10 w-10" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-lg font-medium text-text-main">宠物训练</h3>
+<p class="text-sm text-text-weak mt-1">行为纠正/技能</p>
+</div>
+</div>
+</section>
+<!-- END: ServiceCategories -->
+<!-- BEGIN: MerchantList -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-2xl text-text-main flex items-center gap-2">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+          优质商家推荐
+        </h2>
+<div class="flex gap-4">
+<select class="rounded-lg border-border-light text-sm text-text-sub focus:ring-primary focus:border-primary">
+<option>综合排序</option>
+<option>距离最近</option>
+<option>评分最高</option>
+</select>
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-border-light rounded-lg text-sm text-text-sub hover:bg-block-bg transition-colors">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+            更多筛选
+          </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Merchant Card 1 -->
+<div class="bg-white rounded-card overflow-hidden border border-border-light flex flex-col md:flex-row hover-up group">
+<div class="md:w-52 h-48 md:h-auto overflow-hidden">
+<img alt="Clinic" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoP2HTfO7R2luweHdbyOqW42gFLHzCcd-HprWderGsardJ6cxOtDnmJXPE9CIyvAH2Gxw9dH0TtskcUCPypnhQMM2AnCUHnShmsjBONUAUa7f2dpu3XXZ3o0vgqRdHMtlZ6AG2cZwrcOlXBt39v4cDhKyrxc0-zYjdm-t-TrJQBSLUpTd8QpJ7ZOF7KtlLEO26xnh2O0RRSG9wRNgKeLQoiuFc-tEN0GATMRh7zTMCMgbdJwqX_2bio2VmPiJH0WNKkC51RXuNAvA"/>
+</div>
+<div class="flex-1 p-6 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-text-main group-hover:text-primary transition-colors">萌宠阳光中心宠物医院</h3>
+<span class="text-primary font-medium text-sm flex items-center gap-1">
+<svg class="h-4 w-4 fill-current" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+</svg>
+                  4.9
+                </span>
+</div>
+<p class="text-text-sub text-sm mb-4 line-clamp-1">全天候急诊，拥有资深内科专家及先进影像设备...</p>
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="px-2 py-1 bg-green-50 text-green-600 text-xs rounded-full border border-green-100">24h急诊</span>
+<span class="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded-full border border-blue-100">专业骨科</span>
+<span class="px-2 py-1 bg-block-bg text-text-weak text-xs rounded-full">停车方便</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-4 pt-4 border-t border-dashed border-border-light">
+<div class="text-text-weak text-sm flex items-center gap-1">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.657 16.657L13.414 12.414M12 14a2 2 0 110-4 2 2 0 010 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                静安区 · 1.2km
+              </div>
+<button class="px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 btn-transition shadow-sm">
+                立即预约
+              </button>
+</div>
+</div>
+</div>
+<!-- Merchant Card 2 -->
+<div class="bg-white rounded-card overflow-hidden border border-border-light flex flex-col md:flex-row hover-up group">
+<div class="md:w-52 h-48 md:h-auto overflow-hidden">
+<img alt="Grooming" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8irTsaqbj8cBYEm7DE7W1i8eHwwTIx4BsA_Qxnq--4K6W35XGszJmusqyrmwUtYp3sRLut2N9ZFRCJ5SZK_710GdFKIn9V3Dm1JSbW9s4k_6AHq-UZ-SQk8GyQ_LtXNwih0VfYhnc1Mz_sC0k7oNbsZv4YjaQ1DRMgiENUr3HccU0oB0R8XDEN-nYF6zBJDo674u8dvsHLo3TwdHvMdKGUcURiVD0WLgUZ_JYjWvk5wtRfqaz4l8KG6MmCWkaRU3Fg0dXPKSPQSw"/>
+</div>
+<div class="flex-1 p-6 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-text-main group-hover:text-primary transition-colors">爪爪美学研究所</h3>
+<span class="text-primary font-medium text-sm flex items-center gap-1">
+<svg class="h-4 w-4 fill-current" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+</svg>
+                  4.8
+                </span>
+</div>
+<p class="text-text-sub text-sm mb-4 line-clamp-1">专注日系风格剪裁，使用进口天然洗护品牌...</p>
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="px-2 py-1 bg-pink-50 text-pink-600 text-xs rounded-full border border-pink-100">日系剪裁</span>
+<span class="px-2 py-1 bg-yellow-50 text-yellow-600 text-xs rounded-full border border-yellow-100">SPA体验</span>
+<span class="px-2 py-1 bg-block-bg text-text-weak text-xs rounded-full">全程可视</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-4 pt-4 border-t border-dashed border-border-light">
+<div class="text-text-weak text-sm flex items-center gap-1">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.657 16.657L13.414 12.414M12 14a2 2 0 110-4 2 2 0 010 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                徐汇区 · 2.5km
+              </div>
+<button class="px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 btn-transition shadow-sm">
+                立即预约
+              </button>
+</div>
+</div>
+</div>
+<!-- Merchant Card 3 -->
+<div class="bg-white rounded-card overflow-hidden border border-border-light flex flex-col md:flex-row hover-up group">
+<div class="md:w-52 h-48 md:h-auto overflow-hidden">
+<img alt="Boarding" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAxB7oLpmjLfrsA1_2E-f6soFvgtH7rjDrDFuD40gSGJEL6cgtcqJ6pW4Ajy4L5zDKo4w1lf-iAULDRaYeDEoki2urFHp1U70Aex4tWzTgKDYRAlpQPoxESUzLZR49mXQzoy4YhUL1qtoZ4ePfYT4sEHljFsUuT-W3UZdU4ZujckDe86pYyorqZYeasPSwaX0i9vi2LVs7uzFzqQR7xK1qR7nk4n_nYGHtZUpIjWBhy95dA42GIglmV-QxqpFxfWNf8xH6r4DiiBY"/>
+</div>
+<div class="flex-1 p-6 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-text-main group-hover:text-primary transition-colors">猫主子五星级寄养中心</h3>
+<span class="text-primary font-medium text-sm flex items-center gap-1">
+<svg class="h-4 w-4 fill-current" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+</svg>
+                  4.7
+                </span>
+</div>
+<p class="text-text-sub text-sm mb-4 line-clamp-1">独立猫房、24小时监控随看、每日营养配餐...</p>
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="px-2 py-1 bg-indigo-50 text-indigo-600 text-xs rounded-full border border-indigo-100">监控直播</span>
+<span class="px-2 py-1 bg-block-bg text-text-weak text-xs rounded-full">猫薄荷乐园</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-4 pt-4 border-t border-dashed border-border-light">
+<div class="text-text-weak text-sm flex items-center gap-1">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.657 16.657L13.414 12.414M12 14a2 2 0 110-4 2 2 0 010 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                普陀区 · 3.8km
+              </div>
+<button class="px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 btn-transition shadow-sm">
+                立即预约
+              </button>
+</div>
+</div>
+</div>
+<!-- Merchant Card 4 -->
+<div class="bg-white rounded-card overflow-hidden border border-border-light flex flex-col md:flex-row hover-up group">
+<div class="md:w-52 h-48 md:h-auto overflow-hidden">
+<img alt="Training" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCbXHuyAWaj_QSHGCOs4gilL5jOmQ_O_UsariU4LnHoUqEsfUrb1wJTXDBiCsXJIE7hpLyYwRo1OHW9VLd0Ymq6JI4tXCo6gw1AHhd5mTBkGSaq3UrTGwKKNPTDmutxyud4AT3HS759p4SonuHOB5wdZxIZTe2--85JW92P79RbTRWPZb5tsagAf1i9ry6Tul46s8ugkdiF8lmOTaWjOGUwM-dhsnLM6jvqa49frBc6vtY3k93TrY6DS7A52RL1geU27fh5cqaFBk"/>
+</div>
+<div class="flex-1 p-6 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-text-main group-hover:text-primary transition-colors">旺财行为管家</h3>
+<span class="text-primary font-medium text-sm flex items-center gap-1">
+<svg class="h-4 w-4 fill-current" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+</svg>
+                  4.9
+                </span>
+</div>
+<p class="text-text-sub text-sm mb-4 line-clamp-1">持证宠物训练师，温和引导，告别焦虑拆家行为...</p>
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="px-2 py-1 bg-purple-50 text-purple-600 text-xs rounded-full border border-purple-100">行为矫正</span>
+<span class="px-2 py-1 bg-block-bg text-text-weak text-xs rounded-full">上门教学</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-4 pt-4 border-t border-dashed border-border-light">
+<div class="text-text-weak text-sm flex items-center gap-1">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.657 16.657L13.414 12.414M12 14a2 2 0 110-4 2 2 0 010 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                黄浦区 · 5.0km
+              </div>
+<button class="px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-opacity-90 btn-transition shadow-sm">
+                立即预约
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-12 flex justify-center">
+<nav class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-light text-text-sub hover:bg-primary hover:text-white transition-colors">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-medium">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-light text-text-sub hover:bg-block-bg transition-colors">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-light text-text-sub hover:bg-block-bg transition-colors">3</button>
+<span class="px-2 text-text-weak">...</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-light text-text-sub hover:bg-block-bg transition-colors">8</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-light text-text-sub hover:bg-primary hover:text-white transition-colors">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</nav>
+</div>
+</section>
+<!-- END: MerchantList -->
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-white border-t border-border-light mt-20 pt-16 pb-8">
+<div class="container mx-auto px-4">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
+<div class="col-span-2">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-lg font-bold text-text-main">宠爱有家</span>
+</div>
+<p class="text-text-sub text-sm max-w-xs">一站式宠物综合服务平台，为您和您的毛孩子提供最温暖的守护和最专业的服务。</p>
+</div>
+<div>
+<h4 class="font-bold text-text-main mb-4">关于我们</h4>
+<ul class="space-y-2 text-sm text-text-sub">
+<li><a class="hover:text-primary" href="#">平台介绍</a></li>
+<li><a class="hover:text-primary" href="#">联系我们</a></li>
+<li><a class="hover:text-primary" href="#">加入我们</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-text-main mb-4">入驻指南</h4>
+<ul class="space-y-2 text-sm text-text-sub">
+<li><a class="hover:text-primary" href="#">商家入驻</a></li>
+<li><a class="hover:text-primary" href="#">机构认证</a></li>
+<li><a class="hover:text-primary" href="#">服务协议</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-text-main mb-4">关注我们</h4>
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-full bg-block-bg flex items-center justify-center text-text-sub hover:text-primary cursor-pointer">
+<span class="text-xs">We</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-block-bg flex items-center justify-center text-text-sub hover:text-primary cursor-pointer">
+<span class="text-xs">Red</span>
+</div>
+</div>
+</div>
+</div>
+<div class="border-t border-border-light pt-8 text-center text-xs text-text-weak">
+        © 2023 宠爱有家 PetCare Platform. All rights reserved. 沪ICP备12345678号
+      </div>
+</div>
+</footer>
+<!-- END: Footer -->
+</body></html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>宠物综合服务平台 - 温暖治愈的宠友之家</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: '#7ECFBC', // 主色：清新绿
+              secondary: '#F7FAF9', // 辅助色：浅底
+              accent: '#FFD66B', // 强调色：暖阳黄
+              text: '#2F3A38', // 主文字
+              muted: '#66706E', // 次文字
+              border: '#E4ECE9' // 边框
+            }
+          },
+          borderRadius: {
+            'card': '20px',
+            'element': '12px'
+          },
+          boxShadow: {
+            'soft': '0 8px 24px rgba(34, 60, 52, 0.08)'
+          }
+        }
+      }
+    }
+  </script>
+<!-- Google Fonts for a soft look (closest to suggested Chinese rounded fonts for web) -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<style data-purpose="typography">
+    body {
+      font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #2F3A38;
+      background-color: #F7FAF9;
+    }
+    .font-rounded {
+      font-weight: 600;
+    }
+  </style>
+<style data-purpose="custom-animations">
+    .hover-float {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-float:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
+    }
+    .nav-link {
+      position: relative;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 3px;
+      bottom: -4px;
+      left: 0;
+      background-color: #7ECFBC;
+      transition: width 0.3s ease;
+      border-radius: 2px;
+    }
+    .nav-link:hover::after {
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-brand-border h-20">
+<div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+<!-- Logo Area -->
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center text-white">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-2xl font-bold tracking-tight text-brand-primary">萌宠家园</span>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="nav-link font-medium text-brand-primary" href="#">首页</a>
+<a class="nav-link font-medium text-brand-muted hover:text-brand-primary" href="#">社区</a>
+<a class="nav-link font-medium text-brand-muted hover:text-brand-primary" href="#">领养</a>
+<a class="nav-link font-medium text-brand-muted hover:text-brand-primary" href="#">服务</a>
+<a class="nav-link font-medium text-brand-muted hover:text-brand-primary" href="#">商城</a>
+<a class="nav-link font-medium text-brand-muted hover:text-brand-primary" href="#">个人中心</a>
+</nav>
+<!-- User Actions -->
+<div class="flex items-center gap-4">
+<button class="text-brand-muted hover:text-brand-primary">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<button class="bg-brand-primary text-white px-6 py-2 rounded-element font-medium hover:bg-opacity-90 transition-all shadow-sm">
+          登录 / 注册
+        </button>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<main class="max-w-7xl mx-auto px-6 py-8 space-y-12">
+<!-- BEGIN: HeroSearchSection -->
+<section class="text-center py-10 bg-white rounded-card shadow-soft p-10 relative overflow-hidden" data-purpose="hero-search">
+<!-- Decorative background elements -->
+<div class="absolute -top-10 -right-10 w-40 h-40 bg-brand-accent/20 rounded-full blur-3xl"></div>
+<div class="absolute -bottom-10 -left-10 w-40 h-40 bg-brand-primary/10 rounded-full blur-3xl"></div>
+<h1 class="text-4xl font-bold text-brand-text mb-6">寻找你和爱宠的快乐时光</h1>
+<div class="max-w-2xl mx-auto relative group">
+<input class="w-full pl-12 pr-4 py-4 rounded-element border-brand-border focus:ring-brand-primary focus:border-brand-primary shadow-sm text-lg" placeholder="搜索宠物知识、服务、商品..." type="text"/>
+<div class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-muted group-focus-within:text-brand-primary">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 bg-brand-primary text-white px-6 py-2 rounded-lg font-medium">搜索</button>
+</div>
+<div class="mt-4 flex justify-center gap-4 text-sm text-brand-muted">
+<span>热门搜索:</span>
+<a class="hover:text-brand-primary" href="#">#猫咪新手指南</a>
+<a class="hover:text-brand-primary" href="#">#金毛驱虫</a>
+<a class="hover:text-brand-primary" href="#">#附近洗澡</a>
+<a class="hover:text-brand-primary" href="#">#自制狗零食</a>
+</div>
+</section>
+<!-- END: HeroSearchSection -->
+<!-- BEGIN: BannerSection -->
+<section class="relative group h-[400px] rounded-card overflow-hidden shadow-soft" data-purpose="featured-banner">
+<img alt="温暖的宠物生活" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXkyy0-Mco4IKtoLM-WZcXe5uzOXapVZAdg19htd7vN_55XjdPP6UM-M_zu4MJOUbWCSBlpkk3MudLA5UaCx6h6iRUQX18XPu7Cv6K5bXMRNfABxueoL_e5RUQchUTk2phMuK1W21p3esLj9KxeWQYlp5pKZ35E7WkezX4vzC7EQ-hCo-ZyYBetarCHGUg0ETfl7lGljfdBqoS1renA_6qjqwFegO4ZK9SGMhnX2V-UuiJoxEn_vZ_uiyvivpkq-VOvqIe944mABg"/>
+<div class="absolute inset-0 bg-gradient-to-r from-brand-text/60 to-transparent flex items-center p-12">
+<div class="max-w-md text-white space-y-4">
+<span class="bg-brand-accent text-brand-text px-4 py-1 rounded-full text-sm font-bold tracking-wide">本月活动</span>
+<h2 class="text-5xl font-bold">温暖领养季：让爱有个家</h2>
+<p class="text-lg opacity-90">参与社区领养故事分享，赢取价值500元的宠物健康礼包，更有机会获得专属“爱心领养官”勋章。</p>
+<button class="bg-white text-brand-primary px-8 py-3 rounded-element font-bold text-lg hover:shadow-lg transition-all">立即参与</button>
+</div>
+</div>
+</section>
+<!-- END: BannerSection -->
+<!-- BEGIN: QuickEntryGrid -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-6" data-purpose="quick-access">
+<a class="bg-white p-8 rounded-card shadow-soft text-center hover-float group" href="#">
+<div class="w-16 h-16 bg-brand-primary/10 rounded-2xl mx-auto mb-4 flex items-center justify-center group-hover:bg-brand-primary transition-colors">
+<svg class="w-8 h-8 text-brand-primary group-hover:text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="font-bold text-brand-text text-lg">宠物知识</h3>
+<p class="text-sm text-brand-muted mt-2">新手必读科学养宠</p>
+</a>
+<a class="bg-white p-8 rounded-card shadow-soft text-center hover-float group" href="#">
+<div class="w-16 h-16 bg-brand-accent/10 rounded-2xl mx-auto mb-4 flex items-center justify-center group-hover:bg-brand-accent transition-colors">
+<svg class="w-8 h-8 text-brand-accent group-hover:text-brand-text" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="font-bold text-brand-text text-lg">领养专区</h3>
+<p class="text-sm text-brand-muted mt-2">遇见生命中的另一半</p>
+</a>
+<a class="bg-white p-8 rounded-card shadow-soft text-center hover-float group" href="#">
+<div class="w-16 h-16 bg-blue-50 rounded-2xl mx-auto mb-4 flex items-center justify-center group-hover:bg-blue-400 transition-colors">
+<svg class="w-8 h-8 text-blue-400 group-hover:text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="font-bold text-brand-text text-lg">宠物服务</h3>
+<p class="text-sm text-brand-muted mt-2">医院、洗护、寄养</p>
+</a>
+<a class="bg-white p-8 rounded-card shadow-soft text-center hover-float group" href="#">
+<div class="w-16 h-16 bg-brand-primary/10 rounded-2xl mx-auto mb-4 flex items-center justify-center group-hover:bg-brand-primary transition-colors">
+<svg class="w-8 h-8 text-brand-primary group-hover:text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="font-bold text-brand-text text-lg">萌宠商城</h3>
+<p class="text-sm text-brand-muted mt-2">严选全球品质好货</p>
+</a>
+</section>
+<!-- END: QuickEntryGrid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- BEGIN: CommunitySection -->
+<section class="lg:col-span-2 space-y-6" data-purpose="popular-posts">
+<div class="flex items-center justify-between">
+<h2 class="text-2xl font-bold flex items-center gap-2">
+<span class="w-2 h-8 bg-brand-primary rounded-full"></span>
+            社区热门帖
+          </h2>
+<a class="text-brand-primary hover:underline font-medium" href="#">查看更多 →</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Post Card 1 -->
+<article class="bg-white rounded-card overflow-hidden shadow-soft hover-float group">
+<div class="h-48 overflow-hidden">
+<img alt="帖子配图" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK5VU2B7Lu0emgLsvIJO2CQS_jy7-mazw3WVaE2QiQsTg2BuNDHZ-zPxjDzNpAL0KvNGEs9bnHkN2wSKQYveHKV03BSYKvM6WvW_fKNJdBc8wbH1FjrmwESuq3TFXlHk8CoGLFKgBBDt8IYaP033naDscwFGcXtxy1MJfUbZngvsUOEQaJYFVaAv7anNlgsU0ku7BeGjNnZA8gkZNFZSZYwNkYlm0D1LY-MF0oE6KQI76hPmyNEI7a2Qx8U3_kQBYmjPZnk39cIZg"/>
+</div>
+<div class="p-5 space-y-3">
+<span class="text-xs font-bold text-brand-primary bg-brand-primary/10 px-2 py-1 rounded-md">#养宠心得</span>
+<h3 class="font-bold text-lg line-clamp-2">接猫回家第一周，这些细节决定了它能否快速适应...</h3>
+<div class="flex items-center justify-between pt-2 border-t border-brand-border">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-brand-accent"></div>
+<span class="text-sm text-brand-muted">铲屎官小王</span>
+</div>
+<div class="flex gap-3 text-brand-muted text-sm">
+<span class="flex items-center gap-1">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg> 1.2k
+                  </span>
+</div>
+</div>
+</div>
+</article>
+<!-- Post Card 2 -->
+<article class="bg-white rounded-card overflow-hidden shadow-soft hover-float group">
+<div class="h-48 overflow-hidden">
+<img alt="帖子配图" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmdsQESGfHLZGqOcqLzLI7SqqEfUnWrGdCHgHj_-fkbrP_Zo33vYHIaK4KbKJiDZZoJtt5xsw5-qQnuw9ekiFFRkcb_9J1C446HNqA_Yfcn3ZvmKpdyOBnPrLaWmqUjhmA-MvQdSp9BpyHaU2Djngzz9Nuhx2BGWqHT4VB8XpI7yVZx0-1R5b1Q0-P7ePq2AFQaIvyS9jW0kejsQ8IgLdoMGWB7Bz6wnPOpILfKeAWxmxkcGEGixrZB8E7P-QYG92FSONxHVpZMV4"/>
+</div>
+<div class="p-5 space-y-3">
+<span class="text-xs font-bold text-orange-400 bg-orange-100 px-2 py-1 rounded-md">#新手避坑</span>
+<h3 class="font-bold text-lg line-clamp-2">别再交智商税了！这5种宠物品其实完全没必要买...</h3>
+<div class="flex items-center justify-between pt-2 border-t border-brand-border">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-blue-200"></div>
+<span class="text-sm text-brand-muted">资深大拿</span>
+</div>
+<div class="flex gap-3 text-brand-muted text-sm">
+<span class="flex items-center gap-1">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg> 856
+                  </span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- END: CommunitySection -->
+<!-- BEGIN: DailyTipSection -->
+<aside class="space-y-6" data-purpose="daily-tip">
+<h2 class="text-2xl font-bold flex items-center gap-2">
+<span class="w-2 h-8 bg-brand-accent rounded-full"></span>
+          每日贴士
+        </h2>
+<div class="bg-brand-accent p-8 rounded-card shadow-soft relative overflow-hidden">
+<svg class="absolute -right-4 -bottom-4 w-24 h-24 text-white/30" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-3.991 15.391c-1.308 0-2.438-.751-3.009-1.848l-1 .38c.751 1.456 2.257 2.468 4.009 2.468 1.956 0 3.606-1.251 4.215-2.992l-.946-.328c-.482 1.378-1.785 2.319-3.269 2.319zm11.991-3.391l-1-.38c.571 1.097 1.701 1.848 3.009 1.848 1.484 0 2.787-.941 3.269-2.319l.946.328c-.609 1.741-2.259 2.992-4.215 2.992-1.752 0-3.258-1.012-4.009-2.469z"></path>
+</svg>
+<div class="relative z-10 space-y-4">
+<div class="text-sm font-bold opacity-80 uppercase tracking-widest">Knowledge Card</div>
+<h3 class="text-xl font-bold text-brand-text">猫咪换毛季该怎么办？</h3>
+<p class="text-brand-text/90 leading-relaxed">进入春秋换毛季，建议每天早晚各梳毛一次，不仅能减少家中飞毛，还能增进与猫咪的感情，防止舔入过多毛发导致毛球症。</p>
+<button class="bg-brand-text text-white px-4 py-2 rounded-element text-sm font-medium">了解更多详情</button>
+</div>
+</div>
+<div class="bg-white p-6 rounded-card shadow-soft space-y-4">
+<h3 class="font-bold border-b border-brand-border pb-2">随机萌宠卡片</h3>
+<div class="flex items-center gap-4">
+<img alt="萌宠" class="w-16 h-16 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXEvoP78Hgpb_2Ohl23cqZ7H5fI5z4PtldblfbTDehTXC0xtisyH79JC2jUOdOkE2R9v9T_kQQGZyeR8kF6cVdLfv0BHYb8wDCO1ft8hE1IZY2vuIlRaWAr7D9o8Akq0eAF65anz0TjwI4HJVceXV6E6Rz5HYAB0h29MaReJ03nhpdsvVO-sATQTyc7gJa8rDOjfBOPMSuEZJZ253uD2eLuD0hB2wGtC1KdqowrFHQlINm6qNoo9Wf4GE3JIdP3bGHmV7amQyo6ms"/>
+<div>
+<p class="font-bold">比熊 - 糯米</p>
+<p class="text-sm text-brand-muted">“今天也是元气满满的一天汪！”</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: DailyTipSection -->
+</div>
+<!-- BEGIN: NearbyServicesSection -->
+<section class="space-y-6" data-purpose="nearby-services">
+<div class="flex items-center justify-between">
+<h2 class="text-2xl font-bold flex items-center gap-2">
+<span class="w-2 h-8 bg-brand-primary rounded-full"></span>
+          推荐服务
+        </h2>
+<div class="flex gap-2">
+<button class="px-4 py-1 rounded-full bg-brand-primary text-white text-sm">热门推荐</button>
+<button class="px-4 py-1 rounded-full bg-white text-brand-muted text-sm border border-brand-border">附近机构</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Service Card 1 -->
+<div class="bg-white p-6 rounded-card shadow-soft flex gap-4 hover-float group cursor-pointer">
+<div class="w-24 h-24 rounded-element overflow-hidden flex-shrink-0">
+<img alt="医院" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYeKPmcWBs7QZYr3BtoaDonCwKGh0WrA0we5f69L3jQso7qYf-KQyLMzS76gSF3zkh58u6oTX-hyRN_8AYnVGbWy4X2UmsYRC1nn1Wsn96k_CtBMhNQ7G4dFEQ_tElafMQjPQ-V2Qvr2YPlcnOUk-uF36H9kh7bANtAHZNYc3QV-5KYbnQk9GcsnbVtZuhv_5wpN47wQvW5opHjnofPFuBiFd6o2oNgoNqBxGNLLHgjIsVU7j_tvWAqWaWbfLTSuEhMt1o0-12iAE"/>
+</div>
+<div class="space-y-2">
+<h3 class="font-bold text-lg group-hover:text-brand-primary transition-colors">萌宠康复中心</h3>
+<div class="flex items-center text-brand-accent text-sm">
+<span>★★★★★</span>
+<span class="text-brand-muted ml-2">4.9</span>
+</div>
+<p class="text-sm text-brand-muted">宠物医院 | 24小时急诊</p>
+<span class="inline-block text-xs bg-brand-secondary text-brand-primary px-2 py-1 rounded">2.4km</span>
+</div>
+</div>
+<!-- Service Card 2 -->
+<div class="bg-white p-6 rounded-card shadow-soft flex gap-4 hover-float group cursor-pointer">
+<div class="w-24 h-24 rounded-element overflow-hidden flex-shrink-0">
+<img alt="美容" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzRstaI1G73HHuPTDfipPGT_nG6IRJ5QHPJD4aTRAR2ITF5VFsw1aPtTr5HF6qfcIwsVdkkq5RH2CGNM9dXRTHU69rGapWsfCveLXtenfsvKi5SYRWd3_pZWbT26qyvSwP_ml-12JW2oNKtHT5OVmUaBWHPQWZSOQWwDUgjCP61k7UoMC_kVXVeRwDwzLzMDDuJS5fW8N6hy9Fa7gw6Rg_KlIuqhe5qsdjt1hdN9ZvbGOxa7zJdlzDvGq4VIZHpirGFY2fbijOyBE"/>
+</div>
+<div class="space-y-2">
+<h3 class="font-bold text-lg group-hover:text-brand-primary transition-colors">丝滑宠物SPA馆</h3>
+<div class="flex items-center text-brand-accent text-sm">
+<span>★★★★☆</span>
+<span class="text-brand-muted ml-2">4.5</span>
+</div>
+<p class="text-sm text-brand-muted">美容洗护 | 精品剪毛</p>
+<span class="inline-block text-xs bg-brand-secondary text-brand-primary px-2 py-1 rounded">800m</span>
+</div>
+</div>
+<!-- Service Card 3 -->
+<div class="bg-white p-6 rounded-card shadow-soft flex gap-4 hover-float group cursor-pointer">
+<div class="w-24 h-24 rounded-element overflow-hidden flex-shrink-0">
+<img alt="寄养" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyWw4ASrLankEkaTTv8Re6Azu-C8ToEH_4_smYNOpYQfxxyOARHovcAYv69QZ-UFM_DFoJ0vTLtHf03KVBcpJUugU1LqdppO08rLYOg-UaLucdEMwVg_h0e8H_5McWXPmdAgdTm3IEd8tDlG6T1STNDWpqYUzmtt_EOWYNK5SWNIj4vYFLefhIdtxeNCmuxzGroNwZUwXhph4X-1dHeQFRd4t6tc0PPu-xoWc22E3YsZevmHORpJOEW0ySJb4OsW50oL6Vm-9NNNc"/>
+</div>
+<div class="space-y-2">
+<h3 class="font-bold text-lg group-hover:text-brand-primary transition-colors">猫咪森林度假村</h3>
+<div class="flex items-center text-brand-accent text-sm">
+<span>★★★★★</span>
+<span class="text-brand-muted ml-2">5.0</span>
+</div>
+<p class="text-sm text-brand-muted">高级寄养 | 独立空间</p>
+<span class="inline-block text-xs bg-brand-secondary text-brand-primary px-2 py-1 rounded">1.2km</span>
+</div>
+</div>
+</div>
+</section>
+<!-- END: NearbyServicesSection -->
+<!-- BEGIN: MallNewArrivals -->
+<section class="space-y-6" data-purpose="mall-recommendations">
+<div class="flex items-center justify-between">
+<h2 class="text-2xl font-bold flex items-center gap-2">
+<span class="w-2 h-8 bg-brand-primary rounded-full"></span>
+          商城新品
+        </h2>
+<a class="text-brand-primary hover:underline font-medium" href="#">去商城逛逛 →</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+<!-- Product 1 -->
+<div class="bg-white p-4 rounded-card shadow-soft hover-float group">
+<div class="aspect-square rounded-element bg-brand-secondary mb-4 overflow-hidden">
+<img alt="商品" class="w-full h-full object-cover group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRwk-5W8hVdUMiCbASR6I4LWyM0J3cqTWERsIK7vHHp9FCxKjtG2FY_FmGjhxf9pA8QUn3x-TLM-s4tRgs668So9Wv2xRNIvfiqW5z_WI1EB25Glh2ZnJ6Itms3369_3lJY6NA6QG74jrE44emva--x2GCWlfTDTPKLAUtvj5sop46oDa4FvuDgTgd4MLrmfoVWwO9pr7ZpZKB8toq8gkjEP8Tq1FMCuUeC4n42dZ5q-IP6zFytRQqaSS0dSxHXOs2QIjyUwhL9f8"/>
+</div>
+<h4 class="font-bold text-brand-text truncate">全期全价无谷猫粮</h4>
+<p class="text-sm text-brand-muted mb-3">高蛋白肉类配方</p>
+<div class="flex items-center justify-between">
+<span class="text-brand-primary font-bold text-lg">¥168.00</span>
+<button class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-sm">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Product 2 -->
+<div class="bg-white p-4 rounded-card shadow-soft hover-float group">
+<div class="aspect-square rounded-element bg-brand-secondary mb-4 overflow-hidden">
+<img alt="商品" class="w-full h-full object-cover group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9hSWhmarnmOiCzFr2ezMihGJ1Ja4PzqOnMA8Wkz63U43eRUqlK7W3oHhJUBJdJ3JaDVCduCicZbvDzlF8Wo_6DPCtkJkIP0GpysbukAnnQ3_7L9c_FAF-yt0ov4fY0oXclO7q7oqti2cdOEu3vDE2JsHDommxdpAlUqXWAZ2qiVubZtO2sONyKhZGYnqJwQQLOf-fJ5nksTCNvqR9k3P44WaYAqtRP7Dtu5Bl_YZolBASsgNEZVaBx3X3CDlB3x9A7hT0g6iC-cA"/>
+</div>
+<h4 class="font-bold text-brand-text truncate">宠物耐咬发声玩具</h4>
+<p class="text-sm text-brand-muted mb-3">狗狗磨牙利器</p>
+<div class="flex items-center justify-between">
+<span class="text-brand-primary font-bold text-lg">¥29.90</span>
+<button class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-sm">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Product 3 -->
+<div class="bg-white p-4 rounded-card shadow-soft hover-float group">
+<div class="aspect-square rounded-element bg-brand-secondary mb-4 overflow-hidden">
+<img alt="商品" class="w-full h-full object-cover group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlEmHLQXlcXoPGELbIzuKZ1aH9m417HBOsp_XCHoUZscLDXYnvFsVgyjIqRcu0uizU1c2qEibx4HQx_jyidJa4hDwZA7FC3QpJM-GoFT14pJ6GDrTSKRgZ0cPV-uJsnN6sdWrmS2Pg5UnYG70aUMfiDZmScR1-ouJndEWdbxGvYeEEc7IDb0AV-ZA676_VSOkjgbPXDeGxtHk9n1Duy-D6H3FS7TmLxUVM7N7e68S7MAITdGo7VUl5jfN8RSnWmY2X4PLByojzNjc"/>
+</div>
+<h4 class="font-bold text-brand-text truncate">高品质混合猫砂</h4>
+<p class="text-sm text-brand-muted mb-3">极速吸水 瞬间除臭</p>
+<div class="flex items-center justify-between">
+<span class="text-brand-primary font-bold text-lg">¥45.00</span>
+<button class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-sm">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Product 4 -->
+<div class="bg-white p-4 rounded-card shadow-soft hover-float group">
+<div class="aspect-square rounded-element bg-brand-secondary mb-4 overflow-hidden">
+<img alt="商品" class="w-full h-full object-cover group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmI05UUyznd9GeCxBsO1fdWqLpjGs9muN6pq3mm-8qzme3PuYZRqgl1Ct9_-Yj3gK70FteTffnIJo5tCuMXdwjLlBhAoQab4zXz9GKNC3XZqweNAA952dKvNjqZVv8yTFizzaKgU492jAmswHD_wkjD7WWOCem5eEZOhxPaANu0IIiMdYKSK5Y5ll8C3yJnTVwR0lsOYX1mP6ozOKTf9nPEXduNwZg846zLEz5wCDOQ1qBtYDuAl-GGoutwIcMnoIXRSwz6X-M_nA"/>
+</div>
+<h4 class="font-bold text-brand-text truncate">宠物多功能出行包</h4>
+<p class="text-sm text-brand-muted mb-3">透气舒适 大容量</p>
+<div class="flex items-center justify-between">
+<span class="text-brand-primary font-bold text-lg">¥128.00</span>
+<button class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-sm">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Product 5 -->
+<div class="bg-white p-4 rounded-card shadow-soft hover-float group">
+<div class="aspect-square rounded-element bg-brand-secondary mb-4 overflow-hidden">
+<img alt="商品" class="w-full h-full object-cover group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjPyFJAmPHRoclbXYbzIJASaPZIpMt1kB4nyrMqL45CyCn5iA_Pi7JmpyB8Lm9p_Wnvcl7jeVsfkn4tMOk1TVdwFnkAAd7qfHIMvkaTvVweb4-6XkIlVWpllu_H3zq927b6ZhJ-3eq9yXif4sO1FZ0bbbN9y7B5rrIK1-f0zHcADWLa7pBZ9AqrBqv-usHFSXQRbUE6YkH9bttJ26YEd5mpmCFmNP9_9G4TjRX7w1FiMm_dKBYMJGSPte5B1yiU-BdGIhuxNbZzs0"/>
+</div>
+<h4 class="font-bold text-brand-text truncate">纯天然牛肉冻干</h4>
+<p class="text-sm text-brand-muted mb-3">互动训练奖励零食</p>
+<div class="flex items-center justify-between">
+<span class="text-brand-primary font-bold text-lg">¥62.00</span>
+<button class="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-sm">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- END: MallNewArrivals -->
+</main>
+<!-- BEGIN: MainFooter -->
+<footer class="bg-white border-t border-brand-border mt-16 py-12">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+<div class="space-y-4">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center text-white">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-xl font-bold text-brand-primary">萌宠家园</span>
+</div>
+<p class="text-sm text-brand-muted">一个温暖、治愈、专业的宠物生活综合服务平台。陪伴你与它的每一个快乐瞬间。</p>
+</div>
+<div>
+<h4 class="font-bold mb-4">关于我们</h4>
+<ul class="text-sm text-brand-muted space-y-2">
+<li><a class="hover:text-brand-primary" href="#">平台介绍</a></li>
+<li><a class="hover:text-brand-primary" href="#">公益领养计划</a></li>
+<li><a class="hover:text-brand-primary" href="#">服务协议</a></li>
+<li><a class="hover:text-brand-primary" href="#">联系我们</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-4">商家入驻</h4>
+<ul class="text-sm text-brand-muted space-y-2">
+<li><a class="hover:text-brand-primary" href="#">医院入驻</a></li>
+<li><a class="hover:text-brand-primary" href="#">美容机构入驻</a></li>
+<li><a class="hover:text-brand-primary" href="#">供应商合作</a></li>
+<li><a class="hover:text-brand-primary" href="#">社区达人招募</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-4">关注我们</h4>
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full bg-brand-secondary flex items-center justify-center text-brand-muted hover:bg-brand-primary hover:text-white transition-colors cursor-pointer">
+<svg class="h-5 w-5" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.066 9.645c.183 4.04-2.83 11.235-9.464 11.235-2.062 0-3.951-.606-5.532-1.646.288.034.577.051.874.051 1.71 0 3.287-.584 4.542-1.564-1.597-.03-2.945-1.085-3.409-2.533.223.043.447.069.684.069.333 0 .653-.043.958-.128-1.669-.335-2.924-1.808-2.924-3.578v-.045c.493.273 1.057.438 1.657.457-1.127-.753-1.864-2.043-1.864-3.511 0-.773.208-1.498.572-2.122 1.799 2.207 4.488 3.659 7.518 3.811-.072-.309-.109-.63-.109-.96 0-2.329 1.888-4.217 4.217-4.217 1.212 0 2.307.511 3.076 1.33.96-.189 1.862-.54 2.675-1.022-.315.984-.98 1.809-1.85 2.332.852-.102 1.666-.329 2.42-.664-.564.845-1.277 1.587-2.105 2.164z"></path></svg>
+</div>
+<div class="w-10 h-10 rounded-full bg-brand-secondary flex items-center justify-center text-brand-muted hover:bg-brand-primary hover:text-white transition-colors cursor-pointer">
+<svg class="h-5 w-5" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.17.054 1.805.249 2.227.412.56.216.96.474 1.38.894.42.42.678.82.894 1.38.163.422.358 1.057.412 2.227.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.054 1.17-.249 1.805-.412 2.227-.216.56-.474.96-.894 1.38-.42.42-.82.678-1.38.894-.422.163-1.057.358-2.227.412-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.17-.054-1.805-.249-2.227-.412-.56-.216-.96-.474-1.38-.894-.42-.42-.678-.82-.894-1.38-.163-.422-.358-1.057-.412-2.227-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.054-1.17.249-1.805.412-2.227.216-.56.474-.96.894-1.38.42-.42.82-.678 1.38-.894.422-.163 1.057-.358 2.227-.412 1.266-.058 1.646-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-1.277.057-2.148.26-2.911.557-.788.306-1.457.715-2.122 1.38-.665.665-1.074 1.334-1.38 2.122-.297.763-.5 1.634-.557 2.911-.058 1.28-.072 1.688-.072 4.947s.014 3.667.072 4.947c.057 1.277.26 2.148.557 2.911.306.788.715 1.457 1.38 2.122.665.665 1.334 1.074 2.122 1.38.763.297 1.634.5 2.911.557 1.28.058 1.688.072 4.947.072s3.667-.014 4.947-.072c1.277-.057 2.148-.26 2.911-.557.788-.306 1.457-.715 2.122-1.38.665-.665 1.074-1.334 1.38-2.122.297-.763.5-1.634.557-2.911.058-1.28.072-1.688.072-4.947s-.014-3.667-.072-4.947c-.057-1.277-.26-2.148-.557-2.911-.306-.788-.715-1.457-1.38-2.122-.665-.665-1.334-1.074-2.122-1.38-.763-.297-1.634-.5-2.911-.557-1.28-.058-1.688-.072-4.947-.072zM12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"></path></svg>
+</div>
+</div>
+</div>
+</div>
+<div class="border-t border-brand-border mt-12 pt-8 text-center text-xs text-brand-muted">
+<p>© 2024 萌宠家园 PetHome - 为爱而生，科学养宠。ICP备12345678号</p>
+</div>
+</div>
+</footer>
+<!-- END: MainFooter -->
+</body></html>
