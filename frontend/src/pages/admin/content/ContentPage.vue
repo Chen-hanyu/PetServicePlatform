@@ -36,8 +36,8 @@
 import { ref } from "vue";
 import DataState from "@/components/DataState.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { fetchAdminPosts, reviewAdminPost } from "@/services/modules/admin";
-import { toErrorMessage } from "@/services/http";
+import { fetchAdminPosts, reviewAdminPost } from "@/api/modules/admin";
+import { toErrorMessage } from "@/api/http";
 import type { PostSummary } from "@/types/community";
 
 const loading = ref(false);

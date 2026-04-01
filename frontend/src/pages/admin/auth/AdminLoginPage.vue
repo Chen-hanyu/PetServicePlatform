@@ -17,8 +17,8 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
-import { loginAdmin } from "@/services/modules/admin-auth";
-import { toErrorMessage } from "@/services/http";
+import { loginAdmin } from "@/api/modules/admin-auth";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 const auth = useAuthStore();

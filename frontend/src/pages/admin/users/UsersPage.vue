@@ -36,8 +36,8 @@
 import { ref } from "vue";
 import DataState from "@/components/DataState.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { fetchAdminUsers, updateAdminUserStatus } from "@/services/modules/admin";
-import { toErrorMessage } from "@/services/http";
+import { fetchAdminUsers, updateAdminUserStatus } from "@/api/modules/admin";
+import { toErrorMessage } from "@/api/http";
 import type { UserProfile } from "@/types/auth";
 
 const loading = ref(false);
