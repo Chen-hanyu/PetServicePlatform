@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7ECFBC",
+                        "background-light": "#F7FAF9",
+                        "background-dark": "#1a2421",
+                        "soft-gray": "#E8F1EE",
+                        "accent-pink": "#FFD1D1"
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "system-ui", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1.25rem", // 20px per request
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #F7FAF9;
+        }
+    </style>
+</head>
+<body class="font-display text-slate-800 antialiased">
+<div class="min-h-screen bg-background-light dark:bg-background-dark pb-12">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
+<div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined text-3xl">shopping_basket</span>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">确认订单</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-primary/10 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<button class="p-2 rounded-full hover:bg-primary/10 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-6 pt-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left Column: Order Details -->
+<div class="lg:col-span-2 space-y-6">
+<!-- Shipping Info Card -->
+<section class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-primary/5">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">location_on</span>
+<h2 class="text-lg font-bold">收货人信息</h2>
+</div>
+<button class="text-primary text-sm font-medium flex items-center gap-1 hover:opacity-80">
+                            选择其他地址 <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+<div class="flex items-center justify-between gap-4 p-4 rounded-xl bg-background-light dark:bg-slate-800/50 border border-dashed border-primary/30">
+<div class="space-y-1">
+<div class="flex items-center gap-3">
+<span class="text-base font-bold text-slate-900 dark:text-slate-100">小萌主 (柚子)</span>
+<span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">默认</span>
+</div>
+<p class="text-slate-600 dark:text-slate-400 text-sm">138 **** 8888</p>
+<p class="text-slate-500 dark:text-slate-500 text-sm">上海市 浦东新区 樱花路 1234号 萌物大厦 A座 808室</p>
+</div>
+<span class="material-symbols-outlined text-slate-300">edit</span>
+</div>
+</section>
+<!-- Product List Card -->
+<section class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-primary/5">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">inventory_2</span>
+<h2 class="text-lg font-bold">商品清单</h2>
+</div>
+<div class="space-y-6">
+<!-- Item 1 -->
+<div class="flex gap-4 items-start">
+<div class="w-24 h-24 rounded-xl overflow-hidden bg-soft-gray shrink-0">
+<img alt="日系软萌猫咪抱枕" class="w-full h-full object-cover" data-alt="A cute soft cat plush pillow on white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC81v8SvSu0V8p9WwGeeNTHBqVSngMhjyVqAM9uVLEWTgYBtdcoLZCSe2bP0RFUlsQQSpUaRhTsK55kYeWEeV2X2AwM1l-mFxYhjw6nuUdrfkKMvOngpDe0vqgp0IlI3nK3RASs5YT5xAwqDZ-MMnDiYp1k82Ht6nsXoUlGS_B592o2bhz7ZA3-DefvCQXJU2czA3BBfCfY7Wkr0nElWksRbwdZzyUdDZ14jo9Vn5l023ets8Yy1eIkXodcUXFEBRiMjpSM1pCJFxI"/>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="text-base font-bold text-slate-900 dark:text-slate-100 truncate">日系软萌猫咪抱枕 - 守护你的美梦</h3>
+<p class="text-sm text-slate-500 mt-1">规格：奶油白 / 超柔大号</p>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-primary font-bold">¥99.00</span>
+<span class="text-slate-400 text-sm">x 1</span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-4 items-start pt-6 border-t border-slate-50 dark:border-slate-800">
+<div class="w-24 h-24 rounded-xl overflow-hidden bg-soft-gray shrink-0">
+<img alt="日系樱花陶瓷杯" class="w-full h-full object-cover" data-alt="Pink cherry blossom ceramic mug" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3k2PIuV0sZ2Deyed6EbhGaCl1wrghZkXjHyPTM3XJYOyjAf1FtsY7UosJziQs_HdLA4c0BMIisH9VvbQ1kG46MjfA42eWQdT3wrMlNIIi6Fw-Ov96Z5cbh2QBq9XG-nNxMrlvt9K4cfwcBfSIIjZd5ffKDRGyQEkERAkwtLz60oLv9kD7D5pc_oXjhDuP3p7tVbtFUOBFkV1eSYJ3C7k-OoeGVPE6JxPstVQGkHZyuQkFczK87obpUkFq77kg6uQ0tq6AwYkL90g"/>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="text-base font-bold text-slate-900 dark:text-slate-100 truncate">春日物语：樱花手作陶瓷杯</h3>
+<p class="text-sm text-slate-500 mt-1">规格：初樱粉 / 350ml</p>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-primary font-bold">¥58.00</span>
+<span class="text-slate-400 text-sm">x 2</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Options Card -->
+<section class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-primary/5 space-y-4">
+<!-- Coupons -->
+<div class="flex items-center justify-between py-2 cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">confirmation_number</span>
+<span class="font-medium">优惠券</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-xs text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full font-bold">2张可用</span>
+<span class="material-symbols-outlined text-slate-400 text-sm group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+</div>
+</div>
+<!-- Points -->
+<div class="flex items-center justify-between py-2 border-t border-slate-50 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">stars</span>
+<div>
+<span class="font-medium">积分抵扣</span>
+<p class="text-[10px] text-slate-400">可用 2000 积分，可抵扣 ¥20.00</p>
+</div>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</div>
+</div>
+<!-- Order Notes -->
+<div class="pt-4 border-t border-slate-50 dark:border-slate-800">
+<label class="block text-sm font-medium mb-2 text-slate-600 dark:text-slate-400">订单备注</label>
+<textarea class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-background-light dark:bg-slate-800 focus:ring-primary focus:border-primary text-sm p-3 placeholder:text-slate-400" placeholder="有什么想对店主说的话吗？" rows="2"></textarea>
+</div>
+</section>
+</div>
+<!-- Right Column: Payment Summary -->
+<div class="lg:col-span-1">
+<div class="sticky top-24 space-y-6">
+<!-- Summary Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-primary/5">
+<h2 class="text-lg font-bold mb-6">费用明细</h2>
+<div class="space-y-4">
+<div class="flex justify-between text-sm">
+<span class="text-slate-500 dark:text-slate-400">商品总额</span>
+<span class="font-medium">¥215.00</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500 dark:text-slate-400">运费</span>
+<span class="font-medium">¥0.00</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500 dark:text-slate-400">优惠金额</span>
+<span class="font-medium text-red-500">-¥10.00</span>
+</div>
+<div class="pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-between items-end">
+<span class="text-base font-bold">应付合计</span>
+<span class="text-2xl font-bold text-primary">¥205.00</span>
+</div>
+</div>
+<!-- Payment Method -->
+<div class="mt-8">
+<h3 class="text-sm font-bold mb-4">支付方式</h3>
+<div class="space-y-2">
+<label class="flex items-center justify-between p-3 rounded-xl border border-primary/20 bg-primary/5 cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#07C160]">account_balance_wallet</span>
+<span class="text-sm font-medium">微信支付</span>
+</div>
+<input checked="" class="text-primary focus:ring-primary h-4 w-4" name="payment" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#1677FF]">payments</span>
+<span class="text-sm font-medium">支付宝</span>
+</div>
+<input class="text-primary focus:ring-primary h-4 w-4" name="payment" type="radio"/>
+</label>
+</div>
+</div>
+<button class="w-full mt-8 bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
+                            提交订单
+                        </button>
+<div class="mt-4 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+<span class="material-symbols-outlined text-sm">verified_user</span>
+                            安全支付保障
+                        </div>
+</div>
+<!-- Promo Tip -->
+<div class="bg-accent-pink/20 dark:bg-accent-pink/10 p-4 rounded-xl border border-accent-pink/30 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-xl">redeem</span>
+<p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+<span class="font-bold text-slate-800 dark:text-slate-100">温馨提示：</span>
+                            现在下单可获得双倍积分奖励，预计发放 410 积分，可用于下次抵扣。
+                        </p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Decorative bottom blob -->
+<div class="fixed bottom-0 left-0 w-full h-24 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none -z-10"></div>
+</div>
+</body></html>

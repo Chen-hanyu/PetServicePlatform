@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>帖子详情 - 治愈系午后</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7ECFBC",
+                        "secondary": "#FFD66B",
+                        "background-light": "#F7FAF9",
+                        "background-dark": "#221610",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "Noto Sans SC", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Public Sans', 'Noto Sans SC', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Desktop Container (1200px max) -->
+<div class="max-w-[1200px] mx-auto bg-white dark:bg-slate-900 shadow-sm min-h-screen">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-10 flex items-center justify-between border-b border-primary/10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-8 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary cursor-pointer">arrow_back_ios</span>
+<h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">帖子详情</h1>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors">share</span>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors">more_horiz</span>
+</div>
+</header>
+<!-- Main Content Area: Centered layout with wider feel -->
+<div class="max-w-[960px] mx-auto">
+<!-- Author Info Section -->
+<div class="px-8 py-8 flex items-center justify-between">
+<div class="flex items-center gap-5">
+<div class="size-16 rounded-full border-2 border-primary/20 p-0.5">
+<img alt="用户头像" class="w-full h-full rounded-full object-cover" data-alt="Cute girl profile picture with warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkrBm4kvrWr64NgNDNy4XNq2iWtQ5BDNFTGWmj_WCyzLj18gYZ7i19YV_2YwwGaQn7_AomYp4t3Ta0_Cs9RidZ0LA_e0WEU-AlUYv17B2X2lozPUpfL0OIKHucejThA5iQDA76QwECxLsrj8jo3mwUhekTHwMar7jILNLOPAa2yYRnocFcr_Usp_t5-JSLooaM5QHDTd3NyQq1NvOGxI4Hz_YG-orpr9LIBOJmq8pY5raLLGDGvmUKrTBhsTcVMJFmO1zlyu2NTrw"/>
+</div>
+<div>
+<h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">小熊软糖</h2>
+<p class="text-sm text-slate-400">2小时前发布 · 来自治愈星球</p>
+</div>
+</div>
+<button class="bg-primary text-white px-8 py-2.5 rounded-full font-bold text-base hover:opacity-90 transition-opacity shadow-lg shadow-primary/20">
+                    关注
+                </button>
+</div>
+<!-- Post Content Section -->
+<article class="px-8 pb-10">
+<h1 class="text-3xl font-bold mb-6 leading-tight text-slate-800 dark:text-slate-100">
+                    今日份的治愈系午后 🌿✨
+                </h1>
+<div class="space-y-6 text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
+<p>在这个充满阳光的午后，泡一杯清茶，听着舒缓的音乐，感觉整个世界都慢了下来。希望能把这份温暖也传递给你。</p>
+<!-- Expanded Image Grid for Desktop -->
+<div class="grid grid-cols-12 gap-4 py-6">
+<div class="col-span-12 aspect-[21/9] rounded-2xl overflow-hidden shadow-md">
+<img alt="咖啡馆室内" class="w-full h-full object-cover" data-alt="Cozy cafe interior with warm morning sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiswdZtgbCg6owjN3cru3LwvFqJE_b0Ad-F8uGulVoYPTCCqHY5b1rE8jphRd3lltacP5gXUq9AT0ZIRIdJnNi8cB22ZtCkXhpmjcjNZhxNXxJxNWJBa_Xqkcs2D-vHBdpyLGRj1rhjUx6fdK_2yNTLENUDW_6oaTCbOEPzNRtujRskE67VJBFEvXQbSkktsbqrgm-ksoO-DMls3kdundu13W-zKyiOjfqzy31COATpJzRS3HmSMl74MqjgjCEkECHxLl8SKwaIGA"/>
+</div>
+<div class="col-span-6 aspect-[4/3] rounded-2xl overflow-hidden shadow-md">
+<img alt="茶杯近景" class="w-full h-full object-cover" data-alt="Close up of a tea cup on wooden table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_i8eZ7UYO5ec6FDM3Mvr5r423Ro7pkMNVU27ySbbVsRZCrDZw1EtKSIaudIthyss2ZRleKSF8Bgp13xzEdeqLoSY6YJnSVi94KdUEfyIT0mA8Q7YLsWK82HKMh6fJ4zUNl0mLDPDAb6MZ0nELn2JYV7rR5PpAwDlO4t9NfmhwyipCciCxBFMc4bPHCCYtpJdLn5Y00OgMeM4YH3P66GMHLKrIo94IZFkuizJE6aP6wfJKmgNDFMSCGln7igVtRHJKAk3L6-Q_sK8"/>
+</div>
+<div class="col-span-6 aspect-[4/3] rounded-2xl overflow-hidden shadow-md">
+<img alt="午后阳光" class="w-full h-full object-cover" data-alt="Soft afternoon sun rays through green leaves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4dqCz0V5SMRE4dzUhYS4oKqPPyNgqM5aX70JmuLpQnb5oraZzx4fwMe8iH8lax8kWaT1aWVpBbpx7naYNlwvAW1E2zXIundo4H5dhgZJMrBVrJb4WZvNvibMajkdNhM1appZ0zh1wmxU8TViEySFgL02rIgIRC7ixyRnv4-RAOgYdcW5BZlUNU5U2dkGodOiDgbxeLTn6Qti_tNhDLJ66p1JkwV6rslReHZ3pLSRXqkgfoUk1i5gY15YfnjKeYjWRMwwURKU3z38"/>
+</div>
+</div>
+<p>其实生活并不需要时时刻刻都紧绷着，偶尔的放空是为了更好地出发。今天也要记得爱自己哦～ ❤️</p>
+</div>
+<!-- Tags -->
+<div class="flex flex-wrap gap-3 mt-8">
+<span class="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium hover:bg-primary/20 cursor-pointer transition-colors">#治愈系生活</span>
+<span class="bg-secondary/10 text-amber-600 px-4 py-1.5 rounded-full text-sm font-medium hover:bg-secondary/20 cursor-pointer transition-colors">#下午茶时光</span>
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-4 py-1.5 rounded-full text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors">#日常</span>
+</div>
+</article>
+<!-- Interaction Bar -->
+<div class="px-8 py-6 flex items-center justify-between border-t border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+<div class="flex items-center gap-10">
+<div class="flex items-center gap-2 cursor-pointer group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-red-400 transition-colors text-2xl">favorite</span>
+<span class="text-base font-medium text-slate-500">1.2k</span>
+</div>
+<div class="flex items-center gap-2 cursor-pointer group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-secondary transition-colors text-2xl">star</span>
+<span class="text-base font-medium text-slate-500">856</span>
+</div>
+<div class="flex items-center gap-2 cursor-pointer group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-2xl">mode_comment</span>
+<span class="text-base font-medium text-slate-500">248</span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-primary cursor-pointer hover:opacity-80 transition-opacity">
+<span class="text-base font-bold">分享给好友</span>
+<span class="material-symbols-outlined text-[24px]">send</span>
+</div>
+</div>
+<!-- Comments Section -->
+<section class="p-8">
+<h3 class="text-xl font-bold mb-8 flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                    评论 <span class="text-slate-400 font-normal text-base">(248)</span>
+</h3>
+<!-- Comment Item 1 -->
+<div class="mb-10">
+<div class="flex gap-5">
+<div class="size-12 rounded-full overflow-hidden shrink-0">
+<img alt="评论者头像" class="w-full h-full object-cover" data-alt="Male minimalist profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfXlIrGI1A_UNQRXatlZcorUKXm-lMycgmKYKa7LxDXwMHoaqcsLq_N5f2JTIrrTZ2otdyUNbtl1GnmCkESx9jG-DwsoLTBCXNaE41wf9Yr_GnVx20zyVL-hwB5unQL3ZmH393tPDlsUFcG0zNOe2izTxyenvhLznAjSNSZGDFOWeZp8nUt4B2VhB2SNaPp82OuR4K1pgH8TeWqbOZ2O4SgimK_UQfdB9CL8XAnJJlQk04mFeoGB7SD_Nl3Gea7JlGmYRic6jJOy8"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-2">
+<span class="font-bold text-base text-slate-700 dark:text-slate-200">云淡风轻</span>
+<span class="text-sm text-slate-400">1小时前</span>
+</div>
+<p class="text-slate-600 dark:text-slate-300 text-base leading-relaxed mb-4">
+                                看到照片感觉心情都变好了，那个杯子好可爱呀！在哪买的？
+                            </p>
+<div class="flex items-center gap-6 text-sm text-slate-400">
+<span class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">thumb_up</span> 42</span>
+<span class="cursor-pointer hover:text-primary transition-colors font-medium">回复</span>
+</div>
+<!-- Sub-comment / Reply -->
+<div class="mt-5 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl space-y-4">
+<div class="flex gap-3">
+<div class="size-8 rounded-full overflow-hidden shrink-0">
+<img alt="作者头像" class="w-full h-full object-cover" data-alt="Author small avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaSXTu1Yn1tSFBhOLbyYviH1PsSW2M0avEdXaghEg31KlE-mDJtpZqXodiqO5bjIBqDGa6EbXC5tiUc0d2LeFvSDMR08M8m018552Bt5tP3-TvSYQrEgMh6obH10XMXAE8grqR0gl-HGEDIYY9OQCToTxRYzUoXyxReiV4t40LescKW2r_CI29vOgJBo6LSBk4uZFX9jbyrAASRraD2Q-60S_ZNjqOOOkvUw9NaHc99qPI2qrY0X6claTCyo64UegGFAMFDqCpGGs"/>
+</div>
+<div>
+<p class="text-base text-slate-600 dark:text-slate-300">
+<span class="font-bold text-primary">小熊软糖</span> (作者) <span class="text-slate-400 mx-1">回复</span> <span class="font-bold text-slate-700 dark:text-slate-200">云淡风轻</span>: 是在巷子里的那家手工店买的哦～
+                                        </p>
+<span class="text-xs text-slate-400 mt-1.5 block">50分钟前</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Comment Item 2 -->
+<div class="mb-10">
+<div class="flex gap-5">
+<div class="size-12 rounded-full overflow-hidden shrink-0">
+<img alt="评论者头像" class="w-full h-full object-cover" data-alt="Young female profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYWF8m2LskHze89umExnOFjrMe13cSl_llwEKcs2NbTASIr6DTZthfptEObI0yevVfOQvbYwbRtfbjvKwXoSMH7EnvttCulu4f_8AIPnCrxzmtkK2XmV8NJN9IDzTwD2jQMSxhYTbeO4PPv6RqnlO5_pnRZbDR9yBwGWzha9gJlRGy-NgOdwfQF8YRIz4Lcz1NPPfWxKRL3iw1WIBTbrejWbexYzGBrI4MGncGjDhw7n4XgSKm90p9hG2wzVQFfOFqeYGKuWUXOCU"/>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-2">
+<span class="font-bold text-base text-slate-700 dark:text-slate-200">草莓布丁</span>
+<span class="text-sm text-slate-400">刚刚</span>
+</div>
+<p class="text-slate-600 dark:text-slate-300 text-base leading-relaxed mb-4">
+                                我也好想拥有这样的午后生活，太治愈了！✨
+                            </p>
+<div class="flex items-center gap-6 text-sm text-slate-400">
+<span class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">thumb_up</span> 5</span>
+<span class="cursor-pointer hover:text-primary transition-colors font-medium">回复</span>
+</div>
+</div>
+</div>
+</div>
+<!-- More Comments Link -->
+<div class="text-center py-6">
+<p class="text-base text-primary font-bold cursor-pointer hover:underline">查看全部 248 条评论</p>
+</div>
+</section>
+</div>
+<!-- Desktop Footer/Input Bar -->
+<div class="sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 px-8 py-6">
+<div class="max-w-[960px] mx-auto flex items-center gap-6">
+<div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full px-6 py-3 flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-[22px]">edit</span>
+<input class="bg-transparent border-none focus:ring-0 text-base w-full text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="说点什么治愈一下..." type="text"/>
+</div>
+<div class="flex items-center gap-6 text-slate-500">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors text-2xl">sentiment_satisfied</span>
+<button class="bg-primary text-white text-base font-bold px-8 py-3 rounded-full shadow-lg shadow-primary/30 hover:opacity-90 transition-all transform hover:scale-[1.02]">发送</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

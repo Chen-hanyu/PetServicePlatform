@@ -82,5 +82,47 @@ export const mockPosts = [
     author: { id: 6, nickname: "户外爱好者", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=6" },
     tags: ["春游", "遛狗"],
     published_at: "2024-03-15 13:20"
+  },
+  {
+    id: 7,
+    title: "猫咪春季驱虫全攻略",
+    category: "知识",
+    cover_url: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=600&q=80",
+    excerpt: "春季是寄生虫高发季节，给猫咪做好驱虫工作是保障健康的重要一步...",
+    status: "PUBLISHED",
+    like_count: 195,
+    favorite_count: 67,
+    comment_count: 28,
+    author: { id: 7, nickname: "宠物医生", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=7" },
+    tags: ["驱虫", "健康"],
+    published_at: "2024-03-14 08:30"
+  },
+  {
+    id: 8,
+    title: "如何训练狗狗定点上厕所",
+    category: "知识",
+    cover_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=600&q=80",
+    excerpt: "训练狗狗定点上厕所需要耐心和技巧，掌握正确方法让你事半功倍...",
+    status: "PUBLISHED",
+    like_count: 275,
+    favorite_count: 98,
+    comment_count: 56,
+    author: { id: 8, nickname: "训犬师老王", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=8" },
+    tags: ["训练", "教程"],
+    published_at: "2024-03-13 15:00"
+  },
+  {
+    id: 9,
+    title: "宠物摄影技巧分享：如何拍出好看的猫咪照片",
+    category: "推荐",
+    cover_url: "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=600&q=80",
+    excerpt: "用手机也能拍出专业级宠物照片！分享几个实用的拍摄技巧和构图方法...",
+    status: "PUBLISHED",
+    like_count: 420,
+    favorite_count: 189,
+    comment_count: 92,
+    author: { id: 9, nickname: "摄影达人", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=9" },
+    tags: ["摄影", "技巧"],
+    published_at: "2024-03-12 10:45"
   }
 ];

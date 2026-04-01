@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>宠物综合服务平台 - 社区中心</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7ECFBC',
+            secondary: '#F7FAF9',
+            accent: '#FFD66B',
+            'main-text': '#2F3A38',
+            'sub-text': '#66706E',
+            'weak-text': '#98A3A0',
+            'border-color': '#E4ECE9',
+            'block-bg': '#F2F7F5',
+            success: '#5BB98C',
+            warning: '#F3B63F',
+            error: '#E97A7A',
+            info: '#73A7E8',
+          },
+          borderRadius: {
+            'card-lg': '20px',
+            'card': '16px',
+            'input': '12px',
+          },
+          boxShadow: {
+            'soft': '0 8px 24px rgba(34, 60, 52, 0.08)',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="typography">
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background-color: #F7FAF9;
+      color: #2F3A38;
+    }
+    .title-font {
+      font-weight: 700;
+    }
+  </style>
+<style data-purpose="custom-layouts">
+    .masonry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-gap: 24px;
+    }
+    .nav-active {
+      color: #7ECFBC;
+      position: relative;
+    }
+    .nav-active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 3px;
+      background-color: #7ECFBC;
+      border-radius: 999px;
+    }
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
+    }
+    .card-transition {
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-50 bg-white border-b border-border-color">
+<div class="container mx-auto px-4 h-20 flex items-center justify-between">
+<!-- Logo Section -->
+<div class="flex items-center space-x-2">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-xl font-bold tracking-tight text-main-text">萌宠管家</span>
+</div>
+<!-- Navigation Modules -->
+<nav class="hidden md:flex items-center space-x-8">
+<a class="text-sub-text hover:text-primary transition-colors" href="#">首页</a>
+<a class="nav-active font-medium" href="#">社区</a>
+<a class="text-sub-text hover:text-primary transition-colors" href="#">领养</a>
+<a class="text-sub-text hover:text-primary transition-colors" href="#">宠物服务</a>
+<a class="text-sub-text hover:text-primary transition-colors" href="#">商城</a>
+</nav>
+<!-- User Actions -->
+<div class="flex items-center space-x-4">
+<div class="relative hidden lg:block">
+<input class="pl-10 pr-4 py-2 bg-block-bg border-none rounded-input focus:ring-2 focus:ring-primary w-64 text-sm" placeholder="搜索帖子、知识..." type="text"/>
+<svg class="h-4 w-4 absolute left-3 top-3 text-weak-text" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<button class="bg-primary text-white px-5 py-2 rounded-input font-medium hover:bg-opacity-90 transition-all flex items-center space-x-1">
+<svg class="h-5 w-5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" fill-rule="evenodd"></path>
+</svg>
+<span>发布</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-gray-200 border-2 border-primary overflow-hidden cursor-pointer">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQe2iw11IksigMWAscVmWtsbOtX_UJJHii-pDJkNr3VWzjwsyDbU240uGFcs5pdPXZFmURoKEfwkJKkP1dtai3DtU8F_kneoHYxoZDnMtc6XoUbqV4QcO6suaOScGdaeibHMrRJKKgwql_TlXWbT924gQWP8WKr2fLcW2WXbIF4ECmLbH-Jc9nNvzmbCrRi8xFTuOK9mCkXV4ql7QttxRSgPQmq5FHPNS4is6LqoO4gz8-KpeEkAvLS1szC3j0zVe5rwa8ZJZ6nF0"/>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: CommunitySubNav -->
+<div class="bg-white shadow-sm">
+<div class="container mx-auto px-4 flex items-center justify-between h-14">
+<div class="flex space-x-8">
+<button class="text-primary font-bold border-b-2 border-primary h-full px-2">推荐</button>
+<button class="text-sub-text hover:text-primary transition-colors h-full px-2">最新</button>
+<button class="text-sub-text hover:text-primary transition-colors h-full px-2">知识库</button>
+<button class="text-sub-text hover:text-primary transition-colors h-full px-2">问答悬赏</button>
+</div>
+<div class="flex items-center space-x-2 text-sm text-weak-text">
+<span>排序方式:</span>
+<select class="border-none bg-transparent text-sub-text focus:ring-0 cursor-pointer">
+<option>热度优先</option>
+<option>时间优先</option>
+</select>
+</div>
+</div>
+</div>
+<!-- END: CommunitySubNav -->
+<main class="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+<!-- BEGIN: MainContentFeed -->
+<section class="flex-grow">
+<div class="masonry-grid" id="community-feed">
+<!-- Post Card 1: Daily Life -->
+<article class="bg-white rounded-card shadow-soft overflow-hidden card-hover card-transition cursor-pointer group" data-purpose="post-card">
+<div class="relative overflow-hidden aspect-[4/5]">
+<img alt="Pet Post" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6i2hALqhqPVoTyDOuqBuL83svOLB7EMpoIp-pCO9iTz9PEUzuDu8KTKB31c0IkXBNPhvaRx_vg1yXvPRWiOzX7elqtUOe2-lkmvU7DL3XwpHoLWsRa8Icc0RO_-JOSfO_rMdA8wCISRpOLdY3qGPsKI3ToI8QB-eJ0-M7qMeLc0RNLG3EIBX5FI3ZLJeqEfNPnZcbIWr90ipnf4Len2zvoGEr9cnP8CGH-LJPv6-BgYQrqFeBYRANM4EOISZgELhNmKBLVzy-5NQ"/>
+<div class="absolute top-3 left-3 bg-black/30 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full flex items-center space-x-1">
+<svg class="h-3 w-3" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" fill-rule="evenodd"></path>
+</svg>
+<span>9张图</span>
+</div>
+</div>
+<div class="p-4">
+<h3 class="font-bold text-main-text leading-tight mb-2 line-clamp-2">今天带我家主子去公园散步，它居然交到了新朋友！</h3>
+<div class="flex items-center justify-between mt-4">
+<div class="flex items-center space-x-2">
+<img alt="User" class="w-6 h-6 rounded-full border border-border-color" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhsCPmZL3REEYh0AldF0ix1E6HgmNYlqijXJowCk3SKtng5GAkTKkos1C7wx6jIFzi4Tn6G4QearkfdKjnJsqOO_rMBvkPs8apt6zvX7TMjM8U-bIygMDWXkA6O20hEspmyLi_Wnawh3RjKM69pr07f9tV54nIdDZ3-kXwNt95qm7nddJJbQZK__dNUAe4qQLqgzSZETAZDNiMukKlO07U7kb_QhRPhtYwSOcRULzzL3tCGO8VBQBo4o-ZU9DLQ06fXeDguAOgwyg"/>
+<span class="text-xs text-sub-text">橘猫大队长</span>
+</div>
+<div class="flex items-center space-x-3 text-weak-text">
+<button class="flex items-center space-x-1 hover:text-error transition-colors">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-xs">128</span>
+</button>
+<div class="flex items-center space-x-1">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-xs">45</span>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- Post Card 2: Knowledge (Special Identifier) -->
+<article class="bg-white rounded-card shadow-soft overflow-hidden card-hover card-transition cursor-pointer group" data-purpose="knowledge-card">
+<div class="relative overflow-hidden aspect-video">
+<img alt="Knowledge" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeFj9F0q_tXehshRRcFGvuaJIWh9fIwjbm_lYFQTPOc1fH60JZ57S4IeHD7ebPeTf8Y4XVwiaxyL-4dSdTUfcyWn8628_Ex_yo9FaH_T8hSh7-BvDX6TPS36P4AJJBRb5YjZT7HvPqBwmFxzuBgyjQYrcSTUAKjTshlpeVYzVBcqJzJ4z3NgdNePj7mo9mQV9SekNAbkgVYnv9ud1VrTMTrlMuXmPUMpKMIhe09l_a_-tbSPRt5nWhvD7lEgZXLEy3nzMpsfUGzMY"/>
+<div class="absolute top-3 left-3 bg-primary/90 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg">
+              精品知识
+            </div>
+</div>
+<div class="p-4 bg-block-bg/30">
+<div class="flex items-center space-x-1 mb-2">
+<span class="text-[10px] bg-accent/20 text-warning px-2 py-0.5 rounded-full font-bold uppercase">#新手必看</span>
+</div>
+<h3 class="font-bold text-main-text leading-tight mb-2">换季期间，宠物掉毛严重怎么办？5个实用小妙招分享。</h3>
+<p class="text-xs text-sub-text line-clamp-2 mb-4">春秋季节是宠物的换毛期，家里的沙发、地毯总是惨不忍睹。其实只要掌握这几个梳理和饮食技巧...</p>
+<div class="flex items-center justify-between border-t border-border-color pt-3">
+<div class="flex items-center space-x-2">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[10px] text-white font-bold">官</div>
+<span class="text-xs text-sub-text font-medium">萌宠官方小助手</span>
+</div>
+<span class="text-[10px] text-weak-text">3.2k 阅读</span>
+</div>
+</div>
+</article>
+<!-- Post Card 3: Q&A -->
+<article class="bg-white rounded-card shadow-soft p-5 border-l-4 border-accent card-hover card-transition cursor-pointer" data-purpose="qa-card">
+<div class="flex justify-between items-start mb-3">
+<span class="bg-accent/20 text-warning px-3 py-1 rounded-full text-[10px] font-bold">悬赏问答</span>
+<span class="text-accent flex items-center">
+<svg class="h-4 w-4 mr-1" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" fill-rule="evenodd"></path>
+</svg>
+<span class="font-bold text-sm">50 积分</span>
+</span>
+</div>
+<h3 class="font-bold text-lg text-main-text mb-3">狗狗突然不吃狗粮了，精神状态还不错，是怎么回事？</h3>
+<div class="flex items-center space-x-2 mb-4">
+<div class="flex -space-x-2">
+<img alt="" class="inline-block h-6 w-6 rounded-full ring-2 ring-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClVUzUIe5zteyBzvkNvNy4f2Lo2Xov8n6V0SB43O-U1xXERNp2DmHkS64fK8dkLCnHx5GCYiQW0IrVpWDLMh0ZY47jZ7bKKCgU2ZOhYKK_KHLYgP1RMyMkuLc6lWS3yhgPniC1YxhvEGI6KskWV7Y9pMyXpGBtj4hYla38Oox6-J49LM5g9tlpk5vZ7dcE1vWdo2Z3-I-MzpKKLMEIuqh5oDPYj9Bm1ckfouexhEpduIZtWVS_fbsn60lQraNmb7zWYGj8HcvD_qk"/>
+<img alt="" class="inline-block h-6 w-6 rounded-full ring-2 ring-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA091lSkEdCDRJe49SvXNPKNwL8v7F6MJTwRtAV3LyZdJ5waMP6N5wuAAmYDoqYwV1QehVY-RpHTRyd96j3i-BqWSVHhJWAL9znmiLy2Bin29L7wdvr0i4eXzII_Zbw_gs3V05FxmtE7_MYIg9B4j9m3-y30cN5L4MVXxlKCQm-TbitVtvsXgdd5E2RXIPORLcuzuOVEvJA6G8R7QjFXMRPfQnmL96KDW6HyHTkDHgQ7dCpQeVT35Tn6PYBhATJ_dadNWpiSTAZ04k"/>
+</div>
+<span class="text-xs text-weak-text">12位资深宠主已回答</span>
+</div>
+<div class="flex items-center justify-between text-xs text-weak-text">
+<span>来自: 问答专区</span>
+<span>2小时前</span>
+</div>
+</article>
+<!-- Post Card 4: Daily Life -->
+<article class="bg-white rounded-card shadow-soft overflow-hidden card-hover card-transition cursor-pointer group" data-purpose="post-card">
+<div class="relative overflow-hidden aspect-square">
+<img alt="Pet Post" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCscMHr4rwUd7GHUjQduKtmqXKbCo58cwCMIanKUlcYJv15SwS_4R9NtCC_eG2adJUmO4Ja_xk0LQrAt6XNgqL6Ph-COPGkdTBmyXpkp6mqv4nk3T7N_2jSLTgMWfndvnLXBLoqq_6cypmmAOPwXkjos2ls9Qk2lzdCqbWlSsmUa6BvyuJ-wDc5BwWOGrMgjoFlbw6RltBGe-ZMsb63NOX74aSqn26bfN5Hnhfuu8VmmOlSWWXcoqeDLViD5Vtt-WqpvyDWHnjVESs"/>
+</div>
+<div class="p-4">
+<h3 class="font-bold text-main-text leading-tight mb-2 line-clamp-1">夕阳下的奔跑，是我逝去的青春！</h3>
+<div class="flex items-center justify-between mt-4">
+<div class="flex items-center space-x-2">
+<img alt="User" class="w-6 h-6 rounded-full border border-border-color" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY-AvFy6axst62mtKCOQACDB3L2SFXKWG1gqyhlJuesKc5kGky93vyG_U-86BKJmVPVTnsMut1-L-zsXtCHEmtIlqqmXumQ9C8Pzm6pEdqf5RaK4y3LZONVnzY12MpNUA196BOPxqgf3DgVgaSAEuhTQD1JFLCKX0Xniw-i5N-dwGkYUK4UqNEDjlFbP4VKaBpNYfM2Fog_Xui_5Gt96I9zmPJze1hF2kyORi3lSTmgIEI_O0L0ZzUei53C2xqAQbl1oPI_zxAW8Q"/>
+<span class="text-xs text-sub-text">哈士奇的铲屎官</span>
+</div>
+<div class="flex items-center space-x-3 text-weak-text">
+<button class="flex items-center space-x-1">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-xs">56</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- Post Card 5: Knowledge -->
+<article class="bg-white rounded-card shadow-soft overflow-hidden card-hover card-transition cursor-pointer group" data-purpose="knowledge-card">
+<div class="relative overflow-hidden aspect-[16/9]">
+<img alt="Knowledge" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxIdOOqqOiEFybd5L64iOvBbirhPBbEM3t4VHLy1jrHKk4Q2baJt3hDSkztKw6mZ2_VjN5wz1ahqCxeyZEKqmpSsUc9HMP-YtDQnI3CiR5vgwbbQ1wOcUKpB4PHD8oUGrHQrtrylpd6I0AOPlKkPKgl8t5GJrgs5OVuk1qSsgZfta9F02u_YLL1XIoszHuFhyqabiee_lz6tKGm6ecNmvcl11xhonjrBPLl2eeeddQAezptWbQcf-niNm35ORTAo2J2sx3KfAVemE"/>
+<div class="absolute top-3 left-3 bg-primary/90 text-white text-[10px] font-bold px-3 py-1 rounded-full">医学小贴士</div>
+</div>
+<div class="p-4">
+<h3 class="font-bold text-main-text leading-tight mb-2">如何科学为宠物补钙？避免盲目补钙带来的伤害。</h3>
+<div class="flex items-center mt-4">
+<img alt="Doctor" class="w-6 h-6 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAU1N7zJxGdEJNafAUWhnqhw6S8JNg4xAsIzdUfkdrJPoERc132RqTvhCFtAP7Uu6uRj8kh21rBg1Jb1biNPTSypw5m4PzPN3SqUOV_OF2Y5-U02pKorJrjejJ8pzkv8fltktBSn5Gs7JbpogVekp8vr-ikjeN6Gaili1-twhYcka_2n_fhXdc3cOpVtjml5vGn6Ivv0AMyiDfjxZfBAQnK4XB-s1DGKod3SOFOCEV5TU1B535BL-qNCPN1wdvGCLgKTgZur5FQjs8"/>
+<span class="text-xs text-sub-text ml-2">汪医生诊疗室</span>
+</div>
+</div>
+</article>
+</div>
+<!-- Loading State -->
+<div class="mt-12 flex justify-center">
+<button class="text-primary font-medium flex items-center space-x-2 border-2 border-primary/20 px-8 py-3 rounded-full hover:bg-primary/5 transition-colors">
+<span>加载更多有趣内容</span>
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</section>
+<!-- END: MainContentFeed -->
+<!-- BEGIN: Sidebar -->
+<aside class="w-full lg:w-80 space-y-8">
+<!-- User Profile Card -->
+<section class="bg-white rounded-card shadow-soft p-6 text-center" data-purpose="user-widget">
+<div class="w-20 h-20 mx-auto rounded-full border-4 border-secondary p-1 mb-4">
+<img alt="User" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpQPnhY3-iJjfDWJupySnmHRz8WnHzgXzY7E0E5x2HrPnfdCgG0dBnDsDK5vGWe7CP3yfJ5lyjkNeVkVIWRWA95hPDqRSSOvOIxBF8eTo89kTZkXhVqt_AOhYqpZ79iiQj9G4D5SP1qOGaxc0vxAovvbQJ3Ig3tWMW3U1ru1VduZu0odO-0ZyodY5AuPBeWTRe8TVAqbeVi7I0LHsetEpQd6S1kdf2xnqbTmkROX8usEZvHx1SA1kb0T-DMmI4bKNzzZeYcYLL-uQ"/>
+</div>
+<h4 class="font-bold text-main-text text-lg">爱猫的小明</h4>
+<p class="text-xs text-weak-text mt-1">社区达人 · 资深铲屎官</p>
+<div class="flex justify-around mt-6 border-t border-border-color pt-6">
+<div class="text-center">
+<div class="font-bold text-main-text">24</div>
+<div class="text-[10px] text-weak-text">发布</div>
+</div>
+<div class="text-center">
+<div class="font-bold text-main-text">1.2k</div>
+<div class="text-[10px] text-weak-text">获赞</div>
+</div>
+<div class="text-center">
+<div class="font-bold text-main-text">89</div>
+<div class="text-[10px] text-weak-text">关注</div>
+</div>
+</div>
+</section>
+<!-- Popular Tags -->
+<section class="bg-white rounded-card shadow-soft p-6">
+<div class="flex items-center justify-between mb-4">
+<h4 class="font-bold text-main-text flex items-center">
+<svg class="h-5 w-5 mr-2 text-primary" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+            热门话题
+          </h4>
+<a class="text-[10px] text-primary hover:underline" href="#">更多</a>
+</div>
+<div class="flex flex-wrap gap-2">
+<a class="px-3 py-1.5 bg-block-bg rounded-full text-xs text-sub-text hover:bg-primary hover:text-white transition-all" href="#"># 萌宠日常</a>
+<a class="px-3 py-1.5 bg-block-bg rounded-full text-xs text-sub-text hover:bg-primary hover:text-white transition-all" href="#"># 养猫避坑指南</a>
+<a class="px-3 py-1.5 bg-block-bg rounded-full text-xs text-sub-text hover:bg-primary hover:text-white transition-all" href="#"># 狗狗健康饮食</a>
+<a class="px-3 py-1.5 bg-block-bg rounded-full text-xs text-sub-text hover:bg-primary hover:text-white transition-all" href="#"># 宠物洗护</a>
+<a class="px-3 py-1.5 bg-block-bg rounded-full text-xs text-sub-text hover:bg-primary hover:text-white transition-all" href="#"># 摄影大赛</a>
+<a class="px-3 py-1.5 bg-block-bg rounded-full text-xs text-sub-text hover:bg-primary hover:text-white transition-all" href="#"># 领养不买卖</a>
+</div>
+</section>
+<!-- Hot Knowledge Recommendation -->
+<section class="bg-white rounded-card shadow-soft p-6">
+<h4 class="font-bold text-main-text mb-4">热门知识榜</h4>
+<div class="space-y-4">
+<div class="flex items-start space-x-3 group cursor-pointer">
+<div class="w-6 h-6 flex-shrink-0 bg-accent/20 text-warning font-bold text-xs flex items-center justify-center rounded-lg">1</div>
+<p class="text-sm text-sub-text group-hover:text-primary transition-colors line-clamp-2">狗狗常见的皮肤病识别与预防...</p>
+</div>
+<div class="flex items-start space-x-3 group cursor-pointer">
+<div class="w-6 h-6 flex-shrink-0 bg-border-color text-weak-text font-bold text-xs flex items-center justify-center rounded-lg">2</div>
+<p class="text-sm text-sub-text group-hover:text-primary transition-colors line-clamp-2">如何训练幼猫使用猫砂盆？</p>
+</div>
+<div class="flex items-start space-x-3 group cursor-pointer">
+<div class="w-6 h-6 flex-shrink-0 bg-border-color text-weak-text font-bold text-xs flex items-center justify-center rounded-lg">3</div>
+<p class="text-sm text-sub-text group-hover:text-primary transition-colors line-clamp-2">宠物家庭安全用药指南：这些药千万别喂</p>
+</div>
+</div>
+</section>
+<!-- Daily Tip Widget -->
+<section class="bg-primary/10 rounded-card p-6 border-2 border-dashed border-primary/30 relative overflow-hidden" data-purpose="daily-tip">
+<div class="relative z-10">
+<h4 class="font-bold text-primary mb-2 flex items-center">
+<svg class="h-5 w-5 mr-1" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" fill-rule="evenodd"></path>
+</svg>
+            今日养宠贴士
+          </h4>
+<p class="text-sm text-sub-text leading-relaxed">
+            春季多风且柳絮多，带狗狗出门散步建议避开正午时分，并注意观察是否有频繁抓挠眼睛的情况哦！
+          </p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<svg class="h-24 w-24" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-3.5 14c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5zm7 0c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5zm-3.5-3c.552 0 1 .448 1 1s-.448 1-1 1-1-.448-1-1 .448-1 1-1z"></path>
+</svg>
+</div>
+</section>
+</aside>
+<!-- END: Sidebar -->
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-white mt-12 py-12 border-t border-border-color">
+<div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center space-x-2 mb-6">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-lg font-bold text-main-text">萌宠管家</span>
+</div>
+<p class="text-xs text-weak-text leading-relaxed">
+          致力于打造最温暖的宠物服务平台，为每一份爱与陪伴提供专业的支持。
+        </p>
+</div>
+<div>
+<h5 class="font-bold text-main-text mb-4">关于我们</h5>
+<ul class="space-y-2 text-sm text-sub-text">
+<li><a class="hover:text-primary" href="#">平台介绍</a></li>
+<li><a class="hover:text-primary" href="#">联系我们</a></li>
+<li><a class="hover:text-primary" href="#">加入我们</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-main-text mb-4">帮助中心</h5>
+<ul class="space-y-2 text-sm text-sub-text">
+<li><a class="hover:text-primary" href="#">社区守则</a></li>
+<li><a class="hover:text-primary" href="#">隐私协议</a></li>
+<li><a class="hover:text-primary" href="#">意见反馈</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-main-text mb-4">关注我们</h5>
+<div class="flex space-x-4">
+<div class="w-8 h-8 rounded-full bg-block-bg flex items-center justify-center text-sub-text hover:bg-primary hover:text-white transition-colors cursor-pointer">
+<span class="text-xs font-bold">博</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-block-bg flex items-center justify-center text-sub-text hover:bg-primary hover:text-white transition-colors cursor-pointer">
+<span class="text-xs font-bold">信</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-block-bg flex items-center justify-center text-sub-text hover:bg-primary hover:text-white transition-colors cursor-pointer">
+<span class="text-xs font-bold">书</span>
+</div>
+</div>
+</div>
+</div>
+<div class="container mx-auto px-4 mt-12 pt-8 border-t border-border-color text-center text-[10px] text-weak-text">
+      © 2024 萌宠管家综合服务平台. All rights reserved.
+    </div>
+</footer>
+<!-- END: Footer -->
+<!-- BEGIN: InteractionScripts -->
+<script data-purpose="card-interactions">
+    // Minimal interaction script to demonstrate hover states or tag toggling
+    document.querySelectorAll('[data-purpose="post-card"]').forEach(card => {
+      card.addEventListener('click', () => {
+        // In a real app, this would navigate to the detail page
+        console.log('Navigate to post details');
+      });
+    });
+  </script>
+<!-- END: InteractionScripts -->
+</body></html>

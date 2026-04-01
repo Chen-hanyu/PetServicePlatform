@@ -1,86 +1,85 @@
 :root {
-  /* 页面基底 */
-  --bg: #fff9f4;
+  /* 页面基底 - 更新为温暖治愈风格（皮肤色调） */
+  --bg: #FFF8F5;
   --surface: #ffffff;
-  --text: #2f2a26;
-  --muted: #7d7068;
-  /* 辅助灰字：偏暖棕灰，避免冷青灰 */
-  --muted-soft: #9a8578;
+  --text: #5C4033;
+  --muted: #8B7355;
+  /* 辅助灰字 */
+  --muted-soft: #B8A089;
 
-  /* 替代 #f5f5f5 / #eee 的暖中性底 */
-  --surface-muted: #faf4ef;
-  --surface-muted-hover: #f0e6dc;
+  /* 浅底 */
+  --surface-muted: #FDF5F0;
+  --surface-muted-hover: #FAEEE7;
 
-  /* 图片底部渐变遮罩（暖棕，不用纯黑） */
+  /* 图片底部渐变遮罩 */
   --image-overlay-gradient: linear-gradient(
     0deg,
-    rgba(61, 47, 40, 0.75) 0%,
-    rgba(61, 47, 40, 0.25) 48%,
+    rgba(92, 64, 51, 0.75) 0%,
+    rgba(92, 64, 51, 0.25) 48%,
     transparent 100%
   );
 
-  /* 品牌主色（全站统一：主按钮、强调、价格、角标） */
-  --primary: #ff9d7a;
-  --primary-strong: #f17c53;
-  --accent: #ffd9a8;
-  --accent-soft: #ffecd2;
+  /* 品牌主色 - 温暖珊瑚橙 */
+  --primary: #FF9B7A;
+  --primary-strong: #E8846A;
+  --accent: #FFD4B8;
+  --accent-soft: #FFF5EE;
 
-  /* 标题与暖色文字 */
-  --text-heading: #7f4026;
-  --text-heading-soft: #8d4d30;
-  --text-subheading: #a06842;
+  /* 标题与文字 */
+  --text-heading: #5C4033;
+  --text-heading-soft: #6B4D3A;
+  --text-subheading: #8B7355;
 
   /* 边框与浅底 */
-  --border-warm: #f0dfd2;
-  --border-warm-mid: #f0dccb;
-  --border-input: #eddacc;
-  --surface-tint: #fffaf5;
-  --chip-bg: #fff1e5;
-  --chip-border: #ffd5b8;
-  --chip-active-bg: #ffe9d7;
+  --border-warm: #F5E6DD;
+  --border-warm-mid: #FAEEE8;
+  --border-input: #E8D5C9;
+  --surface-tint: #FFF8F5;
+  --chip-bg: #FDF5F0;
+  --chip-border: #FF9B7A;
+  --chip-active-bg: #FFF0E8;
 
-  /* 全站统一横幅渐变（领养/服务/商城/社区顶栏等共用） */
-  --hero-gradient: linear-gradient(135deg, #ffb089 0%, #ff9d7a 42%, #f17c53 78%, #ffd9a8 100%);
+  /* 全站统一横幅渐变 - 温暖日落渐变 */
+  --hero-gradient: linear-gradient(135deg, #FFB088 0%, #FF9B7A 42%, #E8846A 78%, #FFD4B8 100%);
   --hero-text: #ffffff;
-  --hero-text-muted: rgba(255, 255, 255, 0.92);
+  --hero-text-muted: rgba(255, 255, 255, 0.95);
 
   /* 次级信息条、提示条 */
-  --banner-soft: linear-gradient(135deg, #ffecd2 0%, #ffd9a8 100%);
+  --banner-soft: linear-gradient(135deg, #FFF5EE 0%, #FFE4D6 100%);
 
   /* 登录页等装饰光斑 */
-  --glow-1: #ffecd2;
-  --glow-2: rgba(255, 157, 122, 0.45);
+  --glow-1: #FFF0E8;
+  --glow-2: rgba(255, 155, 122, 0.45);
 
-  /* 性别标签：公偏暖调蓝灰，母用主色 */
-  --gender-male: #6b8fa8;
-  --gender-female: var(--primary);
+  /* 性别标签 */
+  --gender-male: #FF9B7A;
+  --gender-female: #FFB6C1;
 
-  /* 语义状态（仅用于状态徽章等，不得用于品牌元素） */
-  --status-success-bg: #e8f5e9;
-  --status-success-text: #4caf50;
-  --status-warning-bg: #fff3e0;
-  --status-warning-text: #ff9800;
-  --status-danger-bg: #ffebee;
-  --status-danger-text: #f44336;
+  /* 语义状态 */
+  --status-success-bg: #FFF0E8;
+  --status-success-text: #E8846A;
+  --status-warning-bg: #FFF8E6;
+  --status-warning-text: #E6A23C;
+  --status-danger-bg: #FFE8E8;
+  --status-danger-text: #E97A7A;
 
   /* 星级评分的填充色 */
-  --rating: #f3b64f;
+  --rating: #FFB088;
 
   /* 购物车/徽章角标等固定在白色背景上的文字 */
-  --on-white-text: #9a8578;
+  --on-white-text: #8B7355;
 
-  /* 弹窗遮罩（暖棕半透明） */
-  --overlay-scrim: rgba(61, 47, 40, 0.48);
+  /* 弹窗遮罩 */
+  --overlay-scrim: rgba(92, 64, 51, 0.5);
 
   --radius-xl: 20px;
-  --radius-lg: 18px;
+  --radius-lg: 16px;
   --radius-md: 12px;
-  --radius-sm: 10px;
-  --shadow: 0 10px 30px rgba(102, 72, 48, 0.1);
+  --radius-sm: 8px;
+  --shadow: 0 8px 24px rgba(92, 64, 51, 0.08);
 
-  --success: #6bbf8b;
-  --warning: #f3b64f;
-  --danger: #df7a7a;
-  /* 装饰性「信息」色：暖琥珀，不用冷蓝 */
-  --info: #c4956a;
+  --success: #E8846A;
+  --warning: #E6A23C;
+  --danger: #E97A7A;
+  --info: #7AACD1;
 }
