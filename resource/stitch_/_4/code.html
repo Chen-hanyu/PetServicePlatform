@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7ECFBC",
+                        "background-light": "#F7FAF9",
+                        "background-dark": "#1a2421",
+                        "soft-pink": "#FFD1DC",
+                        "soft-yellow": "#FFF4BD",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1.25rem", // 20px
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Public Sans', sans-serif;
+            background-color: #F7FAF9;
+        }
+        .custom-shadow {
+            box-shadow: 0 4px 20px -2px rgba(126, 207, 188, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-100">
+<div class="min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10 px-4 py-4">
+<div class="max-w-6xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="bg-primary/20 p-2 rounded-xl text-primary">
+<span class="material-symbols-outlined text-2xl">shopping_basket</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight">我的购物车</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400">共 3 件宝贝</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="p-2 hover:bg-primary/10 rounded-xl transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 hover:bg-primary/10 rounded-xl transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left: Product List -->
+<div class="lg:col-span-2 space-y-4">
+<!-- Global Selection Header -->
+<div class="flex items-center justify-between bg-white dark:bg-slate-800/50 p-4 rounded-xl custom-shadow">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-5 h-5 rounded-full border-primary/30 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox"/>
+<span class="text-sm font-semibold">全选商品</span>
+</label>
+<button class="text-sm text-slate-400 hover:text-red-400 flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-sm">delete_sweep</span>
+                            批量删除
+                        </button>
+</div>
+<!-- Cart Items -->
+<!-- Item 1 -->
+<div class="bg-white dark:bg-slate-800/50 p-5 rounded-xl custom-shadow flex flex-col sm:flex-row gap-5 items-center relative overflow-hidden group">
+<div class="absolute left-0 top-0 w-1.5 h-full bg-primary/40"></div>
+<input class="w-5 h-5 rounded-full border-primary/30 text-primary focus:ring-primary/20" type="checkbox"/>
+<div class="w-32 h-32 rounded-xl bg-slate-100 dark:bg-slate-700 overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Japanese strawberry mochi dessert on a plate" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANGuvvwbqQvWGDdT1SnF9n6FN5X3KGzhzeiweQUJ1Yv3Pu0X5wc-TgiKaOvV3FnDvfReiSu5Xty3XV9ZUCwPZqsTVq35PF9McylZfjkL6V2JQfmq2Qmczh_Y-UlS22YbIULZO38RFQ-xnwPY6K8Ufz2G4jZTzGZBsXGz19p_eUUeEgWP-mbMNhY9sV0AN5qixjq_yK1m_T7CGtzWaRcNhrGtaJvcShnZWhiuUwHymgIFmigPC_SNUtlq_QhB6XP8FAUo-UMudJTRE"/>
+</div>
+<div class="flex-grow space-y-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg leading-tight">手工草莓大福 (4枚入)</h3>
+<p class="text-xs text-slate-400 mt-1 bg-primary/5 inline-block px-2 py-0.5 rounded-full">规格：原味淡奶 / 特等草莓</p>
+</div>
+<button class="text-slate-300 hover:text-red-400 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex justify-between items-end mt-4">
+<div class="text-primary font-bold text-xl">
+<span class="text-sm">¥</span>48.00
+                                </div>
+<div class="flex items-center bg-background-light dark:bg-slate-700 rounded-lg p-1">
+<button class="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 rounded-md transition-all text-slate-500">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<span class="w-10 text-center font-bold text-sm">1</span>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 rounded-md transition-all text-slate-500">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-white dark:bg-slate-800/50 p-5 rounded-xl custom-shadow flex flex-col sm:flex-row gap-5 items-center relative overflow-hidden group">
+<div class="absolute left-0 top-0 w-1.5 h-full bg-soft-pink/40"></div>
+<input checked="" class="w-5 h-5 rounded-full border-primary/30 text-primary focus:ring-primary/20" type="checkbox"/>
+<div class="w-32 h-32 rounded-xl bg-slate-100 dark:bg-slate-700 overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Matcha green tea latte in a white cup" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFhe_6K416yiwufyfEEGOANYM5s4AEu96dNKIk4kUIv5m0eN-VWL1v2t2kujjEH5GTD3l_MOG46z6gc-yk3ea9aHddMDFikkMLni8YXWoF2-pzs9JI1vfJwQAXh3xHifBAObXpnHuNfleJUPZXZbmwDug4-G7fF5rDfEwQ1E2LxFyYzlIqE_tA4lG8RB5hL_0Vv876FBEEvcpDoywi4p9xncq71J_T7xY1Ni5Ue_p2UNuEep6hbeZl9NV6WLYybRtSz3FluZI3Ddo"/>
+</div>
+<div class="flex-grow space-y-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg leading-tight">宇治抹茶拿铁原粉</h3>
+<p class="text-xs text-slate-400 mt-1 bg-primary/5 inline-block px-2 py-0.5 rounded-full">规格：罐装 / 250g</p>
+</div>
+<button class="text-slate-300 hover:text-red-400 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex justify-between items-end mt-4">
+<div class="text-primary font-bold text-xl">
+<span class="text-sm">¥</span>128.00
+                                </div>
+<div class="flex items-center bg-background-light dark:bg-slate-700 rounded-lg p-1">
+<button class="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 rounded-md transition-all text-slate-500">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<span class="w-10 text-center font-bold text-sm">2</span>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 rounded-md transition-all text-slate-500">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-white dark:bg-slate-800/50 p-5 rounded-xl custom-shadow flex flex-col sm:flex-row gap-5 items-center relative overflow-hidden group">
+<div class="absolute left-0 top-0 w-1.5 h-full bg-soft-yellow/40"></div>
+<input class="w-5 h-5 rounded-full border-primary/30 text-primary focus:ring-primary/20" type="checkbox"/>
+<div class="w-32 h-32 rounded-xl bg-slate-100 dark:bg-slate-700 overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Sweet donut with colorful sprinkles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCejc4PSdydUkgBj9wRjkCXwrWrJnDt9HYz4dnT-wA8acKC90DhbSekNcJQDT2DZAQOFGZb7hUT6nRcayey5hIeqQ65bwrGfnMzQO3jOtT5AWku1h7MApuU1Bzbr9RnzrdkK1zU30szgtP4VALVvh5SJikWn37Z8D3ahOJPZAT6XKTYBvyW44_usGISVXOosC3Qd27vBW1Q0RTxbgwXKXOMTEGLb6hKvWS69l_3OypPC8Ymr7NxPeHV9doGxRdaYcyL0i2JWCGDHPY"/>
+</div>
+<div class="flex-grow space-y-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg leading-tight">樱花限定甜甜圈</h3>
+<p class="text-xs text-slate-400 mt-1 bg-primary/5 inline-block px-2 py-0.5 rounded-full">规格：礼盒装 / 6枚</p>
+</div>
+<button class="text-slate-300 hover:text-red-400 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex justify-between items-end mt-4">
+<div class="text-primary font-bold text-xl">
+<span class="text-sm">¥</span>65.00
+                                </div>
+<div class="flex items-center bg-background-light dark:bg-slate-700 rounded-lg p-1">
+<button class="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 rounded-md transition-all text-slate-500">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<span class="w-10 text-center font-bold text-sm">1</span>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-slate-600 rounded-md transition-all text-slate-500">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Summary Sidebar -->
+<div class="lg:col-span-1">
+<div class="bg-white dark:bg-slate-800/50 p-6 rounded-xl custom-shadow sticky top-24 space-y-6">
+<h2 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">receipt_long</span>
+                            订单摘要
+                        </h2>
+<div class="space-y-4">
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">商品总计 (3件)</span>
+<span class="font-medium text-slate-800 dark:text-slate-200">¥369.00</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">运费估算</span>
+<span class="font-medium text-slate-800 dark:text-slate-200">¥12.00</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">店铺优惠</span>
+<span class="font-medium text-red-400">- ¥10.00</span>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700 w-full"></div>
+<div class="flex justify-between items-center pt-2">
+<span class="font-bold text-lg">实付金额</span>
+<div class="text-right">
+<span class="text-primary text-2xl font-bold italic">¥371.00</span>
+<p class="text-[10px] text-slate-400 mt-1">包含运费及优惠</p>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 p-4 rounded-xl border border-primary/10">
+<div class="flex gap-2 items-start text-xs text-primary/80">
+<span class="material-symbols-outlined text-sm">info</span>
+<p>满 ¥400 即可享受包邮服务，还差 ¥29 即可减免运费哦！</p>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]">
+                            去结算
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<div class="flex justify-center gap-4 text-xs text-slate-400 py-2">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs text-primary/50">verified_user</span>正品保障</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs text-primary/50">local_shipping</span>极速发货</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="py-10 text-center text-slate-400 text-sm">
+<p>© 2024 日系软萌甜品屋. 每一份甜都是生活的馈赠.</p>
+</footer>
+</div>
+</body></html>

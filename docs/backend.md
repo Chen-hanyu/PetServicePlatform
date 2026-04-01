@@ -1,5 +1,11 @@
 # 后端模块说明（宠物综合服务平台）
 
+> 测试文档入口：[backend-test-plan.md](D:/Code/PetServicePlatform/docs/backend-test-plan.md)
+> 简要说明：当前后端已建立 `MockMvc` 接口/权限测试、`service` 规则测试以及 H2 集成测试，用于验证主流程、权限边界和数据联动。
+
+## 当前状态总览
+- 当前后端接口覆盖清单、实现状态标记与最小自测说明见 [backend-status.md](D:/Code/PetServicePlatform/docs/backend-status.md)。
+
 ## 1. 模块功能
 后端采用 `Java + Spring Boot` 构建，负责为用户 Web 前台和管理员后台提供统一的业务服务、权限控制和数据持久化能力。
 
@@ -17,7 +23,7 @@
 - 框架：Spring Boot 3
 - Web 框架：Spring MVC
 - 权限认证：Spring Security + JWT
-- 数据持久化：MyBatis-Plus 或 JPA
+- 数据持久化：MyBatis-Plus
 - 数据库：MySQL
 - 缓存：Redis
 - 文件存储：MinIO / 本地静态资源目录
@@ -29,13 +35,17 @@
 - 生态成熟，便于接入权限、日志、校验、文档和文件上传。
 - 能自然支撑用户端和管理端共用一套服务、按角色授权的模式。
 
-## 3. 目录结构
+## 3. 当前目录结构
 
 ```text
 backend/
+├── .mvn/                                  # Maven Wrapper 配置
+├── mvnw
+├── mvnw.cmd
 ├── src/
 │   ├── main/
 │   │   ├── java/com/petplatform/
+│   │   │   ├── PetServicePlatformApplication.java
 │   │   │   ├── controller/          # 用户端接口
 │   │   │   ├── admin/controller/    # 管理端接口
 │   │   │   ├── service/             # 业务逻辑层
@@ -44,23 +54,31 @@ backend/
 │   │   │   ├── dto/                 # 请求响应对象
 │   │   │   ├── config/              # 配置类
 │   │   │   ├── security/            # 鉴权与权限
-│   │   │   ├── common/              # 通用返回、异常、工具类
-│   │   │   └── PetPlatformApplication.java
+│   │   │   └── common/              # 通用返回、异常、工具类
 │   │   └── resources/
 │   │       ├── application.yml
 │   │       ├── mapper/
 │   │       └── sql/
 │   └── test/
+│       └── java/com/petplatform/
+│           └── PetServicePlatformApplicationTests.java
 ├── pom.xml
 └── README.md
 ```
 
+补充说明：
+
+- `.idea/` 为本地开发环境文件，不作为项目结构的一部分。
+- `target/` 为编译输出目录，不作为源码目录。
+- 当前目录骨架已经与项目设计文档对齐，但各业务包下仍主要是占位结构，等待后续实现。
+
 ## 4. 运行方式
 1. 进入后端目录：`cd backend`
-2. 安装依赖并编译：`mvn clean install`
-3. 启动开发环境：`mvn spring-boot:run`
-4. 默认访问地址：`http://127.0.0.1:8080`
-5. 接口文档地址：`http://127.0.0.1:8080/swagger-ui.html`
+2. 按本地环境修改 `src/main/resources/application.yml`
+3. 安装依赖并编译：`mvnw.cmd clean install` 或 `mvn clean install`
+4. 启动开发环境：`mvnw.cmd spring-boot:run` 或 `mvn spring-boot:run`
+5. 默认访问地址：`http://127.0.0.1:8080`
+6. 接口文档地址：`http://127.0.0.1:8080/swagger-ui.html`
 
 ## 5. 业务模块设计
 ### 5.1 用户端业务
@@ -93,3 +111,12 @@ backend/
 - 推荐位、标签、状态角标、仪表盘统计数据由后端统一提供。
 - 管理端接口必须支持分页、筛选、排序、批量操作。
 - 所有审核类接口都需要返回清晰的状态流转结果和备注信息。
+
+## 8. 当前开发状态
+
+- 后端 Maven 工程已可正常编译和运行。
+- 后端已完成课程项目 MVP 主流程，用户端与管理端核心业务链路可联调。
+- 统一返回结构、全局异常处理、JWT 鉴权、角色隔离与分页能力均已落地。
+- 自动化测试已覆盖接口、服务规则与 H2 集成链路（当前本地测试报告为 142 个用例全部通过）。
+- 文件上传与验证码当前为 MVP 占位方案（本地存储、内存验证码）；Redis、MinIO、批量操作等为后续增强项。
+- 详细接口覆盖与状态说明以 `docs/backend-status.md` 为准。

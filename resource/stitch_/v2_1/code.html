@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>个人中心 - 宠物综合服务平台</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7ECFBC',
+            secondary: '#F7FAF9',
+            accent: '#FFD66B',
+            'main-text': '#2F3A38',
+            'sub-text': '#66706E',
+            'weak-text': '#98A3A0',
+            'border-color': '#E4ECE9',
+            'card-bg': '#FFFFFF',
+            'block-bg': '#F2F7F5',
+            'success': '#5BB98C',
+          },
+          borderRadius: {
+            'card-lg': '20px',
+            'card': '16px',
+            'input': '12px',
+          },
+          boxShadow: {
+            'soft': '0 8px 24px rgba(34, 60, 52, 0.08)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Google Fonts for icons (Optional, using text/div for placeholder icons) -->
+<style data-purpose="typography">
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #2F3A38;
+      background-color: #F7FAF9;
+    }
+    .font-title {
+      font-weight: 600;
+    }
+  </style>
+<style data-purpose="custom-layouts">
+    /* Custom scrollbar for Pet List */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Hover effects */
+    .hover-lift {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
+    }
+
+    /* S-Curve Path Animation & Style */
+    .path-gradient {
+      stroke: url(#sCurveGradient);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0px 2px 4px rgba(126, 207, 188, 0.2));
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+<!-- BEGIN: MainHeader -->
+<header class="bg-white border-b border-border-color sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+<div class="flex items-center gap-10">
+<!-- Logo -->
+<div class="flex items-center gap-2 cursor-pointer" data-purpose="logo">
+<div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-xl font-title tracking-tight text-main-text">宠物之家</span>
+</div>
+<!-- Navigation -->
+<nav class="hidden md:flex items-center gap-8 text-sub-text font-medium">
+<a class="hover:text-primary transition-colors" href="#">首页</a>
+<a class="hover:text-primary transition-colors" href="#">社区</a>
+<a class="hover:text-primary transition-colors" href="#">领养</a>
+<a class="hover:text-primary transition-colors" href="#">服务</a>
+<a class="hover:text-primary transition-colors" href="#">商城</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-sub-text hover:text-primary p-2">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<div class="w-10 h-10 rounded-full border-2 border-primary overflow-hidden cursor-pointer">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhv4bHKeT2MSj2bm5H-ZBQmTemuPFFB5RRyw0QLWBY__npaBfqavvNDHYlB9jNwsWCCsngB-RYwkYyIUWXVQcCR7lJafsCGOO6qkfdALwRNYpgOHNGYmtMSA3BR473dc2lKx6PMem_HpZ8s5KYAnJGDjXw3JUfyQ-L9jK62IdgCReHhWNpJt2lFIMXYTkvVavQts97JecQyYkb1-sOEgV3wbqvc8rMKtCtaIHLXFWQfW5AFZ0PT2d_bq4Cyu00HGlK0De8PDcI044"/>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<main class="max-w-7xl mx-auto px-4 py-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- BEGIN: ProfileSidebar -->
+<aside class="lg:col-span-3 space-y-6">
+<!-- User Brief Card -->
+<section class="bg-white rounded-card-lg p-6 shadow-soft text-center" data-purpose="user-profile-card">
+<div class="relative inline-block mb-4">
+<img alt="User" class="w-24 h-24 rounded-full border-4 border-secondary object-cover mx-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4iU-asBT83mx21VnyCgny9hx3Uz4loORiFW512XuhI_zu0FB6jSbBewEWWXSMcvGc6rnAh1l_j12Db-qsuCFXAmb-MxzHRF83dw0OvcW5RnU_xNKl-BP3kbN0B1WXenHgtTo_G7Gx8z37A9vw8PooL1d2B7Mj81hO4UcjxHZ-71iyFyzoRk-7_fveKjUZ8NDGnksGasy7YO_Q-HO1UFE-bO86dBkNJ3tgxhoZEiiOx-rtyASk6lPj8RiXgw4N_bgePyL7AvJEWzY"/>
+<button class="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-lg border-2 border-white hover:bg-opacity-90 transition-all">
+<svg class="h-4 w-4" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+</svg>
+</button>
+</div>
+<h2 class="text-xl font-title text-main-text">落日余晖下的铲屎官</h2>
+<p class="text-weak-text text-sm mt-1 mb-4">专注养宠3年 | 猫狗双全</p>
+<div class="flex justify-center gap-4 border-t border-border-color pt-4 mt-4">
+<div class="text-center">
+<p class="text-main-text font-bold">12</p>
+<p class="text-weak-text text-xs">动态</p>
+</div>
+<div class="border-l border-border-color h-8"></div>
+<div class="text-center">
+<p class="text-main-text font-bold">256</p>
+<p class="text-weak-text text-xs">获赞</p>
+</div>
+<div class="border-l border-border-color h-8"></div>
+<div class="text-center">
+<p class="text-main-text font-bold">88</p>
+<p class="text-weak-text text-xs">关注</p>
+</div>
+</div>
+</section>
+<!-- Navigation Menu -->
+<nav class="bg-white rounded-card-lg p-4 shadow-soft" data-purpose="user-menu">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center justify-between p-3 rounded-card bg-block-bg text-primary font-medium" href="#">
+<span class="flex items-center gap-3">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                  个人资料
+                </span>
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</a>
+</li>
+<li>
+<a class="flex items-center justify-between p-3 rounded-card text-sub-text hover:bg-secondary transition-colors" href="#">
+<span class="flex items-center gap-3">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                  我的动态
+                </span>
+</a>
+</li>
+<li>
+<a class="flex items-center justify-between p-3 rounded-card text-sub-text hover:bg-secondary transition-colors" href="#">
+<span class="flex items-center gap-3">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                  订单中心
+                </span>
+</a>
+</li>
+<li>
+<a class="flex items-center justify-between p-3 rounded-card text-sub-text hover:bg-secondary transition-colors" href="#">
+<span class="flex items-center gap-3">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                  领养申请
+                </span>
+</a>
+</li>
+<li>
+<a class="flex items-center justify-between p-3 rounded-card text-sub-text hover:bg-secondary transition-colors" href="#">
+<span class="flex items-center gap-3">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                  消息通知
+                </span>
+<span class="bg-red-400 text-white text-[10px] px-1.5 py-0.5 rounded-full">3</span>
+</a>
+</li>
+</ul>
+</nav>
+</aside>
+<!-- END: ProfileSidebar -->
+<!-- BEGIN: ContentArea -->
+<div class="lg:col-span-9 space-y-8">
+<!-- Section: My Pets -->
+<section data-purpose="my-pets-section">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xl font-title text-main-text flex items-center gap-2">
+<span class="w-2 h-6 bg-primary rounded-full"></span>
+              我的宠物
+            </h3>
+<button class="text-primary text-sm font-medium hover:underline flex items-center gap-1">
+              添加宠物
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 hide-scrollbar" data-purpose="pet-scroll-container">
+<!-- Pet Card 1 -->
+<div class="min-w-[280px] bg-white rounded-card p-4 shadow-soft border border-transparent hover:border-primary transition-all cursor-pointer flex items-center gap-4 hover-lift">
+<img alt="Pet Avatar" class="w-16 h-16 rounded-full object-cover bg-block-bg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTdQhSkW33PW9BqHbr0gRQ5Mz6WEoSdym67vyIihIc55EWHcsqArJhwGyx4Met-piDr4oFNO1gL9VmXBNr3jE5HDgsReWQ5jDkDc-MKnmY6gF7ojZsYP0JvWqBVbA3IhqO9RkHp5ledfxQteuOudpWTZ8B-SDVRUEksPuAoxajaHLnE-lb_UxWb1Uh-L_TDN0vw6VfuYSgodEfAzQsGsLllefoNQh5JJF2kzETLzQZMtMxLTfiH3VP_-iUFhWaP8WFuig5G3VF40E"/>
+<div>
+<h4 class="font-title text-main-text text-lg">曲奇 (Cookie)</h4>
+<p class="text-weak-text text-xs">金毛 · 2岁 · 男宝</p>
+<div class="mt-2 flex gap-2">
+<span class="px-2 py-0.5 bg-secondary text-primary text-[10px] rounded-full">已疫苗</span>
+<span class="px-2 py-0.5 bg-accent/10 text-accent text-[10px] rounded-full">健康</span>
+</div>
+</div>
+</div>
+<!-- Pet Card 2 -->
+<div class="min-w-[280px] bg-white rounded-card p-4 shadow-soft border border-transparent hover:border-primary transition-all cursor-pointer flex items-center gap-4 hover-lift">
+<img alt="Pet Avatar" class="w-16 h-16 rounded-full object-cover bg-block-bg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7ZS_IxoJVblrqd6PFJ2VGxJ3TScia_kQp5xXfFPf_x1WEFNPyfkgz96ZeYSSQjurgHrjEzyGZfrTpFATRCgnAI2mSdNJhoCGCXdz3dYkXriCH0pLr8aL2zf3VipgWXkp7AQP0iN2siqv0xT_b00JN-sesK-lRn2BJ1qN9VSm75UW0jjweeaINuN8-w54XLeYl_s2Vbbvu9Mi9bBFTeQp7yH535dzSTrlW6YNQVCOQrXjnMh2RFz8ZxEYEEPLfCvUGlKxZ-K6vil0"/>
+<div>
+<h4 class="font-title text-main-text text-lg">糯米 (Mochi)</h4>
+<p class="text-weak-text text-xs">布偶猫 · 1岁 · 女宝</p>
+<div class="mt-2 flex gap-2">
+<span class="px-2 py-0.5 bg-secondary text-primary text-[10px] rounded-full">已驱虫</span>
+<span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full">已绝育</span>
+</div>
+</div>
+</div>
+<!-- Empty Placeholder Card -->
+<div class="min-w-[200px] border-2 border-dashed border-border-color rounded-card flex flex-col items-center justify-center p-4 text-weak-text hover:border-primary hover:text-primary transition-all cursor-pointer">
+<svg class="h-8 w-8 mb-2" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6v6m0 0v6m0-6h6m-6 0H6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-sm font-medium">添加更多</span>
+</div>
+</div>
+</section>
+<!-- Section: Content Grid (Posts & Orders) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Quick Stats / Recent Posts -->
+<section class="bg-white rounded-card-lg p-6 shadow-soft" data-purpose="recent-activity">
+<h3 class="text-lg font-title text-main-text mb-6">最近动态</h3>
+<div class="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-border-color">
+<!-- Item 1 -->
+<div class="relative pl-8">
+<div class="absolute left-0 top-1.5 w-[22px] h-[22px] bg-white border-4 border-primary rounded-full"></div>
+<p class="text-main-text text-sm">发布了帖子 <span class="text-primary font-medium">《分享一下糯米刚回家的样子》</span></p>
+<p class="text-weak-text text-xs mt-1">今天 10:24 · 社区</p>
+</div>
+<!-- Item 2 -->
+<div class="relative pl-8">
+<div class="absolute left-0 top-1.5 w-[22px] h-[22px] bg-white border-4 border-accent rounded-full"></div>
+<p class="text-main-text text-sm">完成了预约 <span class="text-primary font-medium">萌宠洗护套餐 - 曲奇</span></p>
+<p class="text-weak-text text-xs mt-1">昨日 15:40 · 宠物服务</p>
+</div>
+<!-- Item 3 -->
+<div class="relative pl-8">
+<div class="absolute left-0 top-1.5 w-[22px] h-[22px] bg-white border-4 border-primary rounded-full"></div>
+<p class="text-main-text text-sm">收藏了文章 <span class="text-primary font-medium">《新手养猫必备清单》</span></p>
+<p class="text-weak-text text-xs mt-1">2023-10-22 · 宠物知识</p>
+</div>
+</div>
+<button class="w-full mt-6 py-2 rounded-input bg-block-bg text-sub-text text-sm hover:bg-secondary transition-colors">查看全部动态</button>
+</section>
+<!-- Timeline Preview (Restyled S-Curve Version) -->
+<section class="bg-white rounded-card-lg p-6 shadow-soft overflow-hidden" data-purpose="pet-growth-timeline">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-title text-main-text">成长时间轴</h3>
+<select class="text-xs border-none bg-secondary rounded-full py-1 px-3 text-sub-text focus:ring-primary">
+<option>曲奇</option>
+<option>糯米</option>
+</select><button class="ml-2 text-primary hover:bg-primary/10 p-1 rounded-full transition-colors">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<div class="flex gap-4 mb-4 items-start">
+<div class="relative flex-shrink-0 w-28 h-32 bg-white p-2 pb-6 shadow-soft rounded-sm rotate-[-2deg] border border-border-color/50">
+<div class="absolute top-1 left-1 bg-primary text-white text-[10px] px-2 py-0.5 rounded-sm z-10 shadow-sm">2023-05</div>
+<img alt="Timeline Photo" class="w-full h-full object-cover rounded-sm bg-block-bg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGk8VGJdGNBLVj_dplNagRA9JqrR1vQmFF_nBmO5DkjIX3-ljwa3-3Rw3eY8ssvwPfLA7iqjxKgYicEep32sauaMNK_FCAkfuAxhA34Nk1BFT1BL4xGQK-jBFmoC5n_OBGck_EsBybRvOdSvgFUFWHH2iBZSpuo85qDYl9DE_TtCTB4IzfuXTkR1y5auZgxEJ9xvg90UFx97KKE6MLShIEkTGwIDv0uRl0GnHKjB1lYYVTcKUlIIR-ufbhbh-N_a3hN9Qa5FwoHS8"/>
+</div>
+<div class="flex-1">
+<p class="text-sm font-title text-main-text line-clamp-1"><span class="text-lg font-bold">曲奇 (Cookie)</span> - 第一次去草坪撒欢</p>
+<p class="text-weak-text text-xs mt-1 leading-relaxed line-clamp-2">曲奇今天表现超级棒，跑累了就乖乖趴在身边，已经快40斤啦...</p>
+<div class="mt-2 flex items-center gap-1 text-primary">
+<span class="text-xs font-medium">查看时间轴详情</span>
+<svg class="h-3 w-3" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Redesigned Winding Timeline Path -->
+<div class="relative h-28 mt-4 overflow-visible">
+<svg class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible" fill="none" preserveaspectratio="none" viewbox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="sCurveGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#7ECFBC"></stop>
+<stop offset="50%" stop-color="#FFD66B"></stop>
+<stop offset="100%" stop-color="#5BB98C"></stop>
+</lineargradient>
+</defs>
+<path class="path-gradient" d="M 40 50 Q 120 10, 200 50 T 360 50" stroke-width="8"></path>
+</svg>
+<!-- Milestones Overlay -->
+<div class="absolute top-0 left-0 w-full h-full flex justify-between items-center px-4">
+<!-- Milestone 1 -->
+<div class="flex flex-col items-center gap-2 -mt-4">
+<div class="w-10 h-10 rounded-full bg-white shadow-soft border-2 border-primary flex items-center justify-center text-primary text-xl">🐣</div>
+<div class="bg-primary/10 px-2 py-0.5 rounded-full">
+<span class="text-[10px] font-bold text-primary">出生</span>
+</div>
+</div>
+<!-- Milestone 2 -->
+<div class="flex flex-col items-center gap-2 mt-8">
+<div class="w-10 h-10 rounded-full bg-white shadow-soft border-2 border-primary flex items-center justify-center text-primary text-xl">🏠</div>
+<div class="bg-primary/10 px-2 py-0.5 rounded-full">
+<span class="text-[10px] font-bold text-primary">回家</span>
+</div>
+</div>
+<!-- Milestone 3 -->
+<div class="flex flex-col items-center gap-2 -mt-4">
+<div class="w-10 h-10 rounded-full bg-white shadow-soft border-2 border-accent flex items-center justify-center text-accent text-xl">🎂</div>
+<div class="bg-accent/10 px-2 py-0.5 rounded-full">
+<span class="text-[10px] font-bold text-accent">1岁</span>
+</div>
+</div>
+<!-- Milestone 4 -->
+<div class="flex flex-col items-center gap-2 mt-8">
+<div class="w-10 h-10 rounded-full bg-white shadow-soft border-2 border-border-color flex items-center justify-center text-weak-text text-xl">🦴</div>
+<div class="bg-block-bg px-2 py-0.5 rounded-full">
+<span class="text-[10px] font-bold text-weak-text">2岁</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Section: Order Preview -->
+<section class="bg-white rounded-card-lg p-6 shadow-soft" data-purpose="order-status-list">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-title text-main-text">商城订单</h3>
+<a class="text-weak-text text-xs hover:text-primary" href="#">全部订单 &gt;</a>
+</div>
+<div class="flex justify-between items-center text-center">
+<div class="flex-1 cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-block-bg mx-auto flex items-center justify-center text-sub-text group-hover:bg-primary group-hover:text-white transition-all relative">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute -top-1 -right-1 bg-red-400 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">1</span>
+</div>
+<p class="text-xs mt-2 text-sub-text group-hover:text-main-text">待付款</p>
+</div>
+<div class="flex-1 cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-block-bg mx-auto flex items-center justify-center text-sub-text group-hover:bg-primary group-hover:text-white transition-all">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<p class="text-xs mt-2 text-sub-text group-hover:text-main-text">待发货</p>
+</div>
+<div class="flex-1 cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-block-bg mx-auto flex items-center justify-center text-sub-text group-hover:bg-primary group-hover:text-white transition-all">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<p class="text-xs mt-2 text-sub-text group-hover:text-main-text">待收货</p>
+</div>
+<div class="flex-1 cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-block-bg mx-auto flex items-center justify-center text-sub-text group-hover:bg-primary group-hover:text-white transition-all">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<p class="text-xs mt-2 text-sub-text group-hover:text-main-text">待评价</p>
+</div>
+<div class="flex-1 cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-block-bg mx-auto flex items-center justify-center text-sub-text group-hover:bg-primary group-hover:text-white transition-all">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2-2v16l4-2 4 2 4-2 4 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<p class="text-xs mt-2 text-sub-text group-hover:text-main-text">退换/售后</p>
+</div>
+</div>
+</section>
+</div>
+<!-- END: ContentArea -->
+</div>
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-white border-t border-border-color mt-12 py-12">
+<div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
+<div class="md:col-span-1">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-lg font-title text-main-text">宠物之家</span>
+</div>
+<p class="text-weak-text text-sm">打造温暖治愈的宠物综合服务社区，给它更好的陪伴。</p>
+</div>
+<div>
+<h4 class="font-title text-main-text mb-4 text-sm">关于我们</h4>
+<ul class="text-weak-text text-xs space-y-2">
+<li><a class="hover:text-primary" href="#">平台介绍</a></li>
+<li><a class="hover:text-primary" href="#">用户协议</a></li>
+<li><a class="hover:text-primary" href="#">隐私政策</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-title text-main-text mb-4 text-sm">帮助中心</h4>
+<ul class="text-weak-text text-xs space-y-2">
+<li><a class="hover:text-primary" href="#">领养流程</a></li>
+<li><a class="hover:text-primary" href="#">发帖规范</a></li>
+<li><a class="hover:text-primary" href="#">商城客服</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-title text-main-text mb-4 text-sm">下载APP</h4>
+<div class="flex gap-4">
+<div class="w-20 h-20 bg-block-bg rounded-lg border border-border-color flex items-center justify-center text-[10px] text-weak-text">二维码</div>
+<div class="text-xs text-weak-text flex flex-col justify-center gap-2">
+<span>扫码关注公众号</span>
+<span>随时随地查看动态</span>
+</div>
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-4 border-t border-border-color mt-10 pt-6 text-center text-weak-text text-xs">
+      © 2023 宠物综合服务平台 - 面向大学生的温暖养宠社区
+    </div>
+</footer>
+<!-- END: Footer -->
+<script data-purpose="page-interaction">
+    console.log("User Center Page Loaded");
+  </script>
+</body></html>

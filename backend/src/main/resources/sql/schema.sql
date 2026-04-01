@@ -1,0 +1,372 @@
+DROP DATABASE IF EXISTS pet_service_platform;
+CREATE DATABASE pet_service_platform
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_unicode_ci;
+
+USE pet_service_platform;
+
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    role VARCHAR(20) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    nickname VARCHAR(50) NOT NULL,
+    avatar_url VARCHAR(255),
+    gender VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    bio VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_users_phone (phone),
+    KEY idx_users_role (role),
+    KEY idx_users_status (status),
+    KEY idx_users_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE messages (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_messages_user_read_created (user_id, is_read, created_at),
+    CONSTRAINT fk_messages_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE pets (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    breed VARCHAR(50),
+    gender VARCHAR(20),
+    birthday DATE,
+    weight DECIMAL(8, 2),
+    avatar_url VARCHAR(255),
+    description VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_pets_user_type (user_id, type),
+    CONSTRAINT fk_pets_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE pet_vaccines (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    pet_id BIGINT NOT NULL,
+    vaccine_name VARCHAR(100) NOT NULL,
+    vaccinated_at DATE NOT NULL,
+    next_due_at DATE,
+    remark VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_pet_vaccines_pet_id (pet_id),
+    CONSTRAINT fk_pet_vaccines_pet_id FOREIGN KEY (pet_id) REFERENCES pets(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE pet_weights (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    pet_id BIGINT NOT NULL,
+    weight DECIMAL(8, 2) NOT NULL,
+    recorded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_pet_weights_pet_id (pet_id),
+    CONSTRAINT fk_pet_weights_pet_id FOREIGN KEY (pet_id) REFERENCES pets(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE pet_albums (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    pet_id BIGINT NOT NULL,
+    image_url VARCHAR(255) NOT NULL,
+    caption VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_pet_albums_pet_id (pet_id),
+    CONSTRAINT fk_pet_albums_pet_id FOREIGN KEY (pet_id) REFERENCES pets(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE community_posts (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    category VARCHAR(30) NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    cover_url VARCHAR(255),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    review_remark VARCHAR(255),
+    like_count INT NOT NULL DEFAULT 0,
+    favorite_count INT NOT NULL DEFAULT 0,
+    comment_count INT NOT NULL DEFAULT 0,
+    published_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_community_posts_status_category_published (status, category, published_at),
+    KEY idx_community_posts_user_id (user_id),
+    CONSTRAINT fk_community_posts_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE post_comments (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_post_comments_post_id (post_id),
+    KEY idx_post_comments_user_id (user_id),
+    CONSTRAINT fk_post_comments_post_id FOREIGN KEY (post_id) REFERENCES community_posts(id),
+    CONSTRAINT fk_post_comments_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE post_likes (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_post_likes_post_user (post_id, user_id),
+    KEY idx_post_likes_user_id (user_id),
+    CONSTRAINT fk_post_likes_post_id FOREIGN KEY (post_id) REFERENCES community_posts(id),
+    CONSTRAINT fk_post_likes_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE post_favorites (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_post_favorites_post_user (post_id, user_id),
+    KEY idx_post_favorites_user_id (user_id),
+    CONSTRAINT fk_post_favorites_post_id FOREIGN KEY (post_id) REFERENCES community_posts(id),
+    CONSTRAINT fk_post_favorites_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE tags (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    sort INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_tags_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE post_tags (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    UNIQUE KEY uk_post_tags_post_tag (post_id, tag_id),
+    KEY idx_post_tags_tag_id (tag_id),
+    CONSTRAINT fk_post_tags_post_id FOREIGN KEY (post_id) REFERENCES community_posts(id),
+    CONSTRAINT fk_post_tags_tag_id FOREIGN KEY (tag_id) REFERENCES tags(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE adoption_pets (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    breed VARCHAR(50),
+    gender VARCHAR(20),
+    age_desc VARCHAR(50),
+    city VARCHAR(50),
+    health_status VARCHAR(255),
+    personality VARCHAR(255),
+    adoption_requirements TEXT,
+    story TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'ONLINE',
+    cover_url VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_adoption_pets_status_type_city (status, type, city)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE adoption_applications (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    pet_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    experience_desc TEXT NOT NULL,
+    living_condition_desc TEXT NOT NULL,
+    contact_phone VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    review_remark VARCHAR(255),
+    reviewed_by BIGINT,
+    reviewed_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_adoption_applications_pet_status (pet_id, status),
+    KEY idx_adoption_applications_user_status (user_id, status),
+    KEY idx_adoption_applications_reviewed_by (reviewed_by),
+    CONSTRAINT fk_adoption_applications_pet_id FOREIGN KEY (pet_id) REFERENCES adoption_pets(id),
+    CONSTRAINT fk_adoption_applications_user_id FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_adoption_applications_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE service_categories (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    sort INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    UNIQUE KEY uk_service_categories_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE merchants (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    district VARCHAR(50) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    business_hours VARCHAR(100),
+    score DECIMAL(3, 1) NOT NULL DEFAULT 0.0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_merchants_district_status (district, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE merchant_services (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    merchant_id BIGINT NOT NULL,
+    category_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    duration_minutes INT,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_merchant_services_merchant_id (merchant_id),
+    KEY idx_merchant_services_category_id (category_id),
+    CONSTRAINT fk_merchant_services_merchant_id FOREIGN KEY (merchant_id) REFERENCES merchants(id),
+    CONSTRAINT fk_merchant_services_category_id FOREIGN KEY (category_id) REFERENCES service_categories(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE merchant_reviews (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    merchant_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    score INT NOT NULL,
+    content VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_merchant_reviews_merchant_user (merchant_id, user_id),
+    KEY idx_merchant_reviews_merchant_created (merchant_id, created_at),
+    KEY idx_merchant_reviews_user_id (user_id),
+    CONSTRAINT fk_merchant_reviews_merchant_id FOREIGN KEY (merchant_id) REFERENCES merchants(id),
+    CONSTRAINT fk_merchant_reviews_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE service_bookings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    merchant_id BIGINT NOT NULL,
+    merchant_service_id BIGINT NOT NULL,
+    booking_time DATETIME NOT NULL,
+    contact_name VARCHAR(50) NOT NULL,
+    contact_phone VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    remark VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_service_bookings_merchant_time_status (merchant_id, booking_time, status),
+    KEY idx_service_bookings_user_status_created (user_id, status, created_at),
+    CONSTRAINT fk_service_bookings_user_id FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_service_bookings_merchant_id FOREIGN KEY (merchant_id) REFERENCES merchants(id),
+    CONSTRAINT fk_service_bookings_merchant_service_id FOREIGN KEY (merchant_service_id) REFERENCES merchant_services(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE product_categories (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    pet_type VARCHAR(20),
+    sort INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    UNIQUE KEY uk_product_categories_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE products (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    category_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    subtitle VARCHAR(255),
+    image_url VARCHAR(255),
+    price DECIMAL(10, 2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    pet_type VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'ON_SALE',
+    description TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_products_category_status_price (category_id, status, price),
+    KEY idx_products_pet_type (pet_type),
+    CONSTRAINT fk_products_category_id FOREIGN KEY (category_id) REFERENCES product_categories(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE cart_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    checked TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_cart_items_user_product (user_id, product_id),
+    KEY idx_cart_items_product_id (product_id),
+    CONSTRAINT fk_cart_items_user_id FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_cart_items_product_id FOREIGN KEY (product_id) REFERENCES products(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE shop_orders (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    order_no VARCHAR(64) NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    pay_amount DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    receiver_name VARCHAR(50) NOT NULL,
+    receiver_phone VARCHAR(20) NOT NULL,
+    receiver_address VARCHAR(255) NOT NULL,
+    remark VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_shop_orders_order_no (order_no),
+    KEY idx_shop_orders_user_status_created (user_id, status, created_at),
+    CONSTRAINT fk_shop_orders_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE shop_order_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    product_name VARCHAR(100) NOT NULL,
+    product_image_url VARCHAR(255),
+    unit_price DECIMAL(10, 2) NOT NULL,
+    quantity INT NOT NULL,
+    subtotal_amount DECIMAL(10, 2) NOT NULL,
+    KEY idx_shop_order_items_order_id (order_id),
+    KEY idx_shop_order_items_product_id (product_id),
+    CONSTRAINT fk_shop_order_items_order_id FOREIGN KEY (order_id) REFERENCES shop_orders(id),
+    CONSTRAINT fk_shop_order_items_product_id FOREIGN KEY (product_id) REFERENCES products(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE banners (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(100) NOT NULL,
+    image_url VARCHAR(255) NOT NULL,
+    link_url VARCHAR(255),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    sort INT NOT NULL DEFAULT 0,
+    created_by BIGINT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_banners_status_sort (status, sort),
+    KEY idx_banners_created_by (created_by),
+    CONSTRAINT fk_banners_created_by FOREIGN KEY (created_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE recommendations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    biz_type VARCHAR(30) NOT NULL,
+    biz_id BIGINT NOT NULL,
+    slot_code VARCHAR(30) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    sort INT NOT NULL DEFAULT 0,
+    created_by BIGINT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_recommendations_biz_type_biz_id (biz_type, biz_id),
+    KEY idx_recommendations_slot_status_sort (slot_code, status, sort),
+    KEY idx_recommendations_created_by (created_by),
+    CONSTRAINT fk_recommendations_created_by FOREIGN KEY (created_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
