@@ -1,34 +1,4 @@
 <template>
-  <section class="community-page">
-    <div class="card page-hero">
-      <h1>宠物社区</h1>
-      <p>分享养宠经验，交流养宠心得</p>
-    </div>
-
-    <div class="tabs-row">
-      <button 
-        v-for="t in tabs" 
-        :key="t.value" 
-        :class="['tab-btn', { active: tab === t.value }]"
-        @click="switchTab(t.value)"
-      >
-        {{ t.label }}
-      </button>
-    </div>
-
-    <div class="content-grid">
-      <main class="feed-column">
-        <div class="create-post-card card">
-          <div class="user-input">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="avatar-small" />
-            <button class="input-trigger" @click="showCreateModal = true">分享你的养宠故事...</button>
-          </div>
-          <div class="quick-actions">
-            <button class="action-btn">📷 相册</button>
-            <button class="action-btn">📷 视频</button>
-          </div>
-=======
-<template>
   <div class="community-page">
     <!-- 顶部搜索区域 -->
     <div class="top-bar">
@@ -36,7 +6,6 @@
         <div class="logo">
           <span class="logo-icon">🐾</span>
           <span class="logo-text">宠物社区</span>
->>>>>>> feature/qts-frontend-develop
         </div>
 
         <div class="search-box">
@@ -80,7 +49,13 @@
             <div class="content-grid">
               <article v-for="post in posts" :key="post.id" class="content-card" @click="openDetail(post.id)">
                 <div class="card-image">
-                  <img :src="post.cover || 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=400&q=80'" :alt="post.title" />
+                  <img
+                    :src="
+                      post.cover_url ||
+                      'https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=400&q=80'
+                    "
+                    :alt="post.title"
+                  />
                 </div>
                 <div class="card-body">
                   <h4 class="card-title">{{ post.title }}</h4>
@@ -208,10 +183,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
-import { createPost, fetchPosts, toggleLike } from "@/services/modules/community";
+import { fetchPosts } from "@/api/modules/community";
+import { mockPosts } from "@/mocks/community";
 import type { PostSummary } from "@/types/community";
 
 const loading = ref(false);
@@ -219,20 +195,28 @@ const error = ref("");
 const searchQuery = ref("");
 const activeCategory = ref("推荐");
 const currentPage = ref(1);
-const posts = ref<any[]>([]);
+const posts = ref<PostSummary[]>([]);
 const router = useRouter();
 
 const categories = ["推荐", "晒宠", "问答", "种草", "日常", "知识", "视频", "好物"];
+
+const mockListForTab = (): PostSummary[] => {
+  const list = mockPosts as PostSummary[];
+  if (activeCategory.value === "推荐") return list;
+  const filtered = list.filter((p) => p.category === activeCategory.value);
+  return filtered.length > 0 ? filtered : list.slice(0, 6);
+};
 
 const loadPosts = async () => {
   loading.value = true;
   error.value = "";
   try {
     const data = await fetchPosts({ tab: activeCategory.value, page: currentPage.value, page_size: 20 });
-    posts.value = data.list || [];
+    const list = data.list ?? [];
+    posts.value = list.length > 0 ? list : mockListForTab();
   } catch (e) {
     console.warn("Failed to fetch posts, using mock data", e);
-    posts.value = mockPosts as any;
+    posts.value = mockListForTab();
   } finally {
     loading.value = false;
   }
@@ -247,6 +231,9 @@ const goToCreate = () => {
 };
 
 onMounted(loadPosts);
+watch([activeCategory, currentPage], () => {
+  void loadPosts();
+});
 </script>
 
 <style scoped lang="scss">
