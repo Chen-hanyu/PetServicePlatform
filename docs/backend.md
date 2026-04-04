@@ -72,13 +72,23 @@ backend/
 - `target/` 为编译输出目录，不作为源码目录。
 - 当前目录骨架已经与项目设计文档对齐，但各业务包下仍主要是占位结构，等待后续实现。
 
-## 4. 运行方式
+## 4. 部署方式
+
+### 4.1 本地部署
 1. 进入后端目录：`cd backend`
 2. 按本地环境修改 `src/main/resources/application.yml`
 3. 安装依赖并编译：`mvnw.cmd clean install` 或 `mvn clean install`
 4. 启动开发环境：`mvnw.cmd spring-boot:run` 或 `mvn spring-boot:run`
 5. 默认访问地址：`http://127.0.0.1:8080`
 6. 接口文档地址：`http://127.0.0.1:8080/swagger-ui.html`
+
+### 4.2 Docker 部署
+1. 在项目根目录准备 `docker-compose.yml`
+2. 在 `backend/` 目录准备 `Dockerfile`
+3. 通过环境变量注入数据库连接、账号密码和 JWT 密钥
+4. 使用 `docker-compose up -d` 启动 `backend` 与 `mysql`
+5. 使用 `docker-compose ps` 检查服务状态
+6. 服务启动后访问 `http://127.0.0.1:8080/swagger-ui.html`
 
 ## 5. 业务模块设计
 ### 5.1 用户端业务

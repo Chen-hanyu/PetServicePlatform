@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
@@ -9,10 +9,10 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/pet_service_platform?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
-    username: root
-    password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/pet_service_platform?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
 
 mybatis-plus:
   configuration:
@@ -23,16 +23,16 @@ springdoc:
     path: /swagger-ui.html
 
 jwt:
-  secret: replace-with-a-secure-secret-key-1234567890
-  expiration-seconds: 7200
+  secret: ${JWT_SECRET:replace-with-a-secure-secret-key-1234567890}
+  expiration-seconds: ${JWT_EXPIRATION_SECONDS:7200}
 
 verify-code:
-  expiration-seconds: 300
-  allow-default-code: true
-  default-code: 123456
+  expiration-seconds: ${VERIFY_CODE_EXPIRATION_SECONDS:300}
+  allow-default-code: ${VERIFY_CODE_ALLOW_DEFAULT_CODE:true}
+  default-code: ${VERIFY_CODE_DEFAULT_CODE:123456}
 
 file:
   storage:
-    type: local
-    local-path: uploads/
-    access-path: /uploads/
+    type: ${FILE_STORAGE_TYPE:local}
+    local-path: ${FILE_STORAGE_LOCAL_PATH:uploads/}
+    access-path: ${FILE_STORAGE_ACCESS_PATH:/uploads/}

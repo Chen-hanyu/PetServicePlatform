@@ -2,11 +2,11 @@
 
 ## 1. 文档说明
 
-本文档用于说明本项目后端的演示初始化数据脚本，对应文件：
+本文档说明项目后端演示初始化数据脚本的用途与默认联调账号，对应文件：
 
 - [seed.sql](/D:/Code/PetServicePlatform/backend/src/main/resources/sql/seed.sql)
 
-该脚本基于 `schema.sql` 已创建好的表结构写入一批可直接联调和演示的样例数据，覆盖：
+该脚本基于 `schema.sql` 已创建完成的表结构，写入一批可直接用于联调和演示的样例数据，覆盖：
 
 - 用户与管理员账号
 - 宠物档案
@@ -25,18 +25,20 @@ SOURCE backend/src/main/resources/sql/schema.sql;
 SOURCE backend/src/main/resources/sql/seed.sql;
 ```
 
-## 3. 默认账号
+## 3. 默认联调账号
 
 - 管理员账号：`13900000000`
+- 管理员密码：`admin123`
 - 普通用户账号：`13800000001`
-- 登录验证码：`123456`
+- 普通用户密码：`123456`
+- 默认验证码兜底值：`123456`
 
 说明：
 
-- 当前后端已提供发送验证码接口，返回的 `debug_code` 可直接用于本地联调
-- 为兼容现有联调脚本，登录仍保留固定验证码 `123456` 作为兜底
-- 管理员登录接口：`POST /api/v1/admin/auth/login`
-- 用户登录接口：`POST /api/v1/auth/login`
+- `POST /api/v1/auth/login` 和 `POST /api/v1/admin/auth/login` 使用密码登录。
+- `POST /api/v1/auth/verify-code` 和 `POST /api/v1/admin/auth/verify-code` 用于发送验证码。
+- 验证码接口返回的 `debug_code` 可直接用于本地联调。
+- 为兼容现有联调流程，验证码服务保留固定兜底值 `123456`。
 
 ## 4. 演示覆盖
 

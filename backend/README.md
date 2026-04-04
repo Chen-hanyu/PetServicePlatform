@@ -50,11 +50,20 @@ backend/
 - `target/` 为 Maven 构建产物，不属于项目源码。
 - 旧的 `com/chenhanyu/...` 空目录如仍存在，可在确认无文件后清理。
 
-## 本地开发
+## 部署方式
+
+### 本地部署
 1. 配置 `src/main/resources/application.yml` 中的数据库账号、密码和 JWT 密钥
 2. 执行 `mvnw.cmd clean install` 或 `mvn clean install`
 3. 执行 `mvnw.cmd spring-boot:run` 或 `mvn spring-boot:run`
 4. 访问 `http://127.0.0.1:8080/swagger-ui.html` 查看接口文档
+
+### Docker 部署
+1. 在项目根目录准备 `docker-compose.yml`
+2. 在 `backend/` 目录准备 `Dockerfile`
+3. 使用 `docker-compose up -d` 启动 `backend` 与 `mysql`
+4. 使用 `docker-compose ps` 检查容器状态
+5. 访问 `http://127.0.0.1:8080/swagger-ui.html` 验证服务可用
 
 ## 开发说明
 - `controller`：用户端接口

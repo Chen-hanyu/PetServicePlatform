@@ -88,30 +88,31 @@ https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%
 | 前端框架 | `Vue 3 + Vite + TypeScript` | 组件化能力成熟，适合用户端与管理员端共用一套工程；构建速度快，便于课程项目开发与演示。 |
 | 后端框架 | `Java 17 + Spring Boot 3 + Spring Security + JWT` | 生态成熟，便于实现分层架构、统一鉴权、接口规范和后续扩展。 |
 | 数据库 | `MySQL` | 适合帖子、订单、预约、领养、宠物档案等结构化业务数据，学习和部署成本较低。 |
-| 部署方式 | `前后端分离 + Nginx + Spring Boot Jar + MySQL` | 轻量、易实施、便于本地联调和课程项目答辩展示，后续可扩展 Redis 与 MinIO。 |
+| 部署方式 | `本地部署 / Docker 部署 + Spring Boot + MySQL` | 轻量、易实施、便于本地联调和课程项目答辩展示，后续可扩展 Redis 与 MinIO。 |
 
 ## 部署方式
 
-- 推荐部署方案：
-- 前端执行 `npm run build` 生成静态资源，由 `Nginx` 托管
-- 后端执行 `mvn clean package` 打包为 `jar`，通过 `java -jar` 启动
-- `Nginx` 统一代理前端页面访问与 `/api/*` 接口请求
-- 业务数据存储在 `MySQL`
-- 缓存使用 `Redis` 作为可选增强组件
-- 图片和附件开发阶段可存储在本地静态目录，后续可升级为 `MinIO`
+- 推荐保留两种部署口径：`本地部署` 与 `Docker 部署`
+- 前端与后端继续保持前后端分离，业务数据存储在 `MySQL`
+- 文件存储开发阶段使用本地目录即可，后续可按需扩展 `MinIO`
+- `Redis` 为可选增强组件，不作为当前阶段最小可运行依赖
 
-- 本地部署方案：
-- 前端：在 `frontend/` 目录执行 `npm install` 和 `npm run dev`，启动本地开发服务
-- 后端：在 `backend/` 目录执行 `mvn clean install` 和 `mvn spring-boot:run`，启动 Spring Boot 服务
+- 本地部署：
+- 前端：在 `frontend/` 目录执行 `npm install` 和 `npm run dev`
+- 后端：在 `backend/` 目录执行 `mvn clean install` 和 `mvn spring-boot:run`
 - 数据库：本地安装并启动 `MySQL`，按 `docs/database.md` 中的数据模型准备数据库
 - 接口联调：前端通过开发环境配置将 `/api/*` 请求转发到本地后端服务
-- 文件存储：开发阶段使用本地静态资源目录即可
-- 缓存：`Redis` 为可选项，最小可运行版本可暂不启用
-- 前端开发地址：Vite 默认开发地址
 - 后端接口地址：`http://127.0.0.1:8080`
 - 接口文档地址：`http://127.0.0.1:8080/swagger-ui.html`
 
-对于当前课程项目，建议优先采用单机部署或本地部署，先保证主流程可运行，再考虑缓存和对象存储等增强能力。
+- Docker 部署：
+- 根目录提供 `docker-compose.yml`，统一启动 `backend` 与 `mysql`
+- 后端通过 `backend/Dockerfile` 构建 Spring Boot 服务镜像
+- 数据库初始化通过挂载 SQL 脚本或启动后手动导入完成
+- 启动命令为 `docker-compose up -d`
+- 服务启动后通过 `docker-compose ps` 检查容器状态
+
+对于当前课程项目，建议优先保证本地部署和 Docker 部署都可运行，再考虑缓存和对象存储等增强能力。
 
 
 ## 分支策略
