@@ -52,6 +52,14 @@ export const mockHomeData = {
       rating: 4.8,
       image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&q=80",
       tags: ["训练", "寄养", "教育"]
+    },
+    {
+      id: 3,
+      name: "萌爪宠物医院",
+      location: "朝阳区",
+      rating: 4.9,
+      image: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=400&q=80",
+      tags: ["医疗", "疫苗", "体检"]
     }
   ],
   recommended_products: [
@@ -60,7 +68,8 @@ export const mockHomeData = {
       name: "天然无谷猫粮 10kg",
       price: 299,
       image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=400&q=80",
-      sales: 500
+      sales: 500,
+      badge: "热卖"
     },
     {
       id: 2,
@@ -75,6 +84,21 @@ export const mockHomeData = {
       price: 159,
       image: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&q=80",
       sales: 300
+    },
+    {
+      id: 4,
+      name: "猫咪爬架多层",
+      price: 399,
+      image: "https://images.unsplash.com/photo-1541781778109-4a63f7c5b3e5?auto=format&fit=crop&w=400&q=80",
+      sales: 150,
+      badge: "新品"
+    },
+    {
+      id: 5,
+      name: "宠物外出背包",
+      price: 89,
+      image: "https://images.unsplash.com/photo-1591946614720-90a587da4a36?auto=format&fit=crop&w=400&q=80",
+      sales: 800
     }
   ],
   tips: [

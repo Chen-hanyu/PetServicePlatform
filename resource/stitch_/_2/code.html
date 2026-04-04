@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7ECFBC",
+                        "secondary": "#FFD66B",
+                        "background-light": "#F7FAF9",
+                        "background-dark": "#1a1f1e",
+                        "accent": "#FF9F80"
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Public Sans', sans-serif;
+        }
+        .soft-shadow {
+            box-shadow: 0 4px 20px -2px rgba(126, 207, 188, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display">
+<div class="relative flex h-auto min-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/10 bg-background-light/80 backdrop-blur-md px-6 py-4 md:px-20 lg:px-40">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
+<span class="material-symbols-outlined">pets</span>
+</div>
+<h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">领养详情</h2>
+</div>
+<div class="flex gap-3">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-primary/20 text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-primary/20 text-accent hover:bg-accent/10 transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</header>
+<main class="mx-auto flex w-full max-w-[1024px] flex-1 flex-col px-4 py-6 md:px-10">
+<!-- Pet Hero Image Section -->
+<div class="@container mb-8">
+<div class="relative overflow-hidden rounded-xl bg-slate-200 aspect-[16/9] md:aspect-[21/9]">
+<div class="absolute inset-0 bg-cover bg-center transition-transform hover:scale-105 duration-700" data-alt="Close up of a cute fluffy white ragdoll cat sitting in a sunny room" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCV81O2kWoMHRJ7MtAD6PhfYlK8GM0JwniJfZFIQy0g19dkOi_rT4S-qwilxEMcsVpdVU5kC8l4tVAQ5sRcL7b3KOWtC25lQPBWBQdJQvTXrLs_3k6ymXTyjn_3oihhSoMlitV9OI0f9NDA6hoxVb6z0yRpBNVpYP0TYViOBuMRtVQV0A5QeE9U61-yhYMajU9Ee8Zb5LMBcE7f4rDqDS9UfbUB88RQE_UrCot2NMKQ6ZwANAjMEv8lE3PLlgYWvYWSgcSjnbxoRN4');">
+</div>
+<div class="absolute bottom-4 left-4 flex gap-2">
+<span class="rounded-full bg-black/30 backdrop-blur-md px-3 py-1 text-xs font-medium text-white">1/5 张图片</span>
+</div>
+</div>
+</div>
+<!-- Basic Info Card -->
+<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+<div class="lg:col-span-2 space-y-8">
+<!-- Name and Key Stats -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h1 class="text-4xl font-black tracking-tight text-slate-900 dark:text-white">小白 (Mochi)</h1>
+<span class="rounded-full bg-secondary/20 px-4 py-1.5 text-sm font-bold text-secondary-700 dark:text-secondary border border-secondary/30">寻找新家</span>
+</div>
+<div class="flex flex-wrap gap-3">
+<div class="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2 text-primary">
+<span class="material-symbols-outlined text-[18px]">category</span>
+<span class="text-sm font-medium">品种：布偶猫</span>
+</div>
+<div class="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2 text-primary">
+<span class="material-symbols-outlined text-[18px]">event</span>
+<span class="text-sm font-medium">年龄：8个月</span>
+</div>
+<div class="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2 text-primary">
+<span class="material-symbols-outlined text-[18px]">transgender</span>
+<span class="text-sm font-medium">性别：小男生</span>
+</div>
+</div>
+</div>
+<!-- Health Tags -->
+<div class="rounded-xl bg-white dark:bg-slate-800 p-6 soft-shadow">
+<h3 class="mb-4 text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">health_and_safety</span>
+                                健康状况
+                            </h3>
+<div class="flex flex-wrap gap-3">
+<span class="flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-4 py-1.5 text-sm text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
+<span class="material-symbols-outlined text-sm">check_circle</span> 已驱虫
+                                </span>
+<span class="flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-4 py-1.5 text-sm text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
+<span class="material-symbols-outlined text-sm">check_circle</span> 已接种疫苗
+                                </span>
+<span class="flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-4 py-1.5 text-sm text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
+<span class="material-symbols-outlined text-sm">check_circle</span> 已绝育
+                                </span>
+<span class="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-700 px-4 py-1.5 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-sm">info</span> 身体指标正常
+                                </span>
+</div>
+</div>
+<!-- Personality Description -->
+<section>
+<h2 class="mb-4 text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">mood</span>
+                                性格描述
+                            </h2>
+<div class="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 leading-relaxed">
+<p>小白是一只非常温柔的布偶猫，性格非常软萌，典型的“棉花糖”性格。它非常亲人，喜欢粘在主人的脚边。当你坐下来时，它会悄悄跳到你的膝盖上求抱抱。小白平时很安静，不乱叫，也不拆家，非常适合在公寓环境喂养。它对新环境适应能力较强，性格稳定，是一只非常完美的伴侣宠物。</p>
+</div>
+</section>
+<!-- Adoption Requirements -->
+<section>
+<h2 class="mb-4 text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-accent">rule</span>
+                                领养要求
+                            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex items-start gap-3 rounded-lg border border-primary/10 bg-white dark:bg-slate-800 p-4">
+<span class="material-symbols-outlined text-primary">home</span>
+<p class="text-sm">在本地有稳定居所，全屋必须安装防护纱窗，防止坠楼风险。</p>
+</div>
+<div class="flex items-start gap-3 rounded-lg border border-primary/10 bg-white dark:bg-slate-800 p-4">
+<span class="material-symbols-outlined text-primary">payments</span>
+<p class="text-sm">有稳定的经济收入，能提供质量可靠的猫粮，生病时能及时送医。</p>
+</div>
+<div class="flex items-start gap-3 rounded-lg border border-primary/10 bg-white dark:bg-slate-800 p-4">
+<span class="material-symbols-outlined text-primary">family_restroom</span>
+<p class="text-sm">征得所有家庭成员同意，不因搬家、结婚、生子等原因弃养。</p>
+</div>
+<div class="flex items-start gap-3 rounded-lg border border-primary/10 bg-white dark:bg-slate-800 p-4">
+<span class="material-symbols-outlined text-primary">video_camera_front</span>
+<p class="text-sm">接受领养后的定期视频回访，愿意分享宠物的日常生活点滴。</p>
+</div>
+</div>
+</section>
+<!-- Adoption Process -->
+<section class="pb-24 lg:pb-0">
+<h2 class="mb-6 text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">description</span>
+                                领养流程
+                            </h2>
+<div class="relative flex flex-col gap-8 md:flex-row md:justify-between">
+<div class="absolute left-6 top-0 hidden h-px w-full bg-primary/20 md:block md:translate-y-6"></div>
+<div class="relative z-10 flex flex-col items-center gap-3 text-center md:w-1/4">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white font-bold ring-4 ring-background-light dark:ring-background-dark">1</div>
+<p class="font-bold">在线申请</p>
+<p class="text-xs text-slate-500">提交个人信息</p>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-3 text-center md:w-1/4">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-primary font-bold ring-4 ring-background-light dark:ring-background-dark">2</div>
+<p class="font-bold">审核交流</p>
+<p class="text-xs text-slate-500">工作人员回访</p>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-3 text-center md:w-1/4">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-primary font-bold ring-4 ring-background-light dark:ring-background-dark">3</div>
+<p class="font-bold">线下见面</p>
+<p class="text-xs text-slate-500">实地接触宠物</p>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-3 text-center md:w-1/4">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-primary font-bold ring-4 ring-background-light dark:ring-background-dark">4</div>
+<p class="font-bold">签订协议</p>
+<p class="text-xs text-slate-500">接TA回家</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar CTA -->
+<div class="lg:sticky lg:top-28 h-fit space-y-4">
+<div class="rounded-xl bg-white dark:bg-slate-800 p-6 soft-shadow border border-primary/10">
+<div class="mb-6 flex items-center gap-4">
+<div class="h-12 w-12 rounded-full bg-slate-200 overflow-hidden">
+<img class="h-full w-full object-cover" data-alt="Portrait of the shelter worker" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbciM_E3FfJmxdQw57KNC6OmEMoyRzXVjwtYWJtkxcGC4iNSBa9PZWL_skLylh_yaqwMUb5zCSa3i-7EZj_dWO68r7HUoHmSbTpUoObEDwu6aq4LnjoUgA5gXa5-_XTAUIyRfBoVMdWVML0hR2GegeWsjA8ChPA8vo4jT0BC_YZA9YTiyaYkU_81xgzX7tVt21u_jYlflFLW3FrHrijHpLny6vB6FhMrpV0PfcMkaFlFym3nww7lZAnAH2Fcv2FnBkgkd_oGFopDk"/>
+</div>
+<div>
+<p class="text-sm font-bold">发布者：小林酱</p>
+<p class="text-xs text-slate-500">爱宠救助站 志愿者</p>
+</div>
+</div>
+<div class="space-y-3">
+<button class="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined">send</span>
+                                    申请领养
+                                </button>
+<button class="w-full flex items-center justify-center gap-2 rounded-xl bg-secondary py-3 font-bold text-slate-800 shadow-lg shadow-secondary/25 hover:bg-secondary/90 transition-all">
+<span class="material-symbols-outlined">chat</span>
+                                    在线咨询
+                                </button>
+</div>
+<p class="mt-4 text-center text-[10px] text-slate-400 leading-relaxed">
+                                温馨提示：领养不收任何费用，请勿相信任何形式的线上转账要求。
+                            </p>
+</div>
+<div class="rounded-xl bg-primary/5 p-4 border border-primary/20">
+<h4 class="text-sm font-bold text-primary mb-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> 领养位置
+                            </h4>
+<div class="h-32 w-full rounded-lg bg-slate-200 overflow-hidden relative">
+<img class="h-full w-full object-cover opacity-60 grayscale" data-alt="Stylized map showing city location" data-location="Tokyo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIhRJ-ZQ6zvJXGzwhY_8cijazrNdGRaXTEOHz9ojO6Wx9SNrtqDf8mEL7xN7vFOFuITp8jZihy52hYKROesUT2xqPUxpJQXui2RvkRpRqO8RtHx1tTisj2Ne0YItPoiiYTjdB1mNULanVZxxoICY4HcqXFwB3i3zf4Q5NaNl8nMCiBOIgmRmCjXvVFHtoYfsoQ9Gj_qM9lrspzo26J4jQCbN3-Gdua2Ha8asFO-LSvnjDVU9l3Ufn_gckyJe3vgXSkcgOP8o8P7-M"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">push_pin</span>
+</div>
+</div>
+<p class="mt-2 text-xs text-slate-600 dark:text-slate-400">北京市 朝阳区 XX救助基地</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Mobile Navigation Placeholder/Safety -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 flex gap-3 border-t border-primary/10">
+<button class="flex-1 rounded-xl bg-secondary py-3 font-bold text-slate-800 shadow-lg shadow-secondary/20">在线咨询</button>
+<button class="flex-[2] rounded-xl bg-primary py-3 font-bold text-white shadow-lg shadow-primary/20">立即申请领养</button>
+</div>
+</div>
+</div>
+</body></html>

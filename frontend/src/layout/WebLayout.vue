@@ -65,6 +65,7 @@
     <main class="page-shell">
       <router-view />
     </main>
+    <WebFooter />
   </div>
 </template>
 
@@ -72,6 +73,7 @@
 import { computed, onBeforeUnmount, ref } from "vue";
 import { useAuthStore } from "@/store/auth";
 import { useRouter } from "vue-router";
+import WebFooter from "@/components/WebFooter.vue";
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -162,8 +164,8 @@ const logout = () => {
   align-items: center;
   gap: 16px;
   padding: 14px 20px;
-  background: rgba(255, 248, 241, 0.9);
-  border-bottom: 1px solid #f2dbc6;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-warm);
   backdrop-filter: blur(10px);
 }
 
@@ -177,13 +179,14 @@ const logout = () => {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffb089, #f17c53);
+  background: var(--hero-gradient);
 }
 
 .brand {
   font-weight: 900;
-  color: #8d4d30;
+  color: var(--text-heading);
   letter-spacing: 0.3px;
+  font-size: 30px;
 }
 
 nav {
@@ -198,14 +201,15 @@ nav {
   padding: 8px 12px;
   border-radius: 999px;
   white-space: nowrap;
-  color: #7b5c4d;
+  color: var(--text);
   border: 1px solid transparent;
+  font-size: 20px;
 }
 
 .link.router-link-active {
-  background: #ffe9d7;
-  color: #8d4d30;
-  border-color: #ffd4b7;
+  background: var(--chip-bg);
+  color: var(--primary);
+  border-color: var(--chip-border);
 }
 
 .auth-actions {
@@ -235,9 +239,9 @@ nav {
   min-width: 168px;
   padding: 8px;
   border-radius: 14px;
-  background: #fff;
-  border: 1px solid #f0e4d8;
-  box-shadow: 0 10px 28px rgba(61, 47, 40, 0.12);
+  background: var(--surface);
+  border: 1px solid var(--border-warm);
+  box-shadow: 0 10px 28px rgba(92, 64, 51, 0.12);
 }
 
 .dropdown-item {
@@ -249,15 +253,15 @@ nav {
   font: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: #5c4a42;
+  color: var(--text);
   text-align: left;
   background: transparent;
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;
 
   &:hover {
-    background: #fff5ec;
-    color: #8d4d30;
+    background: var(--chip-bg);
+    color: var(--primary);
   }
 }
 
@@ -267,21 +271,21 @@ nav {
   gap: 10px;
   padding: 4px 16px 4px 4px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid #f0e4d8;
-  box-shadow: 0 1px 2px rgba(141, 77, 48, 0.06);
+  background: var(--surface);
+  border: 1px solid var(--border-warm);
+  box-shadow: 0 1px 2px rgba(92, 64, 51, 0.06);
   text-decoration: none;
   color: inherit;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
-    border-color: #ffd4b7;
-    box-shadow: 0 2px 8px rgba(241, 124, 83, 0.12);
+    border-color: var(--chip-border);
+    box-shadow: 0 2px 8px rgba(255, 155, 122, 0.12);
   }
 
   &:focus-visible {
-    outline: 2px solid #f17c53;
+    outline: 2px solid var(--primary);
     outline-offset: 2px;
   }
 }
@@ -291,8 +295,8 @@ nav {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #ffb089, #f17c53);
-  color: #fff;
+  background: var(--hero-gradient);
+  color: var(--hero-text);
   font-weight: 800;
   font-size: 15px;
   letter-spacing: -0.02em;
@@ -315,7 +319,7 @@ nav {
 .user-pill-name {
   font-size: 14px;
   font-weight: 600;
-  color: #3d2f28;
+  color: var(--text-heading);
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -332,7 +336,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e74c3c;
+  background: var(--danger);
   color: #fff;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.12s ease;
