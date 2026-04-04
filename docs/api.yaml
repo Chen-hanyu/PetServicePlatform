@@ -1874,6 +1874,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseArray'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [Admin Content]
       summary: 创建 Banner
@@ -1892,6 +1896,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/v1/admin/banners/{bannerId}:
     put:
@@ -1914,6 +1922,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Admin Content]
+      summary: 删除 Banner
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BannerId'
+      responses:
+        '200':
+          description: 成功，data 为 null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/v1/admin/tags:
     get:

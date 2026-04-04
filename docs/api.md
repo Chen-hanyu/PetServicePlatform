@@ -660,6 +660,7 @@ Authorization: Bearer <token>
 | `GET` | `/api/v1/admin/banners` | 是 | 获取 Banner 列表 |
 | `POST` | `/api/v1/admin/banners` | 是 | 创建 Banner |
 | `PUT` | `/api/v1/admin/banners/{bannerId}` | 是 | 更新 Banner |
+| `DELETE` | `/api/v1/admin/banners/{bannerId}` | 是 | 删除 Banner |
 | `GET` | `/api/v1/admin/tags` | 是 | 获取标签列表 |
 | `POST` | `/api/v1/admin/tags` | 是 | 创建标签 |
 | `PUT` | `/api/v1/admin/tags/{tagId}` | 是 | 更新标签 |
