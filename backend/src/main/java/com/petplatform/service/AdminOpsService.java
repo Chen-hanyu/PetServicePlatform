@@ -379,6 +379,15 @@ public class AdminOpsService {
         return AdminBannerResponse.from(bannerMapper.selectById(bannerId));
     }
 
+    @Transactional
+    public void deleteBanner(Long bannerId) {
+        Banner banner = bannerMapper.selectById(bannerId);
+        if (banner == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "Banner 不存在");
+        }
+        bannerMapper.deleteById(bannerId);
+    }
+
     public PageResponse<AdminTagResponse> getTagPage(String type, String status, String keyword, int page, int pageSize) {
         Page<Tag> pager = new Page<>(page, pageSize);
         IPage<Tag> tagPage = tagMapper.selectPage(

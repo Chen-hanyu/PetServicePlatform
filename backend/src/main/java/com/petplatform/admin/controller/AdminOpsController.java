@@ -26,6 +26,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -196,6 +197,12 @@ public class AdminOpsController {
             @Valid @RequestBody SaveBannerRequest request
     ) {
         return ApiResponse.success(adminOpsService.updateBanner(bannerId, request));
+    }
+
+    @DeleteMapping("/banners/{bannerId}")
+    public ApiResponse<Void> deleteBanner(@PathVariable Long bannerId) {
+        adminOpsService.deleteBanner(bannerId);
+        return ApiResponse.success();
     }
 
     @GetMapping("/tags")
