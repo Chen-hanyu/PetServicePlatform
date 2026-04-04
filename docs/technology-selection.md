@@ -20,7 +20,7 @@
 | 前端框架 | `Vue 3 + Vite + TypeScript` | Vue 3 组件化能力成熟，适合用户端和管理端共用一套工程；Vite 启动和构建速度快；TypeScript 便于接口类型约束和多人协作。 |
 | 后端框架 | `Java 17 + Spring Boot 3 + Spring Security + JWT` | Spring Boot 生态完善，适合课程项目的标准后端分层；Spring Security 与 JWT 便于实现用户端和管理员端的角色鉴权。 |
 | 数据库 | `MySQL` | 关系型建模清晰，适合用户、帖子、领养、预约、订单等结构化业务数据；学习和部署成本较低。 |
-| 部署方式 | `前后端分离 + Nginx + Spring Boot Jar + MySQL` | 方案轻量、易实现、便于排错；适合课程项目演示和 MVP 原型落地；后续可按需扩展 Redis 与 MinIO。 |
+| 部署方式 | `本地部署 / Docker 部署 + Spring Boot + MySQL` | 方案轻量、易实现、便于排错；适合课程项目演示和 MVP 原型落地；后续可按需扩展 Redis 与 MinIO。 |
 
 ---
 
@@ -80,13 +80,24 @@
 
 推荐部署方式：
 
-- 前端与后端分离部署
-- 前端执行 `npm run build` 后生成静态资源，由 `Nginx` 托管
-- 后端执行 `mvn clean package` 后打包为 `jar`，使用 `java -jar` 启动
-- `Nginx` 负责反向代理 `/api/*` 请求到 Spring Boot 服务
-- 数据库使用 `MySQL`
-- 开发阶段文件可存储在本地目录，后续按需升级到 `MinIO`
+- 保留 `本地部署` 与 `Docker 部署` 两种交付方式
+- 前端与后端分离运行，数据库统一使用 `MySQL`
+- 开发阶段文件存储在本地目录，后续按需升级到 `MinIO`
 - `Redis` 作为可选增强组件，不作为最小可运行版本的强依赖
+
+本地部署：
+
+- 前端执行 `npm install`、`npm run dev`
+- 后端执行 `mvn clean install`、`mvn spring-boot:run`
+- 数据库使用本地 `MySQL`
+- 前端通过开发代理访问后端 `/api/*`
+
+Docker 部署：
+
+- 根目录通过 `docker-compose.yml` 启动 `backend` 与 `mysql`
+- 后端通过 `backend/Dockerfile` 构建镜像并暴露 `8080`
+- 数据库通过容器环境变量和初始化 SQL 完成启动
+- 使用 `docker-compose up -d` 一键启动服务
 
 推荐理由：
 
@@ -104,7 +115,7 @@
 - 前端：`Vue 3 + Vite`
 - 后端：`Spring Boot 3`
 - 数据库：`MySQL`
-- 部署：`Nginx + Spring Boot Jar`
+- 部署：`本地运行前端 + Spring Boot` 或 `docker-compose + Spring Boot + MySQL`
 - 文件：本地静态资源目录
 - 缓存：可暂不启用 Redis
 
@@ -123,6 +134,6 @@
 - 前端：`Vue 3 + Vite + TypeScript`
 - 后端：`Spring Boot 3 + Spring Security + JWT`
 - 数据库：`MySQL`
-- 部署：`前后端分离 + Nginx + Spring Boot Jar + MySQL`
+- 部署：`本地部署 / Docker 部署 + Spring Boot + MySQL`
 
 该方案与当前已有的设计文档、API 文档、数据库设计和信息架构保持一致，能够较好支撑课程项目的开发、展示与后续扩展。
