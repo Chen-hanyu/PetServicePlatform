@@ -35,6 +35,7 @@ import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -399,6 +400,16 @@ class AdminOpsMutationsWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.sort").value(2));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("delete banner should return success")
+    void deleteBannerShouldReturnSuccess() throws Exception {
+        mockMvc.perform(delete("/api/v1/admin/banners/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @Test
