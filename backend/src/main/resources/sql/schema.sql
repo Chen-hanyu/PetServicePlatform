@@ -100,6 +100,7 @@ CREATE TABLE community_posts (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY idx_community_posts_status_category_published (status, category, published_at),
+    KEY idx_community_posts_status_like_published (status, like_count, published_at),
     KEY idx_community_posts_user_id (user_id),
     CONSTRAINT fk_community_posts_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -175,7 +176,8 @@ CREATE TABLE adoption_pets (
     cover_url VARCHAR(255),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    KEY idx_adoption_pets_status_type_city (status, type, city)
+    KEY idx_adoption_pets_status_type_city (status, type, city),
+    KEY idx_adoption_pets_status_created (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE adoption_applications (
@@ -217,7 +219,8 @@ CREATE TABLE merchants (
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    KEY idx_merchants_district_status (district, status)
+    KEY idx_merchants_district_status (district, status),
+    KEY idx_merchants_status_score (status, score)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE merchant_services (
@@ -262,6 +265,7 @@ CREATE TABLE service_bookings (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY idx_service_bookings_merchant_time_status (merchant_id, booking_time, status),
+    KEY idx_service_bookings_merchant_service_time_status (merchant_id, merchant_service_id, booking_time, status),
     KEY idx_service_bookings_user_status_created (user_id, status, created_at),
     CONSTRAINT fk_service_bookings_user_id FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_service_bookings_merchant_id FOREIGN KEY (merchant_id) REFERENCES merchants(id),
@@ -291,6 +295,7 @@ CREATE TABLE products (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY idx_products_category_status_price (category_id, status, price),
+    KEY idx_products_status_created (status, created_at),
     KEY idx_products_pet_type (pet_type),
     CONSTRAINT fk_products_category_id FOREIGN KEY (category_id) REFERENCES product_categories(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -31,6 +31,7 @@ import com.petplatform.mapper.ServiceBookingMapper;
 import com.petplatform.mapper.ServiceCategoryMapper;
 import com.petplatform.mapper.UserMapper;
 import com.petplatform.security.SecurityUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -178,7 +179,11 @@ public class ServiceBookingService {
         review.setUserId(userId);
         review.setScore(request.score());
         review.setContent(request.content().trim());
-        merchantReviewMapper.insert(review);
+        try {
+            merchantReviewMapper.insert(review);
+        } catch (DuplicateKeyException exception) {
+            throw new BusinessException(ResultCode.DUPLICATE_DATA, "当前商家已评价，请勿重复提交");
+        }
 
         BigDecimal merchantScore = recalculateMerchantScore(merchantId);
         merchant.setScore(merchantScore);
@@ -200,6 +205,9 @@ public class ServiceBookingService {
                 || !merchantService.getMerchantId().equals(request.merchantId())) {
             throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "服务项目不存在");
         }
+
+        // Serialize bookings on the same service item to avoid concurrent double-booking race.
+        merchantServiceMapper.lockById(request.merchantServiceId());
 
         Long conflictCount = serviceBookingMapper.selectCount(new LambdaQueryWrapper<ServiceBooking>()
                 .eq(ServiceBooking::getMerchantId, request.merchantId())
