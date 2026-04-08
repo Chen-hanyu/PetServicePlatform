@@ -2,6 +2,7 @@
 
 > 测试文档入口：[backend-test-plan.md](D:/Code/PetServicePlatform/docs/backend-test-plan.md)
 > 简要说明：当前后端已建立 `MockMvc` 接口/权限测试、`service` 规则测试以及 H2 集成测试，用于验证主流程、权限边界和数据联动。
+> 未完成项与必要性评估：[backend-backlog.md](D:/Code/PetServicePlatform/docs/backend-backlog.md)
 
 ## 当前状态总览
 - 当前后端接口覆盖清单、实现状态标记与最小自测说明见 [backend-status.md](D:/Code/PetServicePlatform/docs/backend-status.md)。
@@ -128,5 +129,5 @@ backend/
 - 后端已完成课程项目 MVP 主流程，用户端与管理端核心业务链路可联调。
 - 统一返回结构、全局异常处理、JWT 鉴权、角色隔离与分页能力均已落地。
 - 自动化测试已覆盖接口、服务规则与 H2 集成链路（当前本地测试报告为 142 个用例全部通过）。
-- 文件上传与验证码当前为 MVP 占位方案（本地存储、内存验证码）；Redis、MinIO、批量操作等为后续增强项。
+- 文件上传当前为 MVP 占位方案（本地存储）；验证码接口作为可选增强能力保留（联调占位），主登录流程为手机号+密码；Redis、MinIO、批量操作等为后续增强项。
 - 详细接口覆盖与状态说明以 `docs/backend-status.md` 为准。

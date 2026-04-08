@@ -115,6 +115,7 @@ SOURCE backend/src/main/resources/sql/seed.sql;
 - 已绘制 ER 图
 - 已提供建表 SQL
 - 社区帖子表已包含审核备注字段 `review_remark`，以对齐管理员审核接口文档
+- 已于 2026-04-08 增补首页聚合与预约冲突相关索引（详见 `schema.sql`）
 - 已提供演示初始化脚本 `seed.sql`
 
 如后续需要，我可以继续补：

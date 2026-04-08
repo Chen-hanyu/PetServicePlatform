@@ -103,7 +103,7 @@ Authorization: Bearer <token>
 | 方法 | 路径 | 认证 | 说明 |
 |---|---|---|---|
 | `POST` | `/api/v1/auth/register` | 否 | 用户注册 |
-| `POST` | `/api/v1/auth/verify-code` | 否 | 发送验证码 |
+| `POST` | `/api/v1/auth/verify-code` | 否 | 可选增强：发送验证码（联调占位） |
 | `POST` | `/api/v1/auth/login` | 否 | 用户密码登录 |
 | `POST` | `/api/v1/auth/logout` | 是 | 用户登出 |
 
@@ -122,13 +122,13 @@ Authorization: Bearer <token>
 | `phone` | string | 是 | 手机号 |
 | `password` | string | 是 | 登录密码 |
 
-验证码请求体：
+验证码请求体（可选增强）：
 
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `phone` | string | 是 | 手机号 |
 
-说明：当前系统主登录方式为手机号加密码，验证码接口保留用于调试与联调。
+说明：当前系统主登录方式为手机号+密码；验证码接口作为可选增强能力保留，当前用于调试与联调，不作为主业务流程的必需能力。
 
 ### 3.3 个人中心
 
@@ -394,12 +394,12 @@ Authorization: Bearer <token>
 
 | 方法 | 路径 | 认证 | 说明 |
 |---|---|---|---|
-| `POST` | `/api/v1/admin/auth/verify-code` | 否 | 发送管理员验证码 |
+| `POST` | `/api/v1/admin/auth/verify-code` | 否 | 可选增强：发送管理员验证码（联调占位） |
 | `POST` | `/api/v1/admin/auth/login` | 否 | 管理员密码登录 |
 | `POST` | `/api/v1/admin/auth/logout` | 是 | 管理员登出 |
 | `GET` | `/api/v1/admin/dashboard` | 是 | 获取仪表盘概览 |
 
-管理员登录请求体与用户登录一致。
+管理员登录请求体与用户登录一致；管理员验证码接口同样为可选增强能力。
 
 ### 4.2 用户管理
 
