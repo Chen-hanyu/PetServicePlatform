@@ -279,3 +279,14 @@ CREATE TABLE merchant_reviews (
     content VARCHAR(255) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_community_posts_status_like_published
+    ON community_posts (status, like_count, published_at);
+CREATE INDEX idx_adoption_pets_status_created
+    ON adoption_pets (status, created_at);
+CREATE INDEX idx_merchants_status_score
+    ON merchants (status, score);
+CREATE INDEX idx_service_bookings_merchant_service_time_status
+    ON service_bookings (merchant_id, merchant_service_id, booking_time, status);
+CREATE INDEX idx_products_status_created
+    ON products (status, created_at);

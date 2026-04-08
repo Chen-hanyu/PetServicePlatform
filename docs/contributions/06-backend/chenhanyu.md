@@ -2,6 +2,7 @@
 姓名：chenhanyu
 学号：2320100624
 日期：2026-04-04
+补充更新：2026-04-08
 
 ## 我完成的工作
 ### API 实现
@@ -32,6 +33,13 @@
 - 编写并维护数据库初始化脚本，覆盖用户、社区、领养、服务预约、商城、宠物档案、Banner、推荐位等核心表。
 - 补充容器化交付文件：`backend/Dockerfile`、根目录 `docker-compose.yml`，并将后端配置调整为环境变量优先，兼容本地部署与 Docker 部署。
 - 编写并维护 WebMvc、Service 与 H2 集成测试，当前后端全量测试已通过。
+
+## 补充进展（2026-04-08）
+- 完成商城下单并发安全优化：`products` 库存扣减改为原子更新（`stock >= quantity` 条件扣减），避免超卖。
+- 完成服务预约并发安全优化：预约创建流程增加 `FOR UPDATE` 行锁，避免同一时段重复占位。
+- 完成购物车并发加购优化：对同一购物车项加锁后刷新再累加，首次并发插入触发唯一键冲突时自动重试合并数量，避免 500 与丢增量。
+- 完成关键索引增强并同步到建表脚本与测试建表脚本：`community_posts`、`products`、`adoption_pets`、`service_bookings`、`merchants`。
+- 本次优化后再次执行后端全量测试，结果为 `Tests run: 152, Failures: 0, Errors: 0, Skipped: 0`。
 
 ## PR 链接
 - https://github.com/Chen-hanyu/PetServicePlatform/pull/25

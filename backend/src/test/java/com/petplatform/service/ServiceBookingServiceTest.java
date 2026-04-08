@@ -23,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -72,6 +73,7 @@ class ServiceBookingServiceTest {
         mockCurrentUser(10L);
         when(merchantMapper.selectById(1L)).thenReturn(activeMerchant(1L));
         when(merchantServiceMapper.selectById(2L)).thenReturn(activeMerchantService(2L, 1L));
+        when(merchantServiceMapper.lockById(2L)).thenReturn(2L);
         when(serviceBookingMapper.selectCount(any())).thenReturn(1L);
 
         CreateServiceBookingRequest request = new CreateServiceBookingRequest(
@@ -87,6 +89,7 @@ class ServiceBookingServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
                         .isEqualTo(ResultCode.BOOKING_TIME_CONFLICT.getCode()));
+        verify(merchantServiceMapper).lockById(2L);
     }
 
     @Test
@@ -135,6 +138,23 @@ class ServiceBookingServiceTest {
         assertThat(response.merchantScore()).isEqualByComparingTo("4.5");
         assertThat(merchant.getScore()).isEqualByComparingTo(new BigDecimal("4.5"));
         verify(merchantMapper).updateById(merchant);
+    }
+
+    @Test
+    @DisplayName("并发重复评价触发唯一约束时应返回重复提交错误")
+    void shouldThrowDuplicateDataWhenInsertReviewViolatesUniqueConstraint() {
+        mockCurrentUser(10L);
+        when(merchantMapper.selectById(1L)).thenReturn(activeMerchant(1L));
+        when(serviceBookingMapper.selectCount(any())).thenReturn(1L);
+        when(merchantReviewMapper.selectCount(any())).thenReturn(0L);
+        when(merchantReviewMapper.insert(any(MerchantReview.class))).thenThrow(new DuplicateKeyException("duplicate"));
+
+        CreateMerchantReviewRequest request = new CreateMerchantReviewRequest(5, "服务很好");
+
+        assertThatThrownBy(() -> serviceBookingService.createReview(1L, request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.DUPLICATE_DATA.getCode()));
     }
 
     private void mockCurrentUser(Long userId) {

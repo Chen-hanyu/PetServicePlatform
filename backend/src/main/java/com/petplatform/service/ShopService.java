@@ -28,6 +28,7 @@ import com.petplatform.mapper.ProductMapper;
 import com.petplatform.mapper.ShopOrderItemMapper;
 import com.petplatform.mapper.ShopOrderMapper;
 import com.petplatform.security.SecurityUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -142,23 +143,25 @@ public class ShopService {
         Product product = getAvailableProductOrThrow(request.productId());
         ensureStock(product, request.quantity());
 
-        CartItem existing = cartItemMapper.selectOne(new LambdaQueryWrapper<CartItem>()
-                .eq(CartItem::getUserId, userId)
-                .eq(CartItem::getProductId, request.productId())
-                .last("limit 1"));
+        CartItem existing = findCartItem(userId, request.productId());
         if (existing == null) {
-            CartItem cartItem = new CartItem();
-            cartItem.setUserId(userId);
-            cartItem.setProductId(request.productId());
-            cartItem.setQuantity(request.quantity());
-            cartItem.setChecked(true);
-            cartItemMapper.insert(cartItem);
-        } else {
-            int newQuantity = existing.getQuantity() + request.quantity();
-            ensureStock(product, newQuantity);
-            existing.setQuantity(newQuantity);
-            cartItemMapper.updateById(existing);
+            try {
+                CartItem cartItem = new CartItem();
+                cartItem.setUserId(userId);
+                cartItem.setProductId(request.productId());
+                cartItem.setQuantity(request.quantity());
+                cartItem.setChecked(true);
+                cartItemMapper.insert(cartItem);
+                return getCart();
+            } catch (DuplicateKeyException exception) {
+                existing = findCartItem(userId, request.productId());
+                if (existing == null) {
+                    throw new BusinessException(ResultCode.INVALID_OPERATION, "购物车更新失败，请重试");
+                }
+            }
         }
+
+        mergeCartItemQuantity(product, existing, request.quantity());
         return getCart();
     }
 
@@ -220,6 +223,12 @@ public class ShopService {
 
         for (CartItem item : cartItems) {
             Product product = products.get(item.getProductId());
+            int updatedRows = productMapper.decrementStockSafely(product.getId(), item.getQuantity());
+            if (updatedRows <= 0) {
+                throw new BusinessException(ResultCode.OUT_OF_STOCK);
+            }
+            product.setStock(product.getStock() - item.getQuantity());
+
             ShopOrderItem orderItem = new ShopOrderItem();
             orderItem.setOrderId(order.getId());
             orderItem.setProductId(product.getId());
@@ -229,9 +238,6 @@ public class ShopService {
             orderItem.setQuantity(item.getQuantity());
             orderItem.setSubtotalAmount(product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
             shopOrderItemMapper.insert(orderItem);
-
-            product.setStock(product.getStock() - item.getQuantity());
-            productMapper.updateById(product);
             cartItemMapper.deleteById(item.getId());
         }
 
@@ -316,6 +322,27 @@ public class ShopService {
         if (product.getStock() == null || product.getStock() < quantity) {
             throw new BusinessException(ResultCode.OUT_OF_STOCK);
         }
+    }
+
+    private CartItem findCartItem(Long userId, Long productId) {
+        return cartItemMapper.selectOne(new LambdaQueryWrapper<CartItem>()
+                .eq(CartItem::getUserId, userId)
+                .eq(CartItem::getProductId, productId)
+                .last("limit 1"));
+    }
+
+    private void mergeCartItemQuantity(Product product, CartItem existing, int deltaQuantity) {
+        cartItemMapper.lockById(existing.getId());
+        CartItem latest = cartItemMapper.selectById(existing.getId());
+        if (latest == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "购物车项不存在");
+        }
+
+        int newQuantity = latest.getQuantity() + deltaQuantity;
+        ensureStock(product, newQuantity);
+        latest.setQuantity(newQuantity);
+        latest.setChecked(true);
+        cartItemMapper.updateById(latest);
     }
 
     private String generateOrderNo() {

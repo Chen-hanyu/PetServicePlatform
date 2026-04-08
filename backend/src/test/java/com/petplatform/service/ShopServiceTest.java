@@ -2,6 +2,7 @@ package com.petplatform.service;
 
 import com.petplatform.common.ResultCode;
 import com.petplatform.common.exception.BusinessException;
+import com.petplatform.dto.shop.AddCartItemRequest;
 import com.petplatform.dto.shop.CreateOrderRequest;
 import com.petplatform.dto.shop.OrderSummaryResponse;
 import com.petplatform.entity.CartItem;
@@ -22,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -62,6 +64,49 @@ class ShopServiceTest {
     }
 
     @Test
+    @DisplayName("并发首次加购触发唯一键冲突时应合并数量")
+    void shouldMergeQuantityWhenConcurrentInsertConflicts() {
+        mockCurrentUser(7L);
+        Product product = product(101L, "猫粮", "39.90", 10);
+
+        when(productMapper.selectById(101L)).thenReturn(product);
+        when(cartItemMapper.selectOne(any())).thenReturn(null, cartItem(9L, 7L, 101L, 2, true));
+        when(cartItemMapper.insert(any(CartItem.class))).thenThrow(new DuplicateKeyException("duplicate"));
+        when(cartItemMapper.lockById(9L)).thenReturn(9L);
+        when(cartItemMapper.selectById(9L)).thenReturn(cartItem(9L, 7L, 101L, 2, true));
+        when(cartItemMapper.updateById(any(CartItem.class))).thenReturn(1);
+        when(cartItemMapper.selectList(any())).thenReturn(List.of(cartItem(9L, 7L, 101L, 4, true)));
+        when(productMapper.selectByIds(List.of(101L))).thenReturn(List.of(product));
+
+        var response = shopService.addCartItem(new AddCartItemRequest(101L, 2));
+
+        assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).quantity()).isEqualTo(4);
+        verify(cartItemMapper).lockById(9L);
+    }
+
+    @Test
+    @DisplayName("已存在购物车项时应加锁后累加数量")
+    void shouldLockAndRefreshExistingCartItemBeforeUpdate() {
+        mockCurrentUser(7L);
+        Product product = product(101L, "猫粮", "39.90", 10);
+
+        when(productMapper.selectById(101L)).thenReturn(product);
+        when(cartItemMapper.selectOne(any())).thenReturn(cartItem(8L, 7L, 101L, 1, true));
+        when(cartItemMapper.lockById(8L)).thenReturn(8L);
+        when(cartItemMapper.selectById(8L)).thenReturn(cartItem(8L, 7L, 101L, 1, true));
+        when(cartItemMapper.updateById(any(CartItem.class))).thenReturn(1);
+        when(cartItemMapper.selectList(any())).thenReturn(List.of(cartItem(8L, 7L, 101L, 3, true)));
+        when(productMapper.selectByIds(List.of(101L))).thenReturn(List.of(product));
+
+        var response = shopService.addCartItem(new AddCartItemRequest(101L, 2));
+
+        assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).quantity()).isEqualTo(3);
+        verify(cartItemMapper).lockById(8L);
+    }
+
+    @Test
     @DisplayName("未勾选购物车项时不允许下单")
     void shouldRejectOrderWhenCartItemsAreUnchecked() {
         mockCurrentUser(7L);
@@ -91,6 +136,8 @@ class ShopServiceTest {
 
         when(cartItemMapper.selectByIds(List.of(1L, 2L))).thenReturn(List.of(firstItem, secondItem));
         when(productMapper.selectByIds(List.of(101L, 102L))).thenReturn(List.of(firstProduct, secondProduct));
+        when(productMapper.decrementStockSafely(101L, 2)).thenReturn(1);
+        when(productMapper.decrementStockSafely(102L, 1)).thenReturn(1);
         ShopOrder persistedOrder = new ShopOrder();
         doAnswer(invocation -> {
             ShopOrder order = invocation.getArgument(0);
@@ -119,8 +166,8 @@ class ShopServiceTest {
         assertThat(response.orderNo()).startsWith("PSP");
         assertThat(firstProduct.getStock()).isEqualTo(8);
         assertThat(secondProduct.getStock()).isEqualTo(4);
-        verify(productMapper).updateById(firstProduct);
-        verify(productMapper).updateById(secondProduct);
+        verify(productMapper).decrementStockSafely(101L, 2);
+        verify(productMapper).decrementStockSafely(102L, 1);
         verify(cartItemMapper).deleteById(1L);
         verify(cartItemMapper).deleteById(2L);
 
