@@ -17,12 +17,17 @@ export const useShopCartStore = defineStore("shopCart", () => {
 
   const add = (
     product: { id: number; name: string; price: number; image_url?: string; image?: string },
-    quantity = 1
+    quantity = 1,
+    onAdded?: (image: string) => void
   ) => {
     const img = product.image_url || product.image || "";
     const line = items.value.find((x) => x.id === product.id);
     if (line) line.quantity += quantity;
     else items.value.push({ id: product.id, name: product.name, price: product.price, quantity, image: img });
+    
+    if (onAdded && img) {
+      onAdded(img);
+    }
   };
 
   const increaseQty = (id: number) => {

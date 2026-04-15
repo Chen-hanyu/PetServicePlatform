@@ -77,10 +77,9 @@
           <!-- 页码切换 -->
           <div class="pagination">
             <button class="page-btn" :class="{ active: currentPage === 1 }" @click="currentPage = 1">1</button>
-            <button class="page-btn" :class="{ active: currentPage === 2 }" @click="currentPage = 2">2</button>
-            <button class="page-btn" :class="{ active: currentPage === 3 }" @click="currentPage = 3">3</button>
-            <span class="page-ellipsis">...</span>
-            <button class="page-btn" @click="currentPage++">下一页</button>
+            <button v-if="totalPages >= 2" class="page-btn" :class="{ active: currentPage === 2 }" @click="currentPage = 2">2</button>
+            <span v-if="totalPages > 3" class="page-ellipsis">...</span>
+            <button v-if="currentPage < totalPages" class="page-btn" @click="currentPage++">下一页</button>
           </div>
         </section>
       </main>
@@ -183,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchPosts } from "@/api/modules/community";
@@ -200,23 +199,41 @@ const router = useRouter();
 
 const categories = ["推荐", "晒宠", "问答", "种草", "日常", "知识", "视频", "好物"];
 
+const PAGE_SIZE = 12;
+
 const mockListForTab = (): PostSummary[] => {
   const list = mockPosts as PostSummary[];
-  if (activeCategory.value === "推荐") return list;
-  const filtered = list.filter((p) => p.category === activeCategory.value);
-  return filtered.length > 0 ? filtered : list.slice(0, 6);
+  let filtered: PostSummary[];
+  if (activeCategory.value === "推荐") {
+    filtered = list;
+  } else {
+    filtered = list.filter((p) => p.category === activeCategory.value);
+    if (filtered.length === 0) filtered = list;
+  }
+  const start = (currentPage.value - 1) * PAGE_SIZE;
+  return filtered.slice(start, start + PAGE_SIZE);
 };
+
+const totalPosts = ref(0);
+const totalPages = computed(() => Math.max(1, Math.ceil(totalPosts.value / PAGE_SIZE)));
 
 const loadPosts = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const data = await fetchPosts({ tab: activeCategory.value, page: currentPage.value, page_size: 20 });
+    const data = await fetchPosts({ tab: activeCategory.value, page: currentPage.value, page_size: PAGE_SIZE });
     const list = data.list ?? [];
-    posts.value = list.length > 0 ? list : mockListForTab();
+    if (list.length > 0) {
+      posts.value = list;
+      totalPosts.value = data.total ?? list.length;
+    } else {
+      posts.value = mockListForTab();
+      totalPosts.value = mockPosts.length;
+    }
   } catch (e) {
     console.warn("Failed to fetch posts, using mock data", e);
     posts.value = mockListForTab();
+    totalPosts.value = mockPosts.length;
   } finally {
     loading.value = false;
   }
@@ -231,6 +248,9 @@ const goToCreate = () => {
 };
 
 onMounted(loadPosts);
+watch(activeCategory, () => {
+  currentPage.value = 1;
+});
 watch([activeCategory, currentPage], () => {
   void loadPosts();
 });
@@ -244,7 +264,7 @@ watch([activeCategory, currentPage], () => {
 
 // 顶部搜索区域
 .top-bar {
-  background: #fff;
+  background: var(--surface);
   border-bottom: 1px solid var(--border-warm);
 }
 
@@ -403,67 +423,106 @@ watch([activeCategory, currentPage], () => {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(34, 60, 52, 0.06);
+  display: flex;
+  flex-direction: column;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(34, 60, 52, 0.14);
 
     .card-image img {
-      transform: scale(1.05);
+      transform: scale(1.08);
+    }
+
+    .card-title {
+      color: var(--primary);
     }
   }
 }
 
 .card-image {
+  position: relative;
   overflow: hidden;
+  height: 200px;
+  background: linear-gradient(135deg, var(--surface-muted) 0%, var(--bg) 100%);
 
   img {
     width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
     transition: transform 0.4s ease;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
+    pointer-events: none;
   }
 }
 
 .card-body {
-  padding: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .card-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-heading);
-  margin: 0 0 12px;
-  line-height: 1.4;
+  margin: 0 0 14px;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: color 0.2s ease;
 }
 
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: auto;
 
   .author {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 12px;
     color: var(--muted);
 
     img {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
+      border: 2px solid var(--border-warm);
+      transition: border-color 0.2s ease;
+    }
+
+    &:hover img {
+      border-color: var(--primary);
     }
   }
 
   .stats {
     display: flex;
-    gap: 8px;
-    font-size: 11px;
+    gap: 12px;
+    font-size: 12px;
     color: var(--muted);
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
   }
 }
 

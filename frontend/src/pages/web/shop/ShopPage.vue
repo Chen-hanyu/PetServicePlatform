@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="shop-page">
     <!-- 淘宝式顶栏：左标识 + 中置搜索（宝贝下拉 + 输入 + 搜索按钮） -->
     <header class="tb-top card">
@@ -221,8 +221,6 @@
         </DataState>
       </div>
     </div>
-
-    <CommerceDock />
   </section>
 </template>
 
@@ -231,7 +229,6 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import DataState from "@/components/DataState.vue";
 import { fetchProducts } from "@/api/modules/shop";
 import { mockProducts } from "@/mocks/shop";
-import CommerceDock from "@/components/shop/CommerceDock.vue";
 
 const loading = ref(false);
 const error = ref("");
@@ -496,7 +493,7 @@ onBeforeUnmount(() => {
 .tb-search-pill {
   display: flex;
   align-items: stretch;
-  background: #fff;
+  background: var(--surface);
   border: 2px solid var(--primary);
   border-radius: 12px;
   overflow: hidden;
@@ -678,12 +675,12 @@ onBeforeUnmount(() => {
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.7);
+    background: var(--chip-bg);
     color: var(--text-heading-soft);
   }
 
   &.active {
-    background: #fff;
+    background: var(--surface);
     color: var(--primary-strong);
     box-shadow: inset 3px 0 0 var(--primary-strong);
   }
@@ -926,7 +923,7 @@ onBeforeUnmount(() => {
   gap: 4px;
 
   &.active {
-    background: #fff;
+    background: var(--surface);
     color: var(--primary-strong);
     box-shadow: 0 1px 6px rgba(102, 72, 48, 0.08);
   }
@@ -958,7 +955,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   width: 100%;
   padding: 12px 12px 16px;
-  background: #f5f0eb;
+  background: var(--surface-muted);
 }
 
 :deep(.shop-state .muted),
@@ -993,10 +990,10 @@ onBeforeUnmount(() => {
   flex-direction: column;
   min-width: 0;
   min-height: 100%;
-  background: #fff;
+  background: var(--surface);
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #ebe4dd;
+  border: 1px solid var(--border-warm);
   transition: box-shadow 0.2s, transform 0.2s;
 
   &:hover {
@@ -1009,7 +1006,7 @@ onBeforeUnmount(() => {
   position: relative;
   aspect-ratio: 1;
   min-height: 132px;
-  background: #faf7f4;
+  background: var(--surface-muted);
   overflow: hidden;
 
   img {

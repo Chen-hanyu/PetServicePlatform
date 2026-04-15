@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="detail-page">
     <DataState :loading="loading" :error="error" :empty="!product && !loading" empty-text="商品不存在或已下架">
       <template v-if="product">
@@ -136,8 +136,6 @@
         </div>
       </template>
     </DataState>
-
-    <CommerceDock />
   </div>
 </template>
 
@@ -145,7 +143,6 @@
 import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
-import CommerceDock from "@/components/shop/CommerceDock.vue";
 import { fetchProduct } from "@/api/modules/shop";
 import { getMockProductById } from "@/mocks/shop";
 import type { ProductDetail } from "@/types/shop";

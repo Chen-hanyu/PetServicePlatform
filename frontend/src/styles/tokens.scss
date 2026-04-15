@@ -83,3 +83,30 @@
   --danger: #E97A7A;
   --info: #7AACD1;
 }
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --bg: #1A1A1A;
+  --surface: #2A2A2A;
+  --text: #E0E0E0;
+  --muted: #A0A0A0;
+  --muted-soft: #808080;
+  --surface-muted: #333333;
+  --surface-muted-hover: #3A3A3A;
+  --text-heading: #F0F0F0;
+  --text-heading-soft: #D0D0D0;
+  --text-subheading: #B0B0B0;
+  --border-warm: #404040;
+  --border-warm-mid: #353535;
+  --border-input: #505050;
+  --surface-tint: #252525;
+  --chip-bg: #333333;
+  --chip-active-bg: #404040;
+  --image-overlay-gradient: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 48%, transparent 100%);
+  --overlay-scrim: rgba(0, 0, 0, 0.7);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --hero-gradient: linear-gradient(135deg, #3A2A20 0%, #2A1A15 42%, #1A0A05 78%, #2A1A15 100%);
+  --banner-soft: linear-gradient(135deg, #252525 0%, #1A1A1A 100%);
+  --glow-1: #2A2A2A;
+  --glow-2: rgba(255, 155, 122, 0.15);
+}
