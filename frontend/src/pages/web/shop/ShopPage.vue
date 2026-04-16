@@ -48,7 +48,7 @@
 
     <p class="tb-promo-strip">
       <span class="tb-strip-ico" aria-hidden="true">🎁</span>
-      点击商品进入详情页可加入购物车或立即购买；右侧竖条打开购物车结算（演示数据）
+      点击商品进入详情页可加入购物车或立即购买；右侧竖条打开购物车结算
     </p>
 
     <nav class="breadcrumb" aria-label="面包屑导航">

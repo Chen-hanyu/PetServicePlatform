@@ -97,9 +97,26 @@
                       <img :src="post.author?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'" />
                       {{ post.author?.nickname || '匿名用户' }}
                     </span>
-                    <span class="stats">
-                      <span>❤️ {{ post.like_count || 0 }}</span>
-                      <span>💬 {{ post.comment_count || 0 }}</span>
+                    <span class="stats" @click.stop>
+                      <span
+                        class="stat-btn like-btn"
+                        :class="{ liked: post.isLiked }"
+                        @click.stop="togglePostLike(post)"
+                      >
+                        <svg viewBox="0 0 24 24" :fill="post.isLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                          <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
+                        </svg>
+                        {{ post.like_count || 0 }}
+                      </span>
+                      <span
+                        class="stat-btn"
+                        @click.stop="goToPostComments(post.id)"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+                        </svg>
+                        {{ post.comment_count || 0 }}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -319,6 +336,15 @@ const loadPosts = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const togglePostLike = (post: PostSummary) => {
+  post.isLiked = !post.isLiked;
+  post.like_count = (post.like_count || 0) + (post.isLiked ? 1 : -1);
+};
+
+const goToPostComments = (postId: number) => {
+  router.push(`/community/post/${postId}#comments`);
 };
 
 const openDetail = (postId: number) => {
@@ -681,11 +707,34 @@ watch([activeCategory, currentPage], () => {
     gap: 12px;
     font-size: 12px;
     color: var(--muted);
+    align-items: center;
 
     span {
       display: flex;
       align-items: center;
       gap: 4px;
+    }
+
+    .stat-btn {
+      cursor: pointer;
+      transition: color 0.2s ease;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      &:hover {
+        color: var(--primary);
+      }
+
+      &.liked {
+        color: #ff4d4f;
+      }
+    }
+
+    .like-btn.liked svg {
+      fill: #ff4d4f;
     }
   }
 }

@@ -153,7 +153,7 @@
       </div>
 
       <!-- 评论区 -->
-      <div class="comments-section">
+      <div id="comments" class="comments-section">
         <h3 class="section-title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
@@ -534,9 +534,16 @@ onMounted(() => {
       commentCount.value = comments.value.length;
       postViews.value = Math.floor(Math.random() * 5000) + 1000;
     }
-    
+
     recommendPosts.value = mockPosts.filter((p: any) => p.id !== postId).slice(0, 4);
     loading.value = false;
+
+    // 如果 URL 包含 #comments，则滚动到评论区
+    if (window.location.hash === '#comments') {
+      nextTick(() => {
+        document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
   }, 500);
 });
 </script>
