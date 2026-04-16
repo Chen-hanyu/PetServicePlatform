@@ -453,7 +453,7 @@ const handlePublish = () => {
 .main-content {
   padding: 16px;
   padding-top: calc(16px + env(safe-area-inset-top) + 60px);
-  max-width: 720px;
+  max-width: 900px;
   margin: 0 auto;
 }
 

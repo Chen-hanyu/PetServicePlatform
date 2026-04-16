@@ -8,12 +8,45 @@
           <span class="logo-text">宠物社区</span>
         </div>
 
-        <div class="search-box">
+        <div class="search-box" :class="{ focused: searchFocused }">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/>
             <path d="M21 21l-4.35-4.35"/>
           </svg>
-          <input type="text" placeholder="搜索话题、用户..." v-model="searchQuery" />
+          <input 
+            type="text" 
+            placeholder="搜索话题、用户..." 
+            v-model="searchQuery" 
+            @focus="searchFocused = true"
+            @blur="handleSearchBlur"
+          />
+          
+          <!-- 智能补全下拉 -->
+          <Transition name="dropdown-fade">
+            <div v-if="searchFocused && searchQuery && completions.length > 0" class="completion-dropdown">
+              <ul class="completion-list">
+                <li 
+                  v-for="(kw, index) in completions" 
+                  :key="index" 
+                  class="completion-item"
+                  @mousedown.prevent="applyCompletion(kw)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                  </svg>
+                  <span>{{ kw }}</span>
+                </li>
+              </ul>
+            </div>
+          </Transition>
+          
+          <button class="search-btn" title="搜索" @click="handleSearch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </button>
         </div>
 
         <button class="btn-publish" @click="goToCreate">
@@ -192,12 +225,61 @@ import type { PostSummary } from "@/types/community";
 const loading = ref(false);
 const error = ref("");
 const searchQuery = ref("");
-const activeCategory = ref("推荐");
+const searchFocused = ref(false);
 const currentPage = ref(1);
 const posts = ref<PostSummary[]>([]);
 const router = useRouter();
 
+const searchSuggestions = ref([
+  "新手养猫注意事项",
+  "狗狗驱虫时间",
+  "猫粮推荐",
+  "宠物疫苗",
+  "自制猫饭",
+  "狗狗洗澡",
+  "猫咪训练",
+  "宠物保险"
+]);
+const activeCategory = ref("推荐");
 const categories = ["推荐", "晒宠", "问答", "种草", "日常", "知识", "视频", "好物"];
+
+const searchKeywords = [
+  "新手养猫", "猫粮推荐", "猫咪训练", "猫咪疫苗", "猫咪洗澡", "自制猫饭",
+  "狗狗驱虫", "狗狗训练", "狗粮推荐", "狗狗洗澡", "养狗注意事项",
+  "兔子饲养", "兔粮推荐", "宠物零食", "宠物医院", "宠物保险",
+  "猫咪尾巴", "狗狗尾巴", "宠物美容", "宠物摄影", "宠物领养"
+];
+
+const getCompletion = (query: string) => {
+  if (!query) return [];
+  const q = query.toLowerCase();
+  return searchKeywords.filter(kw => kw.includes(q)).slice(0, 8);
+};
+
+const completions = computed(() => getCompletion(searchQuery.value));
+
+const applyCompletion = (kw: string) => {
+  searchQuery.value = kw;
+  searchFocused.value = false;
+};
+
+const handleSearchBlur = () => {
+  setTimeout(() => {
+    searchFocused.value = false;
+  }, 200);
+};
+
+const selectSuggestion = (item: PostSummary) => {
+  openDetail(item.id);
+  searchFocused.value = false;
+};
+
+const handleSearch = () => {
+  if (searchQuery.value) {
+    alert(`搜索: ${searchQuery.value}`);
+    searchFocused.value = false;
+  }
+};
 
 const PAGE_SIZE = 12;
 
@@ -306,8 +388,9 @@ watch([activeCategory, currentPage], () => {
   padding: 10px 18px;
   margin: 0 40px;
   transition: all 0.2s ease;
+  position: relative;
 
-  &:focus-within {
+  &.focused {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(255, 155, 122, 0.15);
   }
@@ -330,6 +413,87 @@ watch([activeCategory, currentPage], () => {
       color: var(--muted-soft);
     }
   }
+}
+
+.search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    color: #fff;
+  }
+
+  &:hover {
+    background: var(--primary-strong);
+    transform: scale(1.05);
+  }
+}
+
+.completion-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border-warm);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.completion-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+}
+
+.completion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  &:hover {
+    background: var(--surface-muted);
+  }
+}
+
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .btn-publish {

@@ -286,7 +286,7 @@ const toggleCart = () => {
 
 const toggleService = () => {
   if (serviceChatRef.value) {
-    serviceChatRef.value.open.value = true;
+    serviceChatRef.value.toggle();
   }
 };
 

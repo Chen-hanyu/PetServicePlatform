@@ -90,7 +90,11 @@ watch(open, (v) => {
   }
 });
 
-defineExpose({ open });
+const toggle = () => {
+  open.value = !open.value;
+};
+
+defineExpose({ toggle, open });
 </script>
 
 <style scoped lang="scss">

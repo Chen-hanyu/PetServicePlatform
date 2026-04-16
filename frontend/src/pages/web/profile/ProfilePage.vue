@@ -228,7 +228,7 @@
             <RouterLink to="/profile/orders" class="view-link">全部订单 &gt;</RouterLink>
           </div>
           <div class="order-icons">
-            <div v-for="order in orderTypes" :key="order.key" class="order-icon-item">
+            <RouterLink v-for="order in orderTypes" :key="order.key" :to="`/profile/orders?tab=${order.key}`" class="order-icon-item">
               <div :class="['order-icon-wrap', { 'has-badge': order.badge }]">
                 <div class="order-icon-bg">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="order.svg"></svg>
@@ -236,7 +236,7 @@
                 <span v-if="order.badge" class="badge">{{ order.badge }}</span>
               </div>
               <p class="order-label">{{ order.label }}</p>
-            </div>
+            </RouterLink>
           </div>
         </section>
       </div>
@@ -1050,6 +1050,10 @@ const goToAddPet = () => {
   .order-icon-item {
     flex: 1;
     cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
     &:hover {
       .order-icon-bg {
