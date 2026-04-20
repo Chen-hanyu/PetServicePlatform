@@ -108,7 +108,7 @@
         </svg>
         <span class="tool-label">{{ isDark ? '日间' : '夜间' }}</span>
       </button>
-      <button class="tool-btn ai-btn" title="AI助手" @click="showAIToast">
+      <button class="tool-btn ai-btn" title="AI助手" @click="openAIChat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/>
           <path d="M12 8v4l3 3"/>
@@ -226,6 +226,9 @@
     <!-- 客服聊天窗口 -->
     <ServiceChat ref="serviceChatRef" />
 
+    <!-- AI宠医助手 -->
+    <AIPetDoctorChat ref="aiChatRef" v-model:open="aiChatOpen" />
+
     <!-- 飞入动画元素 -->
     <Teleport to="body">
       <div v-if="flyingItem.show" class="flying-item" :style="flyingItem.style">
@@ -238,12 +241,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, reactive } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, reactive } from "vue";
 import { useAuthStore } from "@/store/auth";
 import { useThemeStore } from "@/store/theme";
 import { useRouter } from "vue-router";
 import WebFooter from "@/components/WebFooter.vue";
 import ServiceChat from "@/components/ServiceChat.vue";
+import AIPetDoctorChat from "@/components/ai/AIPetDoctorChat.vue";
 import { useServiceBookingStore } from "@/store/serviceBooking";
 import { useShopCartStore } from "@/store/shopCart";
 
@@ -259,6 +263,8 @@ const toggleTheme = () => theme.toggle();
 const bookingOpen = ref(false);
 const cartOpen = ref(false);
 const serviceChatRef = ref<InstanceType<typeof ServiceChat> | null>(null);
+const aiChatRef = ref<InstanceType<typeof AIPetDoctorChat> | null>(null);
+const aiChatOpen = ref(false);
 
 interface FlyingItem {
   show: boolean;
@@ -315,8 +321,8 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
-const showAIToast = () => {
-  alert("AI助手功能开发中...");
+const openAIChat = () => {
+  aiChatOpen.value = true;
 };
 
 type ProfileSectionTab = "pets" | "orders" | "bookings" | "settings";
