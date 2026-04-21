@@ -669,6 +669,59 @@ POST /api/v1/pets
 
 ---
 
+### 3.9 AI 宠医助手 (`/api/v1/ai`)
+
+#### AI 对话
+
+```typescript
+// 函数
+sendChatMessage(messages: ChatMessage[]): Promise<AIChatResponse>
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+interface AIChatResponse {
+  reply: string;
+  suggestions?: string[];
+}
+
+// 请求
+POST /api/v1/ai/chat
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "我家猫咪一直打喷嚏是怎么回事？"
+    }
+  ]
+}
+// 无需认证
+
+// 响应
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "reply": "先观察猫咪是否还伴随流鼻涕、食欲下降或精神差，如果持续超过 24 小时，建议尽快就医。",
+    "suggestions": [
+      "观察症状持续时间",
+      "留意是否有食欲下降",
+      "持续加重时尽快就医"
+    ]
+  }
+}
+```
+
+联调约定：
+
+- 前端会传入当前会话的 `messages` 数组，后端负责拼接系统提示词并保留最近上下文。
+- `role` 仅支持 `user` 和 `assistant`。
+- 当未配置 `AI_API_KEY` / `DEEPSEEK_API_KEY` 或上游模型服务异常时，后端返回 `{ code, message, data }` 统一错误结构。
+
+---
+
 ## 4. 前后端字段命名对照
 
 ### 4.1 通用字段

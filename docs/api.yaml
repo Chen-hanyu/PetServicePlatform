@@ -11,6 +11,8 @@ tags:
     description: 首页接口
   - name: Search
     description: 搜索接口
+  - name: AI
+    description: AI 宠医助手接口
   - name: Auth
     description: 用户认证接口
   - name: Profile
@@ -87,6 +89,37 @@ paths:
                 $ref: '#/components/schemas/ApiResponsePage'
         '400':
           $ref: '#/components/responses/BadRequest'
+
+  /api/v1/ai/chat:
+    post:
+      tags: [AI]
+      summary: AI 宠医助手对话
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiChatRequest'
+      responses:
+        '200':
+          description: 成功，data 为 AiChatResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAiChatResponse'
+        '422':
+          description: 请求数据校验失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseError'
+        '503':
+          description: AI 服务未配置或调用失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseError'
 
   /api/v1/auth/register:
     post:
@@ -2831,3 +2864,51 @@ components:
           type: integer
           nullable: true
       required: [biz_type, biz_id, slot_code, status]
+    AiChatMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+          example: user
+        content:
+          type: string
+          maxLength: 2000
+          example: 我家猫咪一直打喷嚏是怎么回事？
+      required: [role, content]
+    AiChatRequest:
+      type: object
+      properties:
+        messages:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/AiChatMessage'
+      required: [messages]
+    AiChatResponse:
+      type: object
+      properties:
+        reply:
+          type: string
+          example: 先观察猫咪是否伴随流鼻涕、食欲下降或精神差，如果持续超过 24 小时，建议尽快就医。
+        suggestions:
+          type: array
+          items:
+            type: string
+          example:
+            - 观察症状持续时间
+            - 留意是否有食欲下降
+            - 持续加重时尽快就医
+      required: [reply, suggestions]
+    ApiResponseAiChatResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          $ref: '#/components/schemas/AiChatResponse'
+      required: [code, message, data]
