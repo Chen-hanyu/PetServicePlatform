@@ -8,12 +8,45 @@
           <span class="logo-text">宠物社区</span>
         </div>
 
-        <div class="search-box">
+        <div class="search-box" :class="{ focused: searchFocused }">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/>
             <path d="M21 21l-4.35-4.35"/>
           </svg>
-          <input type="text" placeholder="搜索话题、用户..." v-model="searchQuery" />
+          <input 
+            type="text" 
+            placeholder="搜索话题、用户..." 
+            v-model="searchQuery" 
+            @focus="searchFocused = true"
+            @blur="handleSearchBlur"
+          />
+          
+          <!-- 智能补全下拉 -->
+          <Transition name="dropdown-fade">
+            <div v-if="searchFocused && searchQuery && completions.length > 0" class="completion-dropdown">
+              <ul class="completion-list">
+                <li 
+                  v-for="(kw, index) in completions" 
+                  :key="index" 
+                  class="completion-item"
+                  @mousedown.prevent="applyCompletion(kw)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                  </svg>
+                  <span>{{ kw }}</span>
+                </li>
+              </ul>
+            </div>
+          </Transition>
+          
+          <button class="search-btn" title="搜索" @click="handleSearch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </button>
         </div>
 
         <button class="btn-publish" @click="goToCreate">
@@ -64,9 +97,26 @@
                       <img :src="post.author?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'" />
                       {{ post.author?.nickname || '匿名用户' }}
                     </span>
-                    <span class="stats">
-                      <span>❤️ {{ post.like_count || 0 }}</span>
-                      <span>💬 {{ post.comment_count || 0 }}</span>
+                    <span class="stats" @click.stop>
+                      <span
+                        class="stat-btn like-btn"
+                        :class="{ liked: post.isLiked }"
+                        @click.stop="togglePostLike(post)"
+                      >
+                        <svg viewBox="0 0 24 24" :fill="post.isLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                          <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
+                        </svg>
+                        {{ post.like_count || 0 }}
+                      </span>
+                      <span
+                        class="stat-btn"
+                        @click.stop="goToPostComments(post.id)"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+                        </svg>
+                        {{ post.comment_count || 0 }}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -77,10 +127,9 @@
           <!-- 页码切换 -->
           <div class="pagination">
             <button class="page-btn" :class="{ active: currentPage === 1 }" @click="currentPage = 1">1</button>
-            <button class="page-btn" :class="{ active: currentPage === 2 }" @click="currentPage = 2">2</button>
-            <button class="page-btn" :class="{ active: currentPage === 3 }" @click="currentPage = 3">3</button>
-            <span class="page-ellipsis">...</span>
-            <button class="page-btn" @click="currentPage++">下一页</button>
+            <button v-if="totalPages >= 2" class="page-btn" :class="{ active: currentPage === 2 }" @click="currentPage = 2">2</button>
+            <span v-if="totalPages > 3" class="page-ellipsis">...</span>
+            <button v-if="currentPage < totalPages" class="page-btn" @click="currentPage++">下一页</button>
           </div>
         </section>
       </main>
@@ -183,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchPosts } from "@/api/modules/community";
@@ -193,33 +242,109 @@ import type { PostSummary } from "@/types/community";
 const loading = ref(false);
 const error = ref("");
 const searchQuery = ref("");
-const activeCategory = ref("推荐");
+const searchFocused = ref(false);
 const currentPage = ref(1);
 const posts = ref<PostSummary[]>([]);
 const router = useRouter();
 
+const searchSuggestions = ref([
+  "新手养猫注意事项",
+  "狗狗驱虫时间",
+  "猫粮推荐",
+  "宠物疫苗",
+  "自制猫饭",
+  "狗狗洗澡",
+  "猫咪训练",
+  "宠物保险"
+]);
+const activeCategory = ref("推荐");
 const categories = ["推荐", "晒宠", "问答", "种草", "日常", "知识", "视频", "好物"];
+
+const searchKeywords = [
+  "新手养猫", "猫粮推荐", "猫咪训练", "猫咪疫苗", "猫咪洗澡", "自制猫饭",
+  "狗狗驱虫", "狗狗训练", "狗粮推荐", "狗狗洗澡", "养狗注意事项",
+  "兔子饲养", "兔粮推荐", "宠物零食", "宠物医院", "宠物保险",
+  "猫咪尾巴", "狗狗尾巴", "宠物美容", "宠物摄影", "宠物领养"
+];
+
+const getCompletion = (query: string) => {
+  if (!query) return [];
+  const q = query.toLowerCase();
+  return searchKeywords.filter(kw => kw.includes(q)).slice(0, 8);
+};
+
+const completions = computed(() => getCompletion(searchQuery.value));
+
+const applyCompletion = (kw: string) => {
+  searchQuery.value = kw;
+  searchFocused.value = false;
+};
+
+const handleSearchBlur = () => {
+  setTimeout(() => {
+    searchFocused.value = false;
+  }, 200);
+};
+
+const selectSuggestion = (item: PostSummary) => {
+  openDetail(item.id);
+  searchFocused.value = false;
+};
+
+const handleSearch = () => {
+  if (searchQuery.value) {
+    alert(`搜索: ${searchQuery.value}`);
+    searchFocused.value = false;
+  }
+};
+
+const PAGE_SIZE = 12;
 
 const mockListForTab = (): PostSummary[] => {
   const list = mockPosts as PostSummary[];
-  if (activeCategory.value === "推荐") return list;
-  const filtered = list.filter((p) => p.category === activeCategory.value);
-  return filtered.length > 0 ? filtered : list.slice(0, 6);
+  let filtered: PostSummary[];
+  if (activeCategory.value === "推荐") {
+    filtered = list;
+  } else {
+    filtered = list.filter((p) => p.category === activeCategory.value);
+    if (filtered.length === 0) filtered = list;
+  }
+  const start = (currentPage.value - 1) * PAGE_SIZE;
+  return filtered.slice(start, start + PAGE_SIZE);
 };
+
+const totalPosts = ref(0);
+const totalPages = computed(() => Math.max(1, Math.ceil(totalPosts.value / PAGE_SIZE)));
 
 const loadPosts = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const data = await fetchPosts({ tab: activeCategory.value, page: currentPage.value, page_size: 20 });
+    const data = await fetchPosts({ tab: activeCategory.value, page: currentPage.value, page_size: PAGE_SIZE });
     const list = data.list ?? [];
-    posts.value = list.length > 0 ? list : mockListForTab();
+    if (list.length > 0) {
+      posts.value = list;
+      totalPosts.value = data.total ?? list.length;
+    } else {
+      posts.value = mockListForTab();
+      totalPosts.value = mockPosts.length;
+    }
   } catch (e) {
     console.warn("Failed to fetch posts, using mock data", e);
     posts.value = mockListForTab();
+    totalPosts.value = mockPosts.length;
   } finally {
     loading.value = false;
   }
+};
+
+const togglePostLike = (post: PostSummary) => {
+  post.isLiked = !post.isLiked;
+  post.like_count = (post.like_count || 0) + (post.isLiked ? 1 : -1);
+};
+
+const goToPostComments = (postId: number) => {
+  router.push(`/community/post/${postId}#comments`);
 };
 
 const openDetail = (postId: number) => {
@@ -231,6 +356,9 @@ const goToCreate = () => {
 };
 
 onMounted(loadPosts);
+watch(activeCategory, () => {
+  currentPage.value = 1;
+});
 watch([activeCategory, currentPage], () => {
   void loadPosts();
 });
@@ -244,7 +372,7 @@ watch([activeCategory, currentPage], () => {
 
 // 顶部搜索区域
 .top-bar {
-  background: #fff;
+  background: var(--surface);
   border-bottom: 1px solid var(--border-warm);
 }
 
@@ -286,8 +414,9 @@ watch([activeCategory, currentPage], () => {
   padding: 10px 18px;
   margin: 0 40px;
   transition: all 0.2s ease;
+  position: relative;
 
-  &:focus-within {
+  &.focused {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(255, 155, 122, 0.15);
   }
@@ -310,6 +439,87 @@ watch([activeCategory, currentPage], () => {
       color: var(--muted-soft);
     }
   }
+}
+
+.search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    color: #fff;
+  }
+
+  &:hover {
+    background: var(--primary-strong);
+    transform: scale(1.05);
+  }
+}
+
+.completion-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border-warm);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.completion-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+}
+
+.completion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  &:hover {
+    background: var(--surface-muted);
+  }
+}
+
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .btn-publish {
@@ -403,67 +613,129 @@ watch([activeCategory, currentPage], () => {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(34, 60, 52, 0.06);
+  display: flex;
+  flex-direction: column;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(34, 60, 52, 0.14);
 
     .card-image img {
-      transform: scale(1.05);
+      transform: scale(1.08);
+    }
+
+    .card-title {
+      color: var(--primary);
     }
   }
 }
 
 .card-image {
+  position: relative;
   overflow: hidden;
+  height: 200px;
+  background: linear-gradient(135deg, var(--surface-muted) 0%, var(--bg) 100%);
 
   img {
     width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
     transition: transform 0.4s ease;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
+    pointer-events: none;
   }
 }
 
 .card-body {
-  padding: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .card-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-heading);
-  margin: 0 0 12px;
-  line-height: 1.4;
+  margin: 0 0 14px;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: color 0.2s ease;
 }
 
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: auto;
 
   .author {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 12px;
     color: var(--muted);
 
     img {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
+      border: 2px solid var(--border-warm);
+      transition: border-color 0.2s ease;
+    }
+
+    &:hover img {
+      border-color: var(--primary);
     }
   }
 
   .stats {
     display: flex;
-    gap: 8px;
-    font-size: 11px;
+    gap: 12px;
+    font-size: 12px;
     color: var(--muted);
+    align-items: center;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-btn {
+      cursor: pointer;
+      transition: color 0.2s ease;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      &:hover {
+        color: var(--primary);
+      }
+
+      &.liked {
+        color: #ff4d4f;
+      }
+    }
+
+    .like-btn.liked svg {
+      fill: #ff4d4f;
+    }
   }
 }
 

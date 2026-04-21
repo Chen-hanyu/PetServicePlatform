@@ -342,7 +342,7 @@ const viewAfterSale = (order: Order) => {
     display: flex;
     gap: 0;
     overflow-x: auto;
-    max-width: 1000px;
+    max-width: 1200px;
   }
 
   .tab {
@@ -395,7 +395,7 @@ const viewAfterSale = (order: Order) => {
 }
 
 .orders-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 32px;
 }

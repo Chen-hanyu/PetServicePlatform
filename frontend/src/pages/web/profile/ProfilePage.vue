@@ -64,6 +64,16 @@
                 </RouterLink>
               </li>
               <li>
+                <RouterLink to="/profile/favorites" class="nav-item">
+                  <span class="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                    </svg>
+                  </span>
+                  <span class="nav-text">我的收藏</span>
+                </RouterLink>
+              </li>
+              <li>
                 <RouterLink to="/profile/orders" class="nav-item">
                   <span class="nav-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -221,6 +231,33 @@
           </div>
         </div>
 
+        <!-- 我的收藏 - 与商城订单对齐 -->
+        <section class="section favorites-section">
+          <div class="section-header">
+            <h3 class="section-title-sm">我的收藏</h3>
+            <RouterLink to="/profile/favorites" class="view-link">查看全部 &gt;</RouterLink>
+          </div>
+          <div class="favorites-grid">
+            <RouterLink
+              v-for="item in favoritePosts"
+              :key="item.id"
+              :to="`/community/post/${item.id}`"
+              class="favorite-card"
+            >
+              <div class="favorite-image">
+                <img :src="item.cover_url || item.image" :alt="item.title" />
+              </div>
+              <div class="favorite-info">
+                <h4 class="favorite-title">{{ item.title }}</h4>
+                <p class="favorite-author">{{ item.author?.nickname || '匿名用户' }}</p>
+              </div>
+            </RouterLink>
+            <div v-if="favoritePosts.length === 0" class="favorites-empty">
+              <p>暂无收藏内容</p>
+            </div>
+          </div>
+        </section>
+
         <!-- 商城订单 - 与左侧边栏对齐 -->
         <section class="section order-section">
           <div class="section-header">
@@ -228,7 +265,7 @@
             <RouterLink to="/profile/orders" class="view-link">全部订单 &gt;</RouterLink>
           </div>
           <div class="order-icons">
-            <div v-for="order in orderTypes" :key="order.key" class="order-icon-item">
+            <RouterLink v-for="order in orderTypes" :key="order.key" :to="`/profile/orders?tab=${order.key}`" class="order-icon-item">
               <div :class="['order-icon-wrap', { 'has-badge': order.badge }]">
                 <div class="order-icon-bg">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="order.svg"></svg>
@@ -236,7 +273,7 @@
                 <span v-if="order.badge" class="badge">{{ order.badge }}</span>
               </div>
               <p class="order-label">{{ order.label }}</p>
-            </div>
+            </RouterLink>
           </div>
         </section>
       </div>
@@ -287,6 +324,21 @@ const pets = reactive([
     age: 1,
     gender: "女宝",
     avatar: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=200&q=80"
+  }
+]);
+
+const favoritePosts = reactive([
+  {
+    id: 1,
+    title: "新手养猫必看！这些注意事项你都知道吗？",
+    cover_url: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=200&q=80",
+    author: { nickname: "喵星人" }
+  },
+  {
+    id: 2,
+    title: "自制狗狗零食，简单又健康！",
+    cover_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=200&q=80",
+    author: { nickname: "铲屎官小李" }
   }
 ]);
 
@@ -547,6 +599,11 @@ const goToAddPet = () => {
   gap: 32px;
 }
 
+// 我的收藏 - 跨越整个宽度
+.favorites-section {
+  grid-column: 1 / -1;
+}
+
 // 商城订单 - 跨越整个宽度
 .order-section {
   grid-column: 1 / -1;
@@ -617,6 +674,67 @@ const goToAddPet = () => {
   &:hover {
     color: var(--primary);
   }
+}
+
+// 收藏卡片网格
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.favorite-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+  }
+
+  .favorite-image {
+    width: 100%;
+    height: 100px;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .favorite-info {
+    padding: 12px;
+
+    .favorite-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin: 0 0 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .favorite-author {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+  }
+}
+
+.favorites-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
 }
 
 // 宠物滚动区域
@@ -1050,6 +1168,10 @@ const goToAddPet = () => {
   .order-icon-item {
     flex: 1;
     cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
     &:hover {
       .order-icon-bg {

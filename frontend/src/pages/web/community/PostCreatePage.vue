@@ -1,187 +1,241 @@
 <template>
   <div class="create-post-page">
     <!-- 顶部导航 -->
-    <div class="nav-bar">
-      <button class="btn-back" @click="goBack">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
-      </button>
-      <h1 class="nav-title">发布动态</h1>
-      <button class="btn-publish" :class="{ active: canPublish }" @click="handlePublish" :disabled="!canPublish">
+    <header class="nav-header">
+      <div class="nav-left">
+        <button class="back-btn" @click="goBack">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+      </div>
+      <h1 class="nav-title">发布笔记</h1>
+      <button class="publish-btn" :class="{ active: canPublish }" @click="handlePublish" :disabled="!canPublish">
         发布
       </button>
-    </div>
+    </header>
 
-    <!-- 发布内容区 -->
-    <div class="content-wrapper">
-      <!-- 用户信息 -->
-      <div class="user-info-bar">
-        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="user-avatar" />
-        <div class="user-text">
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <!-- 用户信息卡片 -->
+      <div class="user-card">
+        <div class="user-avatar-wrapper">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="user-avatar" />
+          <div class="user-level-badge">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Lv.5
+          </div>
+        </div>
+        <div class="user-info">
           <span class="user-name">宠友123456</span>
-          <span class="user-level">Lv.5 萌新达人</span>
+          <span class="user-desc">分享养宠日常，记录美好生活</span>
         </div>
       </div>
 
-      <!-- 分类选择 -->
-      <div class="category-section">
-        <div class="category-scroll">
+      <!-- 分类选择器 -->
+      <div class="category-selector">
+        <div class="selector-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          选择分类
+        </div>
+        <div class="category-tabs">
           <button 
             v-for="cat in categories" 
-            :key="cat" 
-            :class="['category-chip', { active: selectedCategory === cat }]"
-            @click="selectedCategory = cat"
+            :key="cat.value" 
+            :class="['category-tab', { active: selectedCategory === cat.value }]"
+            :style="selectedCategory === cat.value ? { background: cat.color, borderColor: cat.color } : {}"
+            @click="selectedCategory = cat.value"
           >
-            {{ cat }}
+            <span class="tab-icon" v-html="cat.icon"></span>
+            {{ cat.label }}
           </button>
         </div>
       </div>
 
       <!-- 标题输入 -->
-      <div class="input-section title-section">
+      <div class="title-input-wrapper">
         <textarea 
           v-model="form.title" 
-          placeholder="给你的动态起个标题吧~" 
-          class="title-input"
+          placeholder="添加标题，让更多人看到~" 
+          class="title-textarea"
           rows="1"
           maxlength="50"
+          ref="titleTextareaRef"
+          @input="autoResizeTitle"
         ></textarea>
-        <span class="char-count" :class="{ warning: form.title.length > 40 }">
+        <span class="title-count" :class="{ warning: form.title.length > 40 }">
           {{ form.title.length }}/50
         </span>
       </div>
 
       <!-- 内容输入 -->
-      <div class="input-section content-section">
+      <div class="content-input-wrapper">
         <textarea 
           v-model="form.content" 
           placeholder="分享你的养宠心得、经验或有趣的故事..." 
-          class="content-input"
+          class="content-textarea"
           maxlength="2000"
         ></textarea>
-        <span class="char-count" :class="{ warning: form.content.length > 1800 }">
-          {{ form.content.length }}/2000
-        </span>
-      </div>
-
-      <!-- 图片预览区 -->
-      <div v-if="form.images.length > 0" class="images-preview">
-        <div v-for="(img, index) in form.images" :key="index" class="preview-item">
-          <img :src="img" alt="预览" />
-          <button class="remove-btn" @click="removeImage(index)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
-          </button>
+        <div class="content-footer">
+          <span class="content-count" :class="{ warning: form.content.length > 1800 }">
+            {{ form.content.length }}/2000
+          </span>
         </div>
       </div>
 
-      <!-- 工具栏 -->
-      <div class="tool-bar">
-        <div class="tool-group">
-          <button class="tool-btn" @click="triggerUpload" title="添加图片">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            <span>图片</span>
-          </button>
-          <button class="tool-btn" title="@好友">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <line x1="19" y1="8" x2="19" y2="14"/>
-              <line x1="22" y1="11" x2="16" y2="11"/>
-            </svg>
-            <span>@好友</span>
-          </button>
-          <button class="tool-btn" title="添加话题">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <line x1="4" y1="9" x2="20" y2="9"/>
-              <line x1="4" y1="15" x2="20" y2="15"/>
-              <line x1="10" y1="3" x2="8" y2="21"/>
-              <line x1="16" y1="3" x2="14" y2="21"/>
-            </svg>
-            <span>话题</span>
-          </button>
-          <button class="tool-btn" title="添加位置">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-            <span>位置</span>
-          </button>
+      <!-- 图片上传区域 -->
+      <div class="image-uploader">
+        <div v-if="form.images.length > 0" class="image-grid">
+          <div 
+            v-for="(img, index) in form.images" 
+            :key="index" 
+            class="image-item"
+            :class="{ 'first-image': index === 0 && form.images.length > 1 }"
+          >
+            <img :src="img" alt="预览" />
+            <button class="remove-btn" @click="removeImage(index)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+            <div v-if="index === 0" class="cover-tag">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              封面
+            </div>
+          </div>
         </div>
-        
-        <div class="image-count" v-if="form.images.length > 0">
-          <span>{{ form.images.length }}/9</span>
+        <div class="upload-area" @click="triggerUpload" v-if="form.images.length < 9">
+          <div class="upload-content">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+              </svg>
+            </div>
+            <span class="upload-text">{{ form.images.length > 0 ? '继续添加' : '添加图片' }}</span>
+            <span class="upload-hint">最多9张，支持jpg、png</span>
+          </div>
         </div>
       </div>
 
-      <!-- 话题标签 -->
+      <!-- 标签区域 -->
       <div class="tags-section">
-        <div class="tags-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
             <line x1="7" y1="7" x2="7.01" y2="7"/>
           </svg>
-          <span>添加话题标签</span>
+          <span>添加标签</span>
+          <span class="tag-tip">最多5个</span>
         </div>
-        <div class="tags-container">
-          <div class="tags-list" v-if="form.tags.length > 0">
-            <span v-for="(tag, index) in form.tags" :key="index" class="tag-chip">
+        <div class="tags-input-area">
+          <div class="selected-tags" v-if="form.tags.length > 0">
+            <span v-for="(tag, index) in form.tags" :key="index" class="selected-tag">
               #{{ tag }}
-              <button @click="removeTag(index)">×</button>
+              <button @click="removeTag(index)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
             </span>
           </div>
-          <input 
-            v-if="form.tags.length < 5" 
-            type="text" 
-            v-model="tagInput" 
-            placeholder="输入话题后按回车添加"
-            @keydown.enter.prevent="addTag"
-            class="tag-input"
-          />
+          <div class="tag-input-wrapper">
+            <input 
+              v-if="form.tags.length < 5" 
+              type="text" 
+              v-model="tagInput" 
+              placeholder="输入话题后按回车"
+              @keydown.enter.prevent="addTag"
+              class="tag-input"
+            />
+            <button v-if="tagInput" class="add-tag-btn" @click="addTag">添加</button>
+          </div>
+        </div>
+        
+        <!-- 推荐话题 -->
+        <div class="recommend-tags">
+          <span class="recommend-label">推荐：</span>
+          <div class="tags-scroll">
+            <button 
+              v-for="tag in recommendTags" 
+              :key="tag"
+              :class="['recommend-tag', { selected: form.tags.includes(tag) }]"
+              @click="toggleRecommendTag(tag)"
+            >
+              #{{ tag }}
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- 推荐话题 -->
-      <div class="recommend-section">
-        <div class="section-header">
-          <span class="section-title">推荐话题</span>
-        </div>
-        <div class="recommend-tags">
-          <button 
-            v-for="tag in recommendTags" 
-            :key="tag" 
-            class="recommend-tag"
-            @click="form.tags.push(tag), form.tags = form.tags.slice(-5)"
-          >
-            #{{ tag }}
-          </button>
-        </div>
+      <!-- 附加功能 -->
+      <div class="extra-options">
+        <button class="option-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          <span>@好友</span>
+        </button>
+        <button class="option-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span>添加位置</span>
+        </button>
+        <button class="option-btn" @click="togglePrivacy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4M12 8h.01"/>
+          </svg>
+          <span>{{ isPublic ? '公开' : '私密' }}</span>
+        </button>
       </div>
-    </div>
+
+      <!-- 发布须知 -->
+      <div class="publish-notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>发布即表示你同意《社区规范》</span>
+      </div>
+    </main>
+
+    <!-- 底部占位 -->
+    <div class="bottom-placeholder"></div>
 
     <!-- 隐藏的文件输入 -->
-    <input type="file" ref="fileInput" accept="image/*" multiple @change="handleFileChange" style="display: none" />
+    <input type="file" ref="fileInputRef" accept="image/*" multiple @change="handleFileChange" style="display: none" />
 
     <!-- Toast 提示 -->
-    <Transition name="toast">
-      <div v-if="toast.show" class="toast" :class="toast.type">
-        <svg v-if="toast.type === 'success'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        {{ toast.message }}
-      </div>
-    </Transition>
+    <Teleport to="body">
+      <Transition name="toast">
+        <div v-if="toast.show" class="toast" :class="toast.type">
+          <svg v-if="toast.type === 'success'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ toast.message }}
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -191,10 +245,20 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-const categories = ["晒宠", "问答", "种草", "日常", "知识", "视频", "好物"];
-const selectedCategory = ref("日常");
+const categories = [
+  { value: 'daily', label: '日常', color: '#ff9b7a', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>' },
+  { value: 'pet', label: '晒宠', color: '#9370db', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 12c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5-3.5-1.57-3.5-3.5zm9 0c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5-3.5-1.57-3.5-3.5zM12 21c-4.97 0-9-2.69-9-6v-1c0-2.76 2.24-5 5-5h8c2.76 0 5 2.24 5 5v1c0 3.31-4.03 6-9 6z"/></svg>' },
+  { value: 'qa', label: '问答', color: '#40e0d0', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>' },
+  { value: 'share', label: '种草', color: '#ff69b4', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+  { value: 'knowledge', label: '知识', color: '#3cb371', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>' },
+  { value: 'goods', label: '好物', color: '#ffb347', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>' }
+];
+
+const selectedCategory = ref("daily");
 const tagInput = ref("");
-const fileInput = ref<HTMLInputElement | null>(null);
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const titleTextareaRef = ref<HTMLTextAreaElement | null>(null);
+const isPublic = ref(true);
 
 const form = reactive({
   title: "",
@@ -203,7 +267,7 @@ const form = reactive({
   tags: [] as string[]
 });
 
-const recommendTags = ["新手养猫", "狗狗训练", "自制零食", "宠物摄影", "春季驱虫", "养兔指南", "布偶猫", "宠物健康"];
+const recommendTags = ["新手养猫", "狗狗训练", "自制零食", "宠物摄影", "春季驱虫", "养兔指南", "布偶猫", "宠物健康", "猫咪用品", "萌宠瞬间"];
 
 const toast = reactive({
   show: false,
@@ -219,8 +283,15 @@ const goBack = () => {
   router.back();
 };
 
+const autoResizeTitle = () => {
+  if (titleTextareaRef.value) {
+    titleTextareaRef.value.style.height = 'auto';
+    titleTextareaRef.value.style.height = titleTextareaRef.value.scrollHeight + 'px';
+  }
+};
+
 const triggerUpload = () => {
-  fileInput.value?.click();
+  fileInputRef.value?.click();
 };
 
 const handleFileChange = (e: Event) => {
@@ -256,13 +327,25 @@ const removeTag = (index: number) => {
   form.tags.splice(index, 1);
 };
 
+const toggleRecommendTag = (tag: string) => {
+  if (form.tags.includes(tag)) {
+    form.tags = form.tags.filter(t => t !== tag);
+  } else if (form.tags.length < 5) {
+    form.tags.push(tag);
+  }
+};
+
+const togglePrivacy = () => {
+  isPublic.value = !isPublic.value;
+};
+
 const showToast = (message: string, type: "success" | "error" = "success") => {
   toast.message = message;
   toast.type = type;
   toast.show = true;
   setTimeout(() => {
     toast.show = false;
-  }, 2000);
+  }, 2500);
 };
 
 const handlePublish = () => {
@@ -284,114 +367,146 @@ const handlePublish = () => {
 <style scoped lang="scss">
 .create-post-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fdfb 0%, #fff 100%);
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 20px;
+  background: linear-gradient(180deg, var(--surface-muted) 0%, var(--bg) 100%);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 // 顶部导航
-.nav-bar {
+.nav-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #fff;
-  border-bottom: 1px solid rgba(255, 155, 122, 0.2);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-warm);
 
-.btn-back {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, rgba(255, 155, 122, 0.1) 0%, rgba(91, 185, 140, 0.1) 100%);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  svg {
-    width: 22px;
-    height: 22px;
-    color: var(--primary);
+  .nav-left {
+    width: 60px;
   }
 
-  &:hover {
-    background: linear-gradient(135deg, rgba(255, 155, 122, 0.2) 0%, rgba(91, 185, 140, 0.2) 100%);
-    transform: scale(1.05);
-  }
-}
-
-.nav-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text-heading);
-  margin: 0;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.btn-publish {
-  padding: 8px 20px;
-  background: #e0e0e0;
-  color: #999;
-  border: none;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &.active {
-    background: var(--hero-gradient);
-    color: #fff;
-    box-shadow: 0 4px 16px rgba(255, 155, 122, 0.4);
-  }
-
-  &:hover.active {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 155, 122, 0.5);
-  }
-}
-
-// 内容区域
-.content-wrapper {
-  flex: 1;
-  padding: 20px 16px;
-  max-width: 720px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-// 用户信息栏
-.user-info-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding: 16px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(34, 60, 52, 0.06);
-
-  .user-avatar {
-    width: 52px;
-    height: 52px;
+  .back-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-muted);
+    border: none;
     border-radius: 50%;
-    border: 3px solid rgba(255, 155, 122, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 22px;
+      height: 22px;
+      color: var(--text-heading);
+    }
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
   }
 
-  .user-text {
+  .nav-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 0;
+  }
+
+  .publish-btn {
+    padding: 8px 20px;
+    background: var(--surface-muted);
+    color: var(--muted);
+    border: 1px solid var(--border-warm);
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &.active {
+      background: linear-gradient(135deg, #ff9b7a 0%, #ff6b6b 100%);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
+      border-color: transparent;
+    }
+
+    &:hover.active {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+}
+
+// 主内容区
+.main-content {
+  padding: 16px;
+  padding-top: calc(16px + env(safe-area-inset-top) + 60px);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+// 用户信息卡片
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-warm);
+
+  .user-avatar-wrapper {
+    position: relative;
+
+    .user-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 3px solid var(--surface);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-level-badge {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px 6px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+
+      svg {
+        width: 10px;
+        height: 10px;
+      }
+    }
+  }
+
+  .user-info {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 
     .user-name {
       font-size: 16px;
@@ -399,335 +514,502 @@ const handlePublish = () => {
       color: var(--text-heading);
     }
 
-    .user-level {
+    .user-desc {
       font-size: 12px;
-      color: var(--primary);
-      font-weight: 600;
+      color: var(--muted);
     }
   }
 }
 
-// 分类选择
-.category-section {
-  margin-bottom: 16px;
-}
-
-.category-scroll {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 4px 0;
-  
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.category-chip {
-  flex-shrink: 0;
-  padding: 8px 18px;
-  background: #fff;
-  border: 1.5px solid rgba(255, 155, 122, 0.3);
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-
-  &.active {
-    background: var(--hero-gradient);
-    border-color: transparent;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(255, 155, 122, 0.3);
-  }
-}
-
-// 输入区域
-.input-section {
-  position: relative;
-  margin-bottom: 16px;
-}
-
-.title-input {
-  width: 100%;
-  padding: 14px 16px;
-  background: #fff;
-  border: 1.5px solid rgba(255, 155, 122, 0.2);
-  border-radius: 12px;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-heading);
-  outline: none;
-  resize: none;
-  transition: all 0.3s ease;
-  line-height: 1.4;
-
-  &::placeholder {
-    color: rgba(34, 60, 52, 0.3);
-    font-weight: 500;
-  }
-
-  &:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(255, 155, 122, 0.1);
-  }
-}
-
-.content-input {
-  width: 100%;
-  min-height: 160px;
+// 分类选择器
+.category-selector {
+  background: var(--surface);
+  border-radius: 16px;
   padding: 16px;
-  background: #fff;
-  border: 1.5px solid rgba(255, 155, 122, 0.2);
-  border-radius: 12px;
-  font-size: 15px;
-  color: var(--text);
-  line-height: 1.7;
-  outline: none;
-  resize: vertical;
-  transition: all 0.3s ease;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-warm);
 
-  &::placeholder {
-    color: rgba(34, 60, 52, 0.3);
-  }
+  .selector-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin-bottom: 12px;
 
-  &:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(255, 155, 122, 0.1);
-  }
-}
-
-.char-count {
-  position: absolute;
-  right: 12px;
-  bottom: -22px;
-  font-size: 12px;
-  color: var(--muted);
-  
-  &.warning {
-    color: #ff6b6b;
-  }
-}
-
-// 图片预览
-.images-preview {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 20px 0;
-
-  .preview-item {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(34, 60, 52, 0.1);
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary);
     }
+  }
 
-    .remove-btn {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 26px;
-      height: 26px;
-      background: rgba(0, 0, 0, 0.5);
-      border: none;
-      border-radius: 50%;
+  .category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .category-tab {
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--bg);
+      border: 1.5px solid rgba(0, 0, 0, 0.08);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
       cursor: pointer;
       transition: all 0.2s ease;
 
-      svg {
-        width: 14px;
-        height: 14px;
-        color: #fff;
+      .tab-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        :deep(svg) {
+          width: 16px;
+          height: 16px;
+          color: currentColor;
+        }
       }
 
       &:hover {
-        background: rgba(255, 107, 107, 0.8);
-        transform: scale(1.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      &.active {
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
     }
   }
 }
 
-// 工具栏
-.tool-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-top: 1px solid rgba(255, 155, 122, 0.15);
-  border-bottom: 1px solid rgba(255, 155, 122, 0.15);
-  margin-bottom: 20px;
-}
-
-.tool-group {
-  display: flex;
-  gap: 4px;
-}
-
-.tool-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  background: transparent;
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  svg {
-    width: 22px;
-    height: 22px;
-  }
-
-  span {
-    font-weight: 500;
-  }
-
-  &:hover {
-    background: rgba(255, 155, 122, 0.1);
-    color: var(--primary);
-  }
-}
-
-.image-count {
-  font-size: 13px;
-  color: var(--primary);
-  font-weight: 600;
-}
-
-// 话题标签
-.tags-section {
-  margin-bottom: 20px;
-}
-
-.tags-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 10px;
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.tags-container {
-  background: #fff;
-  border: 1.5px solid rgba(255, 155, 122, 0.2);
-  border-radius: 12px;
-  padding: 12px;
-  transition: all 0.3s ease;
-
-  &:focus-within {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(255, 155, 122, 0.1);
-  }
-}
-
-.tags-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.tag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, rgba(255, 155, 122, 0.15) 0%, rgba(91, 185, 140, 0.15) 100%);
-  color: var(--primary);
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 600;
-
-  button {
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 16px;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    margin-left: 2px;
-  }
-}
-
-.tag-input {
-  width: 100%;
-  padding: 6px;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  color: var(--text);
-
-  &::placeholder {
-    color: rgba(34, 60, 52, 0.4);
-  }
-}
-
-// 推荐话题
-.recommend-section {
-  background: linear-gradient(135deg, rgba(255, 155, 122, 0.05) 0%, rgba(91, 185, 140, 0.05) 100%);
+// 标题输入
+.title-input-wrapper {
+  position: relative;
+  background: var(--surface);
   border-radius: 16px;
   padding: 16px;
-}
-
-.section-header {
   margin-bottom: 12px;
-}
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-warm);
 
-.section-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-heading);
-}
+  .title-textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-heading);
+    resize: none;
+    line-height: 1.5;
+    background: transparent;
 
-.recommend-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.recommend-tag {
-  padding: 6px 14px;
-  background: #fff;
-  border: 1px solid rgba(255, 155, 122, 0.3);
-  border-radius: 16px;
-  font-size: 12px;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--hero-gradient);
-    border-color: transparent;
-    color: #fff;
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.25);
+      font-weight: 500;
+    }
   }
+
+  .title-count {
+    position: absolute;
+    right: 16px;
+    bottom: 12px;
+    font-size: 12px;
+    color: var(--muted);
+
+    &.warning {
+      color: #ff6b6b;
+    }
+  }
+}
+
+// 内容输入
+.content-input-wrapper {
+  position: relative;
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-warm);
+
+  .content-textarea {
+    width: 100%;
+    min-height: 160px;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.8;
+    resize: none;
+    background: transparent;
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  .content-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    margin-top: 8px;
+
+    .content-count {
+      font-size: 12px;
+      color: var(--muted);
+
+      &.warning {
+        color: #ff6b6b;
+      }
+    }
+  }
+}
+
+// 图片上传区域
+.image-uploader {
+  margin-bottom: 16px;
+
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+
+    .image-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      &.first-image {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+
+      .remove-btn {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 24px;
+        height: 24px;
+        background: rgba(0, 0, 0, 0.5);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        svg {
+          width: 12px;
+          height: 12px;
+          color: #fff;
+        }
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.9);
+          transform: scale(1.1);
+        }
+      }
+
+      .cover-tag {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 12px;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+
+        svg {
+          width: 12px;
+          height: 12px;
+        }
+      }
+    }
+  }
+
+  .upload-area {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px;
+    border: 2px dashed var(--border-warm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: var(--primary);
+      background: rgba(255, 155, 122, 0.05);
+    }
+
+    .upload-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+
+      .upload-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(255, 155, 122, 0.1) 0%, rgba(91, 185, 140, 0.1) 100%);
+        border-radius: 12px;
+
+        svg {
+          width: 24px;
+          height: 24px;
+          color: var(--primary);
+        }
+      }
+
+      .upload-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-heading);
+      }
+
+      .upload-hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+    }
+  }
+}
+
+// 标签区域
+.tags-section {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-warm);
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin-bottom: 12px;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary);
+    }
+
+    .tag-tip {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+  }
+
+  .tags-input-area {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+
+    .selected-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+
+      .selected-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 10px;
+        background: linear-gradient(135deg, #ff9b7a 0%, #ff6b6b 100%);
+        color: #fff;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 600;
+
+        button {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          svg {
+            width: 14px;
+            height: 14px;
+            color: #fff;
+            opacity: 0.8;
+          }
+
+          &:hover svg {
+            opacity: 1;
+          }
+        }
+      }
+    }
+
+    .tag-input-wrapper {
+      display: flex;
+      gap: 8px;
+
+      .tag-input {
+        flex: 1;
+        padding: 8px;
+        background: transparent;
+        border: none;
+        outline: none;
+        font-size: 14px;
+        color: var(--text);
+
+        &::placeholder {
+          color: var(--muted);
+        }
+      }
+
+      .add-tag-btn {
+        padding: 8px 16px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          opacity: 0.9;
+        }
+      }
+    }
+  }
+
+  .recommend-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .recommend-label {
+      font-size: 12px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .tags-scroll {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+
+      .recommend-tag {
+        padding: 5px 12px;
+        background: rgba(255, 155, 122, 0.1);
+        border: 1px solid transparent;
+        border-radius: 14px;
+        font-size: 12px;
+        color: var(--primary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 155, 122, 0.2);
+        }
+
+        &.selected {
+          background: linear-gradient(135deg, #ff9b7a 0%, #ff6b6b 100%);
+          color: #fff;
+        }
+      }
+    }
+  }
+}
+
+// 附加功能
+.extra-options {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  .option-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-warm);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+
+    svg {
+      width: 24px;
+      height: 24px;
+      color: var(--primary);
+    }
+
+    span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+// 发布须知
+.publish-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  color: var(--muted);
+  font-size: 12px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.bottom-placeholder {
+  height: 20px;
 }
 
 // Toast
@@ -739,14 +1021,14 @@ const handlePublish = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
-  background: var(--hero-gradient);
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #ff9b7a 0%, #ff6b6b 100%);
   color: #fff;
   border-radius: 24px;
   font-size: 14px;
   font-weight: 600;
   z-index: 1000;
-  box-shadow: 0 4px 20px rgba(255, 155, 122, 0.4);
+  box-shadow: 0 8px 32px rgba(255, 107, 107, 0.4);
 
   svg {
     width: 18px;
@@ -755,7 +1037,7 @@ const handlePublish = () => {
 
   &.error {
     background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 8px 32px rgba(255, 107, 107, 0.4);
   }
 }
 
@@ -772,12 +1054,27 @@ const handlePublish = () => {
 
 // 响应式
 @media (max-width: 480px) {
-  .tool-btn span {
-    display: none;
+  .category-tabs {
+    .category-tab {
+      padding: 6px 12px;
+      font-size: 12px;
+
+      .tab-icon {
+        display: none;
+      }
+    }
   }
 
-  .images-preview {
-    grid-template-columns: repeat(2, 1fr);
+  .extra-options {
+    gap: 8px;
+
+    .option-btn {
+      padding: 12px;
+
+      span {
+        font-size: 11px;
+      }
+    }
   }
 }
 </style>

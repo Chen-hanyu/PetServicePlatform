@@ -42,7 +42,7 @@
 - 本次优化后再次执行后端全量测试，结果为 `Tests run: 152, Failures: 0, Errors: 0, Skipped: 0`。
 
 ## PR 链接
-- 待补充
+- https://github.com/Chen-hanyu/PetServicePlatform/pull/25
 
 ## 遇到的问题和解决
 1. 问题：项目原始后端配置更偏向本地开发，数据库连接、JWT 密钥和文件存储路径未对容器化场景做兼容。

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="adoption-page">
     <!-- Hero Banner -->
     <div class="adoption-hero">
@@ -331,7 +331,8 @@ onMounted(loadPets);
   height: 320px;
   border-radius: 20px;
   overflow: hidden;
-  background: var(--hero-gradient);
+  background: var(--surface);
+  border: 1px solid var(--border-warm);
   
   .hero-overlay {
     position: absolute;
@@ -344,14 +345,14 @@ onMounted(loadPets);
     h1 {
       font-size: 36px;
       font-weight: 800;
-      color: #fff;
+      color: var(--text-heading);
       margin: 0 0 12px;
       max-width: 600px;
     }
     
     p {
       font-size: 18px;
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--muted);
       margin: 0 0 24px;
     }
   }
@@ -364,36 +365,36 @@ onMounted(loadPets);
 
 .btn-hero-primary {
   padding: 14px 28px;
-  background: #fff;
-  color: var(--primary);
+  background: var(--primary);
+  color: #fff;
   border: none;
   border-radius: 12px;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(255, 155, 122, 0.3);
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 20px rgba(255, 155, 122, 0.4);
   }
 }
 
 .btn-hero-secondary {
   padding: 14px 28px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: var(--text-heading);
+  border: 1px solid var(--border-input);
   border-radius: 12px;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(8px);
   
   &:hover {
-    background: rgba(255, 255, 255, 0.3);
+    border-color: var(--primary);
+    color: var(--primary);
   }
 }
 

@@ -3,6 +3,12 @@ import { useAuthStore } from "@/store/auth";
 
 const router = createRouter({
   history: createWebHistory(),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    }
+    return { top: 0 };
+  },
   routes: [
     { path: "/", component: () => import("@/layout/WebLayout.vue"), children: [
       { path: "", redirect: "/home" },
@@ -21,6 +27,7 @@ const router = createRouter({
       { path: "profile", component: () => import("@/pages/web/profile/ProfilePage.vue"), meta: { requiresAuth: true } },
       { path: "profile/pets", component: () => import("@/pages/web/profile/PetsPage.vue"), meta: { requiresAuth: true } },
       { path: "profile/posts", component: () => import("@/pages/web/profile/MyPostsPage.vue"), meta: { requiresAuth: true } },
+      { path: "profile/favorites", component: () => import("@/pages/web/profile/MyFavoritesPage.vue"), meta: { requiresAuth: true } },
       { path: "profile/orders", component: () => import("@/pages/web/profile/MyOrdersPage.vue"), meta: { requiresAuth: true } },
       { path: "profile/applications", component: () => import("@/pages/web/profile/MyApplicationsPage.vue"), meta: { requiresAuth: true } },
       { path: "profile/messages", component: () => import("@/pages/web/profile/MyMessagesPage.vue"), meta: { requiresAuth: true } },

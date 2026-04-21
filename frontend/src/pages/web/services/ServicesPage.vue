@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="services-page">
     <!-- Hero Search -->
     <div class="services-hero">
@@ -90,8 +90,6 @@
         </div>
       </DataState>
     </main>
-
-    <ServiceBookingDock />
   </section>
 </template>
 
@@ -99,7 +97,6 @@
 import { onMounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
-import ServiceBookingDock from "@/components/services/ServiceBookingDock.vue";
 import { fetchMerchants } from "@/api/modules/services";
 import { mockMerchants } from "@/mocks/services";
 
