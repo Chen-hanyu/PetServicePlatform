@@ -13,7 +13,9 @@ public enum ResultCode {
     DUPLICATE_DATA(10007, "数据重复", HttpStatus.CONFLICT),
     OUT_OF_STOCK(10008, "库存不足", HttpStatus.CONFLICT),
     ALREADY_REVIEWED(10009, "审核已处理", HttpStatus.CONFLICT),
-    BOOKING_TIME_CONFLICT(10010, "预约时间冲突", HttpStatus.CONFLICT);
+    BOOKING_TIME_CONFLICT(10010, "预约时间冲突", HttpStatus.CONFLICT),
+    AI_NOT_CONFIGURED(10011, "AI 服务未配置", HttpStatus.SERVICE_UNAVAILABLE),
+    AI_SERVICE_ERROR(10012, "AI 服务调用失败", HttpStatus.SERVICE_UNAVAILABLE);
 
     private final int code;
     private final String message;
