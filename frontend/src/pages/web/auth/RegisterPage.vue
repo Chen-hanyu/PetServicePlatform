@@ -33,24 +33,6 @@
           </div>
         </div>
 
-        <div class="field">
-          <label for="reg-code">验证码</label>
-          <div class="input-shell input-shell--code">
-            <span class="field-ico" aria-hidden="true">✉️</span>
-            <input
-              id="reg-code"
-              v-model.trim="code"
-              type="text"
-              inputmode="numeric"
-              placeholder="请输入验证码"
-              class="field-input field-input--code"
-            />
-            <button type="button" class="code-btn" :disabled="countdown > 0" @click="sendCode">
-              {{ countdown > 0 ? `${countdown}s` : "获取验证码" }}
-            </button>
-          </div>
-        </div>
-
         <div class="grid-2">
           <div class="field">
             <label for="reg-pwd">设置密码</label>
@@ -110,35 +92,20 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
-import { mockUser } from "@/mocks/auth";
+import { registerUser, loginUser } from "@/api/modules/auth";
 import AuthSplitShell from "@/components/auth/AuthSplitShell.vue";
 
 const router = useRouter();
 const auth = useAuthStore();
 const phone = ref("");
-const code = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const agreeTerms = ref(false);
 const loading = ref(false);
-const countdown = ref(0);
 const error = ref("");
 
-const sendCode = () => {
-  if (!phone.value) {
-    error.value = "请先填写手机号";
-    return;
-  }
-  error.value = "";
-  countdown.value = 60;
-  const timer = setInterval(() => {
-    countdown.value--;
-    if (countdown.value <= 0) clearInterval(timer);
-  }, 1000);
-};
-
-const submit = () => {
-  if (!phone.value || !code.value || !password.value) {
+const submit = async () => {
+  if (!phone.value || !password.value) {
     error.value = "请填写所有必填项";
     return;
   }
@@ -153,11 +120,24 @@ const submit = () => {
 
   loading.value = true;
   error.value = "";
-  setTimeout(() => {
-    auth.setSession(mockUser.token, mockUser.user);
+
+  try {
+    // 注册
+    await registerUser({
+      phone: phone.value,
+      password: password.value
+    });
+
+    // 注册成功后自动登录
+    const result = await loginUser(phone.value, password.value);
+    auth.setSession(result.token, result.user);
+
     router.push("/home");
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : "注册失败，请稍后重试";
+  } finally {
     loading.value = false;
-  }, 600);
+  }
 };
 </script>
 

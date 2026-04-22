@@ -36,3 +36,8 @@ file:
     type: ${FILE_STORAGE_TYPE:local}
     local-path: ${FILE_STORAGE_LOCAL_PATH:uploads/}
     access-path: ${FILE_STORAGE_ACCESS_PATH:/uploads/}
+
+ai:
+  api-key: ${AI_API_KEY:${DEEPSEEK_API_KEY:}}
+  base-url: ${AI_BASE_URL:https://api.deepseek.com}
+  model: ${AI_MODEL:deepseek-chat}

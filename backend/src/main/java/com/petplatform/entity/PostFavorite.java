@@ -1,13 +1,19 @@
 package com.petplatform.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.time.LocalDateTime;
 
 @TableName("post_favorites")
 public class PostFavorite {
 
+    @TableId(type = IdType.AUTO)
     private Long id;
     private Long postId;
     private Long userId;
+    private LocalDateTime createdAt;
 
     public Long getId() {
         return id;
@@ -31,5 +37,13 @@ public class PostFavorite {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

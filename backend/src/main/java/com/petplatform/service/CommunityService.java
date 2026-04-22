@@ -277,6 +277,64 @@ public class CommunityService {
         return new ToggleFavoriteResponse(favorited, count);
     }
 
+    public PageResponse<PostSummaryResponse> getFavoritePosts(int page, int pageSize) {
+        CurrentUser currentUser = SecurityUtils.getCurrentUser();
+        Page<PostFavorite> pager = new Page<>(page, pageSize);
+
+        // 查询用户收藏的帖子ID
+        LambdaQueryWrapper<PostFavorite> favQuery = new LambdaQueryWrapper<PostFavorite>()
+                .eq(PostFavorite::getUserId, currentUser.id())
+                .orderByDesc(PostFavorite::getId);
+
+        IPage<PostFavorite> favPage = postFavoriteMapper.selectPage(pager, favQuery);
+        List<Long> postIds = favPage.getRecords().stream()
+                .map(PostFavorite::getPostId)
+                .toList();
+
+        if (postIds.isEmpty()) {
+            return new PageResponse<>(List.of(), 0, page, pageSize);
+        }
+
+        // 查询这些帖子的详情（只查已审核的）
+        LambdaQueryWrapper<CommunityPost> postQuery = new LambdaQueryWrapper<CommunityPost>()
+                .in(CommunityPost::getId, postIds)
+                .eq(CommunityPost::getStatus, "APPROVED");
+
+        List<CommunityPost> posts = communityPostMapper.selectList(postQuery);
+        Map<Long, User> authors = loadUsers(posts.stream().map(CommunityPost::getUserId).toList());
+        Map<Long, List<String>> tagsByPostId = loadTagNamesByPostIds(postIds);
+
+        // 按收藏顺序排列
+        Map<Long, CommunityPost> postMap = posts.stream()
+                .collect(Collectors.toMap(CommunityPost::getId, p -> p));
+        List<PostSummaryResponse> list = postIds.stream()
+                .filter(postMap::containsKey)
+                .map(postId -> {
+                    CommunityPost post = postMap.get(postId);
+                    return toPostSummary(post, authors.get(post.getUserId()), tagsByPostId.getOrDefault(postId, List.of()));
+                })
+                .toList();
+
+        return new PageResponse<>(list, favPage.getTotal(), page, pageSize);
+    }
+
+    public void removeFavorite(Long postId) {
+        CurrentUser currentUser = SecurityUtils.getCurrentUser();
+        // 检查帖子是否存在
+        CommunityPost post = communityPostMapper.selectById(postId);
+        if (post == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "帖子不存在");
+        }
+        // 删除收藏记录
+        postFavoriteMapper.delete(new LambdaQueryWrapper<PostFavorite>()
+                .eq(PostFavorite::getPostId, postId)
+                .eq(PostFavorite::getUserId, currentUser.id()));
+        // 更新收藏数
+        int count = nullSafeInt(post.getFavoriteCount());
+        post.setFavoriteCount(Math.max(0, count - 1));
+        communityPostMapper.updateById(post);
+    }
+
     private CommunityPost getApprovedPostOrThrow(Long postId) {
         CommunityPost post = communityPostMapper.selectById(postId);
         if (post == null || !"APPROVED".equals(post.getStatus())) {

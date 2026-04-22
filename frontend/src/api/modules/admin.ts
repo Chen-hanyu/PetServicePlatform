@@ -1,4 +1,4 @@
-﻿import { adminHttp, unwrap } from "@/api/http";
+import { adminHttp, unwrap } from "@/api/http";
 import type { ApiResponse, PageResult } from "@/types/api";
 import type { DashboardOverview } from "@/types/admin";
 import type { PostSummary } from "@/types/community";
@@ -11,6 +11,11 @@ export const fetchAdminDashboard = async () => {
 
 export const fetchAdminUsers = async (params: Record<string, string | number | undefined>) => {
   const { data } = await adminHttp.get<ApiResponse<PageResult<UserProfile>>>("/users", { params });
+  return unwrap(data);
+};
+
+export const fetchAdminUserDetail = async (userId: number) => {
+  const { data } = await adminHttp.get<ApiResponse<UserProfile>>(`/users/${userId}`);
   return unwrap(data);
 };
 
