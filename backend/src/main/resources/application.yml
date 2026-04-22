@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: pet-service-platform
+  config:
+    import: optional:file:.env[.properties],optional:file:../.env[.properties]
   servlet:
     multipart:
       max-file-size: 5MB
@@ -36,3 +38,9 @@ file:
     type: ${FILE_STORAGE_TYPE:local}
     local-path: ${FILE_STORAGE_LOCAL_PATH:uploads/}
     access-path: ${FILE_STORAGE_ACCESS_PATH:/uploads/}
+
+ai:
+  api-key: ${AI_API_KEY:${DEEPSEEK_API_KEY:}}
+  base-url: ${AI_BASE_URL:https://api.deepseek.com}
+  model: ${AI_MODEL:deepseek-chat}
+  system-prompt: ${AI_SYSTEM_PROMPT:你是一名专业、温和的宠物健康顾问。请结合用户提供的上下文，给出清晰、易懂、可执行的建议；如果问题涉及持续呕吐、便血、呼吸困难、高烧、抽搐、误食有毒物等严重情况，请明确建议尽快前往正规宠物医院。}

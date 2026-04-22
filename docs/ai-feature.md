@@ -2,49 +2,62 @@
 
 ## 1. 功能概述
 
-**AI 宠医助手** - 基于 DeepSeek 大语言模型的智能宠物健康咨询助手。
+本期集成的 AI 功能为 **AI 宠医助手**。它面向用户前台提供宠物健康问答能力，支持用户围绕宠物症状、饮食、护理和行为习惯进行连续对话咨询。
 
-### 功能特点
+该功能属于课程作业要求中的 **智能客服 / 基于上下文问答** 场景，当前采用轻量实现，不引入知识库、向量检索或复杂编排，优先满足 MVP 联调与演示需要。
 
-- **智能问答**：基于宠物医疗知识的智能问答
-- **多场景覆盖**：支持宠物健康、习性、饮食、护理等多种咨询场景
-- **快捷问题**：提供常见问题快捷入口，提升用户体验
-- **实时对话**：支持连续对话，保持上下文理解
+## 2. 使用模型
 
-### 适用场景
+- 默认模型：`deepseek-chat`
+- 调用方式：OpenAI 兼容 Chat Completions API
+- 默认 Base URL：`https://api.deepseek.com`
+- 兼容方式：
+  - 云端模型：DeepSeek、Qwen 等 OpenAI 兼容接口
+  - 本地模型：可通过修改 `AI_BASE_URL` 和 `AI_MODEL` 适配 Ollama
 
-| 场景 | 示例问题 |
-|------|----------|
-| 健康咨询 | "我家猫咪一直打喷嚏是怎么回事？" |
-| 习性问答 | "狗狗半夜叫是什么原因？" |
-| 饮食建议 | "3个月的小狗适合吃什么狗粮？" |
-| 日常护理 | "如何给猫咪清理耳螨？" |
+当前后端默认按 DeepSeek 官方调用形式对齐：
 
----
+```http
+POST https://api.deepseek.com/chat/completions
+Authorization: Bearer ${DEEPSEEK_API_KEY}
+Content-Type: application/json
+```
 
-## 2. 技术实现
+## 3. 实现内容
 
-### 使用模型
+### 3.1 前端
 
-- **模型名称**：DeepSeek Chat
-- **API 接口**：DeepSeek API
-- **Base URL**：`https://api.deepseek.com/v1`
+- `frontend/src/api/modules/ai.ts`
+  - 封装 `POST /api/v1/ai/chat`
+- `frontend/src/components/ai/AIPetDoctorChat.vue`
+  - 对话抽屉、快捷问题、消息流展示
+- `frontend/src/components/ai/AIPetDoctorDock.vue`
+  - AI 功能入口
+- `frontend/src/layout/WebLayout.vue`
+  - 集成到用户端主布局
 
-### 前端实现
+### 3.2 后端
 
-| 文件 | 说明 |
-|------|------|
-| `frontend/src/types/ai.ts` | AI 相关类型定义 |
-| `frontend/src/api/modules/ai.ts` | AI API 调用封装 |
-| `frontend/src/components/ai/AIPetDoctorChat.vue` | AI 对话组件 |
-| `frontend/src/components/ai/AIPetDoctorDock.vue` | AI 浮动按钮组件 |
-| `frontend/src/layout/WebLayout.vue` | 集成到主布局 |
+- `backend/src/main/java/com/petplatform/controller/AiController.java`
+  - 暴露 `POST /api/v1/ai/chat`
+- `backend/src/main/java/com/petplatform/service/AiService.java`
+  - 封装 DeepSeek/OpenAI 兼容接口调用
+  - 追加系统提示词
+  - 保留最近上下文消息
+  - 生成补充建议 `suggestions`
+- `backend/src/main/java/com/petplatform/config/AiConfig.java`
+  - 创建 AI 专用 `RestClient`
+- `backend/src/main/java/com/petplatform/config/AiProperties.java`
+  - 读取 `ai.*` 配置
+- `backend/src/main/java/com/petplatform/dto/ai/*`
+  - 定义请求与响应 DTO
 
-### 后端接口（待实现）
+### 3.3 接口契约
 
-**接口路径**：`POST /api/v1/ai/chat`
+接口路径：`POST /api/v1/ai/chat`
 
-**请求格式**：
+请求示例：
+
 ```json
 {
   "messages": [
@@ -53,86 +66,67 @@
 }
 ```
 
-**响应格式**：
+响应示例：
+
 ```json
 {
   "code": 0,
   "message": "ok",
   "data": {
-    "reply": "猫咪打喷嚏可能由以下原因造成...",
-    "suggestions": ["建议观察猫咪是否有其他症状"]
+    "reply": "先观察猫咪是否还伴随流鼻涕、食欲下降或精神差，如果持续超过 24 小时，建议尽快就医。",
+    "suggestions": [
+      "观察症状持续时间",
+      "留意是否有食欲下降",
+      "持续加重时尽快就医"
+    ]
   }
 }
 ```
 
-### 提示词设计
+错误处理：
 
-AI 助手以宠物医生的角色回答问题，系统提示词设计如下：
+- 未配置 `AI_API_KEY` / `DEEPSEEK_API_KEY` 时，返回统一错误结构，错误码为 `10011`
+- 上游 AI 服务不可用或调用失败时，返回统一错误结构，错误码为 `10012`
+- 请求体为空、消息格式非法时，走现有参数校验与全局异常处理
 
-```
-你是一个专业的宠物健康顾问。请根据用户的问题，提供专业、温暖的宠物健康建议。
-如果问题涉及严重症状，请建议用户及时就医。
-回答要简洁、易懂，适合普通宠物主人理解。
-```
+## 4. 提示词设计
 
----
+后端会在用户消息前追加系统提示词，约束模型扮演“专业、温和的宠物健康顾问”，并补充以下规则：
 
-## 3. 配置说明
+- 回答要清晰、易懂、可执行
+- 不编造医学检查结果或诊断结论
+- 遇到持续呕吐、便血、呼吸困难、高烧、抽搐、误食有毒物等严重情况时，明确建议尽快前往正规宠物医院
 
-### 环境变量
+## 5. 配置说明
 
-在 `backend/src/main/resources/application.yml` 或 `.env` 中配置：
+`backend/src/main/resources/application.yml` 中新增：
 
 ```yaml
 ai:
-  api-key: ${AI_API_KEY:your-api-key}
-  base-url: https://api.deepseek.com/v1
-  model: deepseek-chat
+  api-key: ${AI_API_KEY:${DEEPSEEK_API_KEY:}}
+  base-url: ${AI_BASE_URL:https://api.deepseek.com}
+  model: ${AI_MODEL:deepseek-chat}
+  system-prompt: ${AI_SYSTEM_PROMPT:...}
 ```
 
-### API Key 管理
+说明：
 
-- API Key 存储在环境变量中，不提交到代码仓库
-- 建议使用 `.env` 文件管理本地开发密钥
-- 生产环境使用服务器环境变量
+- API Key 仅通过环境变量提供，不提交到代码仓库
+- 本地开发可将密钥放在项目根目录 `.env`，Spring Boot 会自动尝试读取根目录 `.env` 与 `backend/.env`
+- `docker compose` 默认更适合使用项目根目录 `.env`
+- 若切换到 Ollama，可将 `AI_BASE_URL` 改为本地地址，并把 `AI_MODEL` 改为对应模型名
 
----
+## 6. 测试情况
 
-## 4. 界面设计
+已补充后端 WebMvc 测试：
 
-### AI 助手入口
+- 匿名访问 `POST /api/v1/ai/chat`
+- 请求体参数校验
+- AI 未配置时的统一错误返回
 
-- 位于页面右侧工具栏底部，紫色渐变按钮
-- 带有 "NEW" 角标提示新功能
+## 7. 后续优化方向
 
-### 对话窗口
-
-- 右侧滑出式抽屉设计
-- 宽度 400px，移动端全屏
-- 顶部紫色渐变标题栏
-- 欢迎页展示功能介绍和快捷问题
-- 消息气泡区分用户和 AI
-
-### 样式规范
-
-- 主题色：紫色渐变 (`#667eea` → `#764ba2`)
-- 字体：系统默认字体
-- 圆角：18px 大圆角设计
-- 动画：300ms 滑入滑出
-
----
-
-## 5. 后续优化方向
-
-- [ ] 支持图片上传（拍照问诊）
-- [ ] 支持语音输入
-- [ ] 保存对话历史
-- [ ] 接入宠物医疗知识库
-- [ ] 添加免责声明
-
----
-
-## 6. 相关文档
-
-- [前端 API 文档](./frontend-api.md)
-- [后端 API 文档](./api.md)
+- 持久化会话历史
+- 支持图片问诊和 OCR
+- 接入更细的宠物知识库或 FAQ
+- 增加免责声明与风险分级提示
