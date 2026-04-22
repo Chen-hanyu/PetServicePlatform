@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
-@RequestMapping("/api/v1/community/posts")
+@RequestMapping("/api/v1/community")
 public class CommunityController {
 
     private final CommunityService communityService;
@@ -35,7 +36,9 @@ public class CommunityController {
         this.communityService = communityService;
     }
 
-    @GetMapping
+    // ==================== 帖子相关 ====================
+
+    @GetMapping("/posts")
     public ApiResponse<PageResponse<PostSummaryResponse>> getPosts(
             @RequestParam(required = false) String tab,
             @RequestParam(required = false) String category,
@@ -48,17 +51,17 @@ public class CommunityController {
         return ApiResponse.success(communityService.getPostPage(tab, category, tag, page, pageSize));
     }
 
-    @GetMapping("/{postId}")
+    @GetMapping("/posts/{postId}")
     public ApiResponse<PostDetailResponse> getPostDetail(@PathVariable Long postId) {
         return ApiResponse.success(communityService.getPostDetail(postId));
     }
 
-    @PostMapping
+    @PostMapping("/posts")
     public ApiResponse<CreatePostResponse> createPost(@Valid @RequestBody CreatePostRequest request) {
         return ApiResponse.success(communityService.createPost(request));
     }
 
-    @GetMapping("/{postId}/comments")
+    @GetMapping("/posts/{postId}/comments")
     public ApiResponse<PageResponse<PostCommentResponse>> getComments(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码必须大于等于1") int page,
@@ -69,7 +72,7 @@ public class CommunityController {
         return ApiResponse.success(communityService.getCommentPage(postId, page, pageSize));
     }
 
-    @PostMapping("/{postId}/comments")
+    @PostMapping("/posts/{postId}/comments")
     public ApiResponse<CreateCommentResponse> createComment(
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequest request
@@ -77,13 +80,31 @@ public class CommunityController {
         return ApiResponse.success(communityService.createComment(postId, request));
     }
 
-    @PostMapping("/{postId}/like")
+    @PostMapping("/posts/{postId}/like")
     public ApiResponse<ToggleLikeResponse> toggleLike(@PathVariable Long postId) {
         return ApiResponse.success(communityService.toggleLike(postId));
     }
 
-    @PostMapping("/{postId}/favorite")
+    @PostMapping("/posts/{postId}/favorite")
     public ApiResponse<ToggleFavoriteResponse> toggleFavorite(@PathVariable Long postId) {
         return ApiResponse.success(communityService.toggleFavorite(postId));
+    }
+
+    // ==================== 收藏相关 ====================
+
+    @GetMapping("/favorites")
+    public ApiResponse<PageResponse<PostSummaryResponse>> getMyFavorites(
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码必须大于等于1") int page,
+            @RequestParam(name = "page_size", defaultValue = "10")
+            @Min(value = 1, message = "每页数量必须大于等于1")
+            @Max(value = 50, message = "每页数量不能超过50") int pageSize
+    ) {
+        return ApiResponse.success(communityService.getFavoritePosts(page, pageSize));
+    }
+
+    @DeleteMapping("/favorites/{postId}")
+    public ApiResponse<Void> removeFavorite(@PathVariable Long postId) {
+        communityService.removeFavorite(postId);
+        return ApiResponse.success();
     }
 }

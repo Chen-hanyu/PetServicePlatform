@@ -1,4 +1,4 @@
-﻿import { webHttp, unwrap } from "@/api/http";
+import { webHttp, unwrap } from "@/api/http";
 import type { ApiResponse, PageResult } from "@/types/api";
 import type { CreatePostPayload, PostComment, PostDetail, PostSummary } from "@/types/community";
 
@@ -31,5 +31,18 @@ export const createComment = async (postId: number, content: string) => {
 
 export const toggleLike = async (postId: number) => {
   const { data } = await webHttp.post<ApiResponse<Record<string, unknown>>>(`/community/posts/${postId}/like`);
+  return unwrap(data);
+};
+
+// 收藏相关
+export const fetchMyFavorites = async (params?: { page?: number; page_size?: number }) => {
+  const { data } = await webHttp.get<ApiResponse<PageResult<PostSummary>>>("/community/favorites", {
+    params: { page: params?.page ?? 1, page_size: params?.page_size ?? 10 }
+  });
+  return unwrap(data);
+};
+
+export const removeFavorite = async (postId: number) => {
+  const { data } = await webHttp.delete<ApiResponse<void>>(`/community/favorites/${postId}`);
   return unwrap(data);
 };

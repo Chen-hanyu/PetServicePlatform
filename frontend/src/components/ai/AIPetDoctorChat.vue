@@ -15,7 +15,7 @@
           <span class="title-sub">DeepSeek AI 驱动</span>
         </div>
       </div>
-      <button type="button" class="chat-close" aria-label="关闭" @click="open = false">
+      <button type="button" class="chat-close" aria-label="关闭" @click="isOpen = false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6L6 18M6 6l12 12"/>
         </svg>
