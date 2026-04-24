@@ -236,7 +236,7 @@ import { onMounted, ref, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchPosts } from "@/api/modules/community";
-import { mockPosts } from "@/mocks/community";
+import { toErrorMessage } from "@/api/http";
 import type { PostSummary } from "@/types/community";
 
 const loading = ref(false);
@@ -300,8 +300,8 @@ const handleSearch = () => {
 
 const PAGE_SIZE = 12;
 
-const mockListForTab = (): PostSummary[] => {
-  const list = mockPosts as PostSummary[];
+const emptyListForTab = (): PostSummary[] => {
+  const list = [] as PostSummary[];
   let filtered: PostSummary[];
   if (activeCategory.value === "推荐") {
     filtered = list;
@@ -326,13 +326,13 @@ const loadPosts = async () => {
       posts.value = list;
       totalPosts.value = data.total ?? list.length;
     } else {
-      posts.value = mockListForTab();
-      totalPosts.value = mockPosts.length;
+      posts.value = [];
+      totalPosts.value = 0;
     }
   } catch (e) {
-    console.warn("Failed to fetch posts, using mock data", e);
-    posts.value = mockListForTab();
-    totalPosts.value = mockPosts.length;
+    error.value = toErrorMessage(e);
+    posts.value = [];
+    totalPosts.value = 0;
   } finally {
     loading.value = false;
   }

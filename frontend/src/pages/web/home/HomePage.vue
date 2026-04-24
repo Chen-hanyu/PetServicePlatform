@@ -157,7 +157,6 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchHomeData } from "@/api/modules/home";
-import { mockHomeData } from "@/mocks/home";
 import type { HomeBanner, HomeQuickEntry, HomeTip } from "@/types/home";
 import { toErrorMessage } from "@/api/http";
 
@@ -191,12 +190,13 @@ onMounted(async () => {
     recommendedServices.value = data.recommended_services || [];
     recommendedProducts.value = data.recommended_products || [];
   } catch (e) {
-    console.warn("Failed to fetch home data, using mock data", e);
-    entries.value = mockHomeData.quick_entries;
-    tips.value = mockHomeData.tips;
-    recommendedPosts.value = mockHomeData.recommended_posts;
-    recommendedServices.value = mockHomeData.recommended_services;
-    recommendedProducts.value = mockHomeData.recommended_products;
+    error.value = toErrorMessage(e);
+    entries.value = [];
+    banners.value = [];
+    tips.value = [];
+    recommendedPosts.value = [];
+    recommendedServices.value = [];
+    recommendedProducts.value = [];
   } finally {
     loading.value = false;
   }

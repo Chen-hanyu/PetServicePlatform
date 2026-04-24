@@ -339,13 +339,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { mockPosts } from "@/mocks/community";
+import { fetchPostComments, fetchPostDetail, fetchPosts } from "@/api/modules/community";
+import type { PostComment, PostDetail, PostSummary } from "@/types/community";
+
+type CommentVm = PostComment & {
+  user?: PostComment["author"];
+  like_count: number;
+  isLiked: boolean;
+  isAuthor: boolean;
+};
 
 const route = useRoute();
 const router = useRouter();
 
 const loading = ref(true);
-const post = ref<any>(null);
+const post = ref<PostDetail | null>(null);
 const isLiked = ref(false);
 const isCollected = ref(false);
 const isFollowing = ref(false);
@@ -359,7 +367,7 @@ const sharePopupVisible = ref(false);
 const commentInputRef = ref<HTMLTextAreaElement | null>(null);
 const commentsRef = ref<HTMLElement | null>(null);
 
-const comments = ref([
+const comments = ref<CommentVm[]>([
   {
     id: 1,
     user: { nickname: "铲屎官小李", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=10" },
@@ -407,7 +415,7 @@ const comments = ref([
   }
 ]);
 
-const recommendPosts = ref<any[]>([]);
+const recommendPosts = ref<PostSummary[]>([]);
 
 const featuredComments = computed(() => comments.value.filter(c => c.like_count > 50).slice(0, 2));
 const normalComments = computed(() => comments.value.filter(c => c.like_count <= 50));
@@ -520,22 +528,40 @@ const shareTo = (platform: string) => {
 };
 
 onMounted(() => {
-  setTimeout(() => {
+  setTimeout(async () => {
     const postId = Number(route.params.id);
-    const foundPost = mockPosts.find((p: any) => p.id === postId);
+    let foundPost: PostDetail | null = null;
+    try {
+      foundPost = await fetchPostDetail(postId);
+      const commentPage = await fetchPostComments(postId);
+      comments.value = (commentPage.list || []).map((c: PostComment) => ({
+        ...c,
+        user: c.author,
+        like_count: 0,
+        isLiked: false,
+        isAuthor: c.author?.id === foundPost?.author?.id
+      }));
+    } catch {
+      comments.value = [];
+    }
     if (foundPost) {
       post.value = foundPost;
       likeCount.value = foundPost.like_count || 0;
       commentCount.value = comments.value.length;
       postViews.value = Math.floor(Math.random() * 5000) + 1000;
     } else {
-      post.value = mockPosts[0];
-      likeCount.value = post.value.like_count || 0;
-      commentCount.value = comments.value.length;
-      postViews.value = Math.floor(Math.random() * 5000) + 1000;
+      post.value = null;
+      likeCount.value = 0;
+      commentCount.value = 0;
+      postViews.value = 0;
     }
 
-    recommendPosts.value = mockPosts.filter((p: any) => p.id !== postId).slice(0, 4);
+    try {
+      const recommendPage = await fetchPosts({ page: 1, page_size: 5 });
+      recommendPosts.value = (recommendPage.list || []).filter((p) => p.id !== postId).slice(0, 4);
+    } catch {
+      recommendPosts.value = [];
+    }
     loading.value = false;
 
     // 如果 URL 包含 #comments，则滚动到评论区

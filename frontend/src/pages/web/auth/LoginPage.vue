@@ -69,7 +69,7 @@
 
       <div class="demo-tip">
         <span class="demo-dot" />
-        演示：任意手机号 + 密码可联调后端；失败时将使用本地演示账号进入首页
+        联调账号：普通用户 13800000001 / 123456；登录失败会直接显示后端错误。
       </div>
     </div>
   </AuthSplitShell>
@@ -80,7 +80,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { loginUser } from "@/api/modules/auth";
-import { mockUser } from "@/mocks/auth";
+import { toErrorMessage } from "@/api/http";
 import AuthSplitShell from "@/components/auth/AuthSplitShell.vue";
 
 const router = useRouter();
@@ -103,10 +103,8 @@ const submit = async () => {
     const data = await loginUser(username.value, password.value);
     auth.setSession(data.token, { ...data.user, role: "USER" });
     await router.push("/home");
-  } catch {
-    error.value = "";
-    auth.setSession(mockUser.token, mockUser.user);
-    await router.push("/home");
+  } catch (e) {
+    error.value = toErrorMessage(e);
   } finally {
     loading.value = false;
   }

@@ -98,7 +98,7 @@ import { onMounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchMerchants } from "@/api/modules/services";
-import { mockMerchants } from "@/mocks/services";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 
@@ -143,18 +143,8 @@ const loadMerchants = async () => {
     const data = await fetchMerchants({ page: 1, page_size: 20 });
     merchants.value = (data.list || []) as typeof merchants.value;
   } catch (e) {
-    console.warn("Failed to fetch merchants, using mock data", e);
-    merchants.value = mockMerchants.map(m => ({
-      id: m.id,
-      name: m.name,
-      district: m.district,
-      description: m.description,
-      cover_url: m.cover_url,
-      rating: m.rating,
-      status: m.status,
-      category: m.category,
-      tags: [m.category]
-    }));
+    error.value = toErrorMessage(e);
+    merchants.value = [];
   } finally {
     loading.value = false;
   }

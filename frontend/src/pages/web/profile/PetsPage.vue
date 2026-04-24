@@ -26,13 +26,12 @@
           <div class="pet-body">
             <div class="pet-name-row">
               <h3>{{ pet.name }}</h3>
-              <span class="pet-age">{{ pet.age }}岁</span>
+              <span class="pet-age">{{ pet.ageText }}</span>
             </div>
-            <p class="pet-breed">{{ pet.breed }} · {{ pet.gender === '公' ? '♂' : '♀' }}</p>
+            <p class="pet-breed">{{ pet.breed || pet.type }} · {{ pet.genderText }}</p>
             <div class="pet-tags">
               <span v-if="pet.weight" class="tag">体重 {{ pet.weight }}kg</span>
-              <span v-if="pet.vaccinated" class="tag tag-vaccine">已疫苗</span>
-              <span v-if="pet.neutered" class="tag tag-neutered">已绝育</span>
+              <span class="tag tag-vaccine">档案</span>
             </div>
           </div>
           <div class="pet-actions" @click.stop>
@@ -78,14 +77,13 @@
             <h2>{{ detailPet.name }}</h2>
             <div class="detail-meta">
               <span class="meta-chip">{{ detailPet.breed }}</span>
-              <span class="meta-chip">{{ detailPet.age }}岁</span>
+              <span class="meta-chip">{{ detailPet.ageText }}</span>
               <span class="meta-chip">{{ detailPet.weight }}kg</span>
             </div>
             <div class="detail-tags">
               <span class="tag-badge primary" v-if="detailPet.type">{{ detailPet.type }}</span>
-              <span class="tag-badge gender" v-if="detailPet.gender">{{ detailPet.gender === '公' ? '♂ 公' : '♀ 母' }}</span>
-              <span class="tag-badge health" v-if="detailPet.vaccinated">已疫苗</span>
-              <span class="tag-badge health" v-if="detailPet.neutered">已绝育</span>
+              <span class="tag-badge gender" v-if="detailPet.genderText">{{ detailPet.genderText }}</span>
+              <span class="tag-badge health">档案</span>
             </div>
           </div>
         </div>
@@ -276,16 +274,29 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { createPet, deletePetById, fetchMyPets, updatePet } from "@/api/modules/pet";
+import { toErrorMessage } from "@/api/http";
+import type { PetProfile, SavePetPayload } from "@/types/pet";
 
 const router = useRouter();
 const defaultPetAvatar = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=300&q=80";
 
 const loading = ref(false);
-const pets = ref<any[]>([]);
+const error = ref("");
+const pets = ref<PetView[]>([]);
 const showAddForm = ref(false);
-const editingPet = ref<any>(null);
-const detailPet = ref<any>(null);
+const editingPet = ref<PetView | null>(null);
+const detailPet = ref<PetView | null>(null);
 const avatarInput = ref<HTMLInputElement | null>(null);
+
+type PetView = PetProfile & {
+  avatar?: string;
+  ageText: string;
+  genderText: string;
+  vaccinated?: boolean;
+  neutered?: boolean;
+  bio?: string;
+};
 
 const petForm = reactive({
   name: "",
@@ -300,63 +311,36 @@ const petForm = reactive({
   avatar: ""
 });
 
-const loadPets = () => {
-  pets.value = [
-    { 
-      id: 1, 
-      name: "小橘", 
-      breed: "中华田园猫", 
-      age: 2, 
-      weight: 4.5, 
-      gender: "母", 
-      vaccinated: true,
-      neutered: false,
-      bio: "性格温顺，喜欢晒太阳",
-      avatar: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=300&q=80" 
-    },
-    { 
-      id: 2, 
-      name: "旺财", 
-      breed: "金毛寻回犬", 
-      age: 1, 
-      weight: 12, 
-      gender: "公", 
-      vaccinated: true,
-      neutered: true,
-      bio: "活泼好动，最爱玩球",
-      avatar: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=300&q=80" 
-    },
-    { 
-      id: 3, 
-      name: "豆豆", 
-      breed: "荷兰垂耳兔", 
-      age: 1, 
-      weight: 1.2, 
-      gender: "母", 
-      vaccinated: false,
-      neutered: false,
-      bio: "喜欢吃胡萝卜，有点胆小",
-      avatar: "https://images.unsplash.com/photo-1585110396000-c9ffd4e87bba?auto=format&fit=crop&w=300&q=80" 
-    }
-  ];
+const loadPets = async () => {
+  loading.value = true;
+  error.value = "";
+  try {
+    const list = await fetchMyPets();
+    pets.value = list.map(toPetView);
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    pets.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
 
-const openPetDetail = (pet: any) => {
+const openPetDetail = (pet: PetView) => {
   detailPet.value = pet;
 };
 
-const editPet = (pet: any) => {
+const editPet = (pet: PetView) => {
   editingPet.value = pet;
   petForm.name = pet.name;
-  petForm.breed = pet.breed;
-  petForm.age = pet.age;
+  petForm.breed = pet.breed || "";
+  petForm.age = null;
   petForm.weight = pet.weight || null;
   petForm.gender = pet.gender || "";
   petForm.birthday = pet.birthday || "";
-  petForm.vaccinated = pet.vaccinated || false;
-  petForm.neutered = pet.neutered || false;
-  petForm.bio = pet.bio || "";
-  petForm.avatar = pet.avatar || "";
+  petForm.vaccinated = false;
+  petForm.neutered = false;
+  petForm.bio = pet.description || pet.bio || "";
+  petForm.avatar = pet.avatar_url || pet.avatar || "";
 };
 
 const closeForm = () => {
@@ -394,31 +378,44 @@ const handleAvatarChange = (event: Event) => {
   }
 };
 
-const submitPet = () => {
+const submitPet = async () => {
   if (!petForm.name || !petForm.breed) {
     alert("请填写宠物名称和品种");
     return;
   }
 
-  if (editingPet.value) {
-    pets.value = pets.value.map(p =>
-      p.id === editingPet.value.id
-        ? { ...p, ...petForm, avatar: petForm.avatar || defaultPetAvatar }
-        : p
-    );
-  } else {
-    pets.value.push({
-      id: Date.now(),
-      ...petForm,
-      avatar: petForm.avatar || defaultPetAvatar
-    });
+  const payload: SavePetPayload = {
+    name: petForm.name,
+    type: petForm.breed.includes("猫") ? "CAT" : petForm.breed.includes("狗") ? "DOG" : "OTHER",
+    breed: petForm.breed,
+    gender: petForm.gender,
+    birthday: petForm.birthday || undefined,
+    weight: petForm.weight || undefined,
+    avatar_url: petForm.avatar || undefined,
+    description: petForm.bio || undefined
+  };
+
+  try {
+    if (editingPet.value) {
+      await updatePet(editingPet.value.id, payload);
+    } else {
+      await createPet(payload);
+    }
+    closeForm();
+    await loadPets();
+  } catch (e) {
+    alert(toErrorMessage(e));
   }
-  closeForm();
 };
 
-const deletePet = (id: number) => {
+const deletePet = async (id: number) => {
   if (confirm("确定要删除这只宠物吗？")) {
-    pets.value = pets.value.filter(p => p.id !== id);
+    try {
+      await deletePetById(id);
+      await loadPets();
+    } catch (e) {
+      alert(toErrorMessage(e));
+    }
   }
 };
 
@@ -426,7 +423,38 @@ const goToAddPet = () => {
   showAddForm.value = true;
 };
 
-onMounted(loadPets);
+function getAgeText(birthday?: string) {
+  if (!birthday) return "年龄未知";
+  const birth = new Date(birthday);
+  if (Number.isNaN(birth.getTime())) return "年龄未知";
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  const hasHadBirthday =
+    now.getMonth() > birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
+  if (!hasHadBirthday) years -= 1;
+  return years > 0 ? `${years}岁` : "未满1岁";
+}
+
+function getGenderText(gender?: string) {
+  if (gender === "MALE" || gender === "公") return "♂ 公";
+  if (gender === "FEMALE" || gender === "母") return "♀ 母";
+  return "性别未知";
+}
+
+function toPetView(pet: PetProfile): PetView {
+  return {
+    ...pet,
+    avatar: pet.avatar_url,
+    ageText: getAgeText(pet.birthday),
+    genderText: getGenderText(pet.gender),
+    bio: pet.description
+  };
+}
+
+onMounted(() => {
+  void loadPets();
+});
 </script>
 
 <style scoped lang="scss">
