@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 DROP DATABASE IF EXISTS pet_service_platform;
 CREATE DATABASE pet_service_platform
   DEFAULT CHARACTER SET utf8mb4
