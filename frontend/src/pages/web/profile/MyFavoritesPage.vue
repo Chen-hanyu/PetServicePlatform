@@ -40,7 +40,7 @@
                 </span>
               </div>
             </div>
-            <button class="remove-btn" @click.stop="removeFavorite(item.id)">
+            <button class="remove-btn" @click.stop="handleRemoveFavorite(item.id)">
               <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
               </svg>
@@ -56,6 +56,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
+import { fetchMyFavorites, removeFavorite } from "@/api/modules/community";
 
 const router = useRouter();
 const loading = ref(true);
@@ -84,61 +85,24 @@ const goToPost = (id: number) => {
   router.push(`/community/post/${id}`);
 };
 
-const removeFavorite = (id: number) => {
-  favorites.value = favorites.value.filter(item => item.id !== id);
+const handleRemoveFavorite = async (id: number) => {
+  try {
+    await removeFavorite(id);
+    favorites.value = favorites.value.filter(item => item.id !== id);
+  } catch {
+    // 移除收藏失败，忽略
+  }
 };
 
-onMounted(() => {
-  setTimeout(() => {
-    favorites.value = [
-      {
-        id: 1,
-        title: "新手养猫必看！这些注意事项你都知道吗？",
-        excerpt: "养猫前的准备工作、接猫注意事项、幼猫喂养指南...",
-        cover_url: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80",
-        like_count: 256,
-        comment_count: 32,
-        author: { nickname: "喵星人", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=1" }
-      },
-      {
-        id: 2,
-        title: "自制狗狗零食，简单又健康！",
-        excerpt: "分享几款简单易做的狗狗零食，让你的毛孩子吃得健康...",
-        cover_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&q=80",
-        like_count: 189,
-        comment_count: 45,
-        author: { nickname: "铲屎官小李", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=2" }
-      },
-      {
-        id: 3,
-        title: "猫咪打疫苗全攻略，新手必读",
-        excerpt: "猫咪需要接种哪些疫苗？什么时候打？有哪些注意事项...",
-        cover_url: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=400&q=80",
-        like_count: 324,
-        comment_count: 67,
-        author: { nickname: "宠物医生王大夫", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=3" }
-      },
-      {
-        id: 4,
-        title: "如何训练狗狗定点上厕所",
-        excerpt: "狗狗乱拉乱尿？教你几招轻松解决...",
-        cover_url: "https://images.unsplash.com/photo-1558788353-f76d92427f16?auto=format&fit=crop&w=400&q=80",
-        like_count: 156,
-        comment_count: 28,
-        author: { nickname: "训犬师老张", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=4" }
-      },
-      {
-        id: 5,
-        title: "布偶猫饲养心得分享",
-        excerpt: "养布偶猫两年，总结了一些经验和心得...",
-        cover_url: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80",
-        like_count: 412,
-        comment_count: 89,
-        author: { nickname: "猫奴日记", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=5" }
-      }
-    ];
+onMounted(async () => {
+  try {
+    const result = await fetchMyFavorites({ page: 1, page_size: 50 });
+    favorites.value = result.list;
+  } catch {
+    favorites.value = [];
+  } finally {
     loading.value = false;
-  }, 500);
+  }
 });
 </script>
 

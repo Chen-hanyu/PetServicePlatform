@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties({JwtProperties.class, VerifyCodeProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, VerifyCodeProperties.class, AiProperties.class})
 public class SecurityConfig {
 
     @Bean
@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 "/api/v1/admin/auth/login",
                                 "/api/v1/admin/auth/verify-code"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/ai/chat").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/auth/logout").authenticated()
                         .requestMatchers("/api/v1/files/**").authenticated()
@@ -62,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/community/posts/*/comments").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/community/posts/*/like").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/community/posts/*/favorite").authenticated()
+                        .requestMatchers("/api/v1/community/favorites/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/community/favorites/*").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/services/merchants/*/reviews").authenticated()
                         .requestMatchers("/api/v1/adoption/applications/**").authenticated()
                         .requestMatchers("/api/v1/pets/**").authenticated()
