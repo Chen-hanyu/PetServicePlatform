@@ -62,7 +62,7 @@ BUILD SUCCESS
 
 ## PR 链接
 
-- PR #X: 待创建 / 合并后补充
+- (https://github.com/Chen-hanyu/PetServicePlatform/pull/31)
 
 ## 遇到的问题和解决
 
