@@ -199,7 +199,6 @@ import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import CommerceDock from "@/components/shop/CommerceDock.vue";
 import { useShopCartStore } from "@/store/shopCart";
-import { getMockProductById } from "@/mocks/shop";
 import { fetchProduct } from "@/api/modules/shop";
 
 const route = useRoute();
@@ -244,20 +243,19 @@ async function loadBuyNow() {
     router.replace("/shop");
     return;
   }
-  const mock = getMockProductById(id);
   try {
     const data = await fetchProduct(id);
     const imgs =
-      data.images && data.images.length > 0 ? data.images : data.image_url ? [data.image_url] : mock?.images || [];
+      data.images && data.images.length > 0 ? data.images : data.image_url ? [data.image_url] : [];
     buyNowProduct.value = {
       id: data.id,
       name: data.name,
       price: data.price,
-      image_url: data.image_url || mock?.image_url,
-      images: imgs.length ? imgs : mock?.images || []
+      image_url: data.image_url,
+      images: imgs
     };
   } catch {
-    buyNowProduct.value = mock;
+    buyNowProduct.value = null;
   }
   if (!buyNowProduct.value) router.replace("/shop");
 }

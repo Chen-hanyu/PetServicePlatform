@@ -51,7 +51,7 @@ import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchMerchantDetail } from "@/api/modules/services";
-import { getMockMerchantById } from "@/mocks/services";
+import { toErrorMessage } from "@/api/http";
 
 type MerchantVm = {
   id: number;
@@ -75,31 +75,30 @@ const merchant = ref<MerchantVm | null>(null);
 
 const formatPrice = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
-function mergeMerchant(api: Record<string, unknown>, mock: MerchantVm | null): MerchantVm | null {
-  if (!api && !mock) return null;
-  const m = mock || ({} as MerchantVm);
-  const services = (api?.services as MerchantVm["services"]) || m.services || [];
+function mergeMerchant(api: Record<string, unknown>): MerchantVm | null {
+  if (!api) return null;
+  const services = (api?.services as MerchantVm["services"]) || [];
   const a = api as {
     cover_url?: string;
     description?: string;
     rating?: number;
   };
   return {
-    id: Number(api?.id ?? m.id),
-    name: String(api?.name ?? m.name),
-    district: String(api?.district ?? m.district ?? ""),
-    address: String(api?.address ?? m.address ?? ""),
-    phone: String(api?.phone ?? m.phone ?? ""),
-    business_hours: String(api?.business_hours ?? m.business_hours ?? ""),
-    status: String(api?.status ?? m.status ?? "营业中"),
-    rating: Number(a.rating ?? m.rating ?? 0),
-    cover_url: String(a.cover_url ?? m.cover_url ?? ""),
-    description: String(a.description ?? m.description ?? ""),
+    id: Number(api?.id),
+    name: String(api?.name ?? ""),
+    district: String(api?.district ?? ""),
+    address: String(api?.address ?? ""),
+    phone: String(api?.phone ?? ""),
+    business_hours: String(api?.business_hours ?? ""),
+    status: String(api?.status ?? "营业中"),
+    rating: Number(a.rating ?? 0),
+    cover_url: String(a.cover_url ?? ""),
+    description: String(a.description ?? ""),
     services: services.map((s: { id: number; name: string; price: number; duration?: string }) => ({
       id: s.id,
       name: s.name,
       price: s.price,
-      duration: s.duration || m.services?.find((x) => x.id === s.id)?.duration || "—"
+      duration: s.duration || "—"
     }))
   };
 }
@@ -116,17 +115,17 @@ async function load() {
     return;
   }
 
-  const mock = getMockMerchantById(id);
   try {
     const data = await fetchMerchantDetail(id);
-    merchant.value = mergeMerchant(data as unknown as Record<string, unknown>, mock as MerchantVm | null);
-  } catch {
-    merchant.value = mock as MerchantVm | null;
+    merchant.value = mergeMerchant(data as unknown as Record<string, unknown>);
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    merchant.value = null;
   } finally {
     loading.value = false;
   }
 
-  if (!merchant.value) {
+  if (!merchant.value && !error.value) {
     error.value = "";
   }
 }

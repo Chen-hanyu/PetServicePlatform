@@ -12,7 +12,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +32,7 @@ class FileUploadIntegrationTest extends IntegrationTestSupport {
     private ObjectMapper objectMapper;
 
     @Test
-    @DisplayName("登录用户上传图片后应返回可访问路径并实际保存文件")
+    @DisplayName("login user uploads image and file is stored locally")
     void uploadShouldStoreImageLocally() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -57,13 +57,15 @@ class FileUploadIntegrationTest extends IntegrationTestSupport {
         String url = (String) data.get("url");
 
         assertThat(url).startsWith("/uploads/");
-        String relativePath = url.substring("/uploads/".length()).replace("/", File.separator);
-        File savedFile = new File("D:\\Code\\PetServicePlatform\\backend\\target\\test-uploads", relativePath);
+        Path savedFile = Path.of("target", "test-uploads");
+        for (String segment : url.substring("/uploads/".length()).split("/")) {
+            savedFile = savedFile.resolve(segment);
+        }
         assertThat(savedFile).exists();
     }
 
     @Test
-    @DisplayName("上传非图片文件时应返回参数错误")
+    @DisplayName("reject unsupported upload content type")
     void uploadShouldRejectUnsupportedContentType() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",

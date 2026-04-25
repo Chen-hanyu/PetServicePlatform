@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import { mockServicePackages } from "@/mocks/services";
 
 export interface ServiceBookingAddon {
   id: string;
@@ -15,24 +14,15 @@ export interface ServiceBookingMain {
   duration?: string;
 }
 
-function sameServiceSet(a: number[], b: number[]) {
-  if (a.length !== b.length) return false;
-  const sa = [...a].sort((x, y) => x - y);
-  const sb = [...b].sort((x, y) => x - y);
-  return sa.every((v, i) => v === sb[i]);
-}
-
 function activePackageForState(
   merchantId: number | null,
   mainIds: number[],
   selectedPackageId: string | null
 ) {
-  if (!merchantId || !selectedPackageId) return null;
-  const pkg = mockServicePackages.find(
-    (p) => p.id === selectedPackageId && p.merchantId === merchantId
-  );
-  if (!pkg) return null;
-  return sameServiceSet(mainIds, [...pkg.serviceIds]) ? pkg : null;
+  void merchantId;
+  void mainIds;
+  void selectedPackageId;
+  return null;
 }
 
 export const useServiceBookingStore = defineStore("serviceBooking", {

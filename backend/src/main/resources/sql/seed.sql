@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 USE pet_service_platform;
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -63,7 +65,7 @@ INSERT INTO users (id, role, phone, nickname, avatar_url, gender, status, bio) V
 (4, 'USER', '13800000003', '猫咪观察员', 'https://example.com/user3.jpg', 'FEMALE', 'ACTIVE', '喜欢记录毛孩子的日常');
 
 UPDATE users SET password_hash = '$2a$10$tlnMMJ2lktQPQ6wSxcD5o.AXnU.yP61/.rCjZwO3MhVWfW3NC2WwS' WHERE id = 1;
-UPDATE users SET password_hash = '$2a$10$oQ9TueFaM3LFV8M6jfIh.O0nwr2aC5mlOeUtclblsY9yuoHmXc7VC' WHERE id IN (2, 3, 4);
+UPDATE users SET password_hash = '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW' WHERE id IN (2, 3, 4);
 
 INSERT INTO messages (user_id, type, title, content, is_read) VALUES
 (2, 'SYSTEM', '领养申请已提交', '你提交的领养申请已进入审核流程，请保持电话畅通。', 0),
@@ -175,5 +177,167 @@ INSERT INTO recommendations (biz_type, biz_id, slot_code, status, sort, created_
 ('service', 2, 'HOME_SERVICE', 'ACTIVE', 2, 1),
 ('product', 1, 'HOME_PRODUCT', 'ACTIVE', 1, 1),
 ('product', 3, 'HOME_PRODUCT', 'ACTIVE', 2, 1);
+
+-- Additional demo data for frontend/backend integration testing.
+INSERT INTO users (id, role, phone, password_hash, nickname, avatar_url, gender, status, bio) VALUES
+(5, 'USER', '13800000004', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '布丁爸爸', 'https://example.com/user4.jpg', 'MALE', 'ACTIVE', '关注狗狗训练和日常陪伴'),
+(6, 'USER', '13800000005', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '小橘饲养员', 'https://example.com/user5.jpg', 'FEMALE', 'ACTIVE', '记录流浪猫救助和领养回访'),
+(7, 'USER', '13800000006', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '豆豆家', 'https://example.com/user6.jpg', 'UNKNOWN', 'ACTIVE', '第一次养宠的新手家庭'),
+(8, 'USER', '13800000007', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '暂禁用户', 'https://example.com/user7.jpg', 'UNKNOWN', 'DISABLED', '用于后台账号状态联调');
+
+INSERT INTO messages (user_id, type, title, content, is_read) VALUES
+(2, 'ORDER', '订单已签收', '你的主粮订单已完成签收，欢迎评价本次购物体验。', 0),
+(3, 'BOOKING', '预约状态已更新', '你预约的基础洗护服务已确认，请按时到店。', 0),
+(5, 'SYSTEM', '完善宠物档案提醒', '补充生日、体重和疫苗记录后，可以获得更完整的健康时间线。', 1),
+(6, 'ADOPTION', '领养回访提醒', '请在本周内提交领养回访照片，帮助平台确认宠物适应情况。', 0);
+
+INSERT INTO pets (id, user_id, name, type, breed, gender, birthday, weight, avatar_url, description) VALUES
+(4, 5, '布丁', 'DOG', '柯基', 'MALE', '2023-06-18', 11.20, 'https://example.com/pet-buding.jpg', '精力旺盛，正在进行召回训练'),
+(5, 5, '可乐', 'DOG', '拉布拉多', 'FEMALE', '2022-09-02', 24.60, 'https://example.com/pet-kele.jpg', '温顺亲人，适合服务预约联调'),
+(6, 6, '小橘', 'CAT', '中华田园猫', 'MALE', '2024-01-15', 4.00, 'https://example.com/pet-xiaoju.jpg', '救助后恢复良好，已完成驱虫'),
+(7, 7, '豆豆', 'DOG', '比熊', 'FEMALE', '2025-02-05', 3.30, 'https://example.com/pet-doudou.jpg', '新手家庭宠物，适合档案新增测试');
+
+INSERT INTO pet_vaccines (pet_id, vaccine_name, vaccinated_at, next_due_at, remark) VALUES
+(4, '狂犬疫苗', '2025-10-12', '2026-10-12', '年度加强针'),
+(5, '犬六联', '2025-11-06', '2026-11-06', '体检时同步接种'),
+(6, '猫三联', '2025-12-01', '2026-12-01', '救助站接种记录'),
+(7, '犬四联', '2026-03-08', '2026-04-08', '幼犬第二针待完成');
+
+INSERT INTO pet_weights (pet_id, weight, recorded_at) VALUES
+(4, 10.80, '2026-03-01 08:20:00'),
+(4, 11.20, '2026-03-20 08:30:00'),
+(5, 24.10, '2026-03-05 19:10:00'),
+(5, 24.60, '2026-03-22 19:00:00'),
+(6, 3.80, '2026-03-12 21:30:00'),
+(6, 4.00, '2026-03-24 21:00:00'),
+(7, 3.10, '2026-03-17 09:00:00');
+
+INSERT INTO pet_albums (pet_id, image_url, caption) VALUES
+(4, 'https://example.com/pet-album-3.jpg', '第一次完成坐下训练'),
+(5, 'https://example.com/pet-album-4.jpg', '洗护后蓬松的一天'),
+(6, 'https://example.com/pet-album-5.jpg', '救助后的第一个春天'),
+(7, 'https://example.com/pet-album-6.jpg', '新家适应记录');
+
+INSERT INTO tags (id, name, type, status, sort) VALUES
+(4, '饮食', 'community', 'ACTIVE', 4),
+(5, '训练', 'community', 'ACTIVE', 5),
+(6, '领养回访', 'community', 'ACTIVE', 6),
+(7, '健康记录', 'community', 'ACTIVE', 7);
+
+INSERT INTO community_posts (id, user_id, category, title, content, cover_url, status, review_remark, like_count, favorite_count, comment_count, published_at) VALUES
+(4, 5, 'training', '柯基召回训练一周记录', '每天固定两次短时间训练，比长时间重复更容易保持狗狗注意力。', 'https://example.com/post-cover-4.jpg', 'APPROVED', '内容符合社区规范', 15, 7, 3, '2026-03-20 10:20:00'),
+(5, 6, 'rescue', '小橘救助后的适应过程', '从躲在纸箱到主动蹭手，大概用了两周时间，稳定环境很重要。', 'https://example.com/post-cover-5.jpg', 'APPROVED', '内容符合社区规范', 21, 12, 4, '2026-03-21 16:40:00'),
+(6, 7, 'daily', '第一次给比熊剪指甲的准备清单', '先熟悉脚掌触碰，再准备止血粉和奖励零食，过程不要着急。', 'https://example.com/post-cover-6.jpg', 'PENDING', NULL, 0, 0, 0, NULL),
+(7, 2, 'knowledge', '猫咪换粮过渡比例怎么安排', '建议用 7 到 10 天逐步替换，观察软便、呕吐和食欲变化。', 'https://example.com/post-cover-7.jpg', 'APPROVED', '内容符合社区规范', 18, 9, 2, '2026-03-22 09:15:00'),
+(8, 3, 'help', '狗狗外出后脚垫发红怎么办', '散步回家后发现脚垫偏红，想确认是否需要立刻就医。', 'https://example.com/post-cover-8.jpg', 'APPROVED', '内容符合社区规范', 6, 2, 2, '2026-03-22 20:10:00'),
+(9, 5, 'daily', '寄养前需要和商家确认哪些细节', '包括喂食次数、遛狗频率、是否单独隔间以及突发情况联系流程。', 'https://example.com/post-cover-9.jpg', 'APPROVED', '内容符合社区规范', 10, 5, 1, '2026-03-23 12:30:00'),
+(10, 6, 'knowledge', '领养回访照片怎么拍更清楚', '建议拍摄正脸、全身、食盆和活动区域，便于平台了解适应情况。', 'https://example.com/post-cover-10.jpg', 'REJECTED', '图片信息不足，请补充更清晰的环境照片', 0, 0, 0, NULL);
+
+INSERT INTO post_tags (post_id, tag_id) VALUES
+(4, 5), (4, 1), (5, 6), (5, 1), (6, 1), (7, 4), (7, 7), (8, 7), (9, 3), (10, 6);
+
+INSERT INTO post_comments (id, post_id, user_id, content, status, created_at) VALUES
+(4, 4, 2, '短时间高频训练这个方法很有用，我家猫也适合。', 'NORMAL', '2026-03-20 11:00:00'),
+(5, 4, 3, '召回训练可以加上固定口令，效果会更稳定。', 'NORMAL', '2026-03-20 12:10:00'),
+(6, 4, 6, '布丁看起来状态很好，期待后续记录。', 'NORMAL', '2026-03-20 14:25:00'),
+(7, 5, 2, '救助猫适应期确实需要耐心，环境稳定很关键。', 'NORMAL', '2026-03-21 17:20:00'),
+(8, 5, 5, '小橘现在能主动互动很棒。', 'NORMAL', '2026-03-21 18:05:00'),
+(9, 5, 7, '想请教救助后驱虫频率怎么安排？', 'NORMAL', '2026-03-21 19:40:00'),
+(10, 5, 3, '可以把回访照片也整理成帖子，方便新手参考。', 'NORMAL', '2026-03-21 21:10:00'),
+(11, 7, 5, '我一般按 25%、50%、75% 的比例逐步过渡。', 'NORMAL', '2026-03-22 10:00:00'),
+(12, 7, 6, '软便时建议先停在当前比例观察两天。', 'NORMAL', '2026-03-22 11:10:00'),
+(13, 8, 2, '如果有破皮或持续舔咬，建议尽快去医院看一下。', 'NORMAL', '2026-03-22 21:00:00'),
+(14, 8, 5, '可以先检查是否有异物或烫伤痕迹。', 'NORMAL', '2026-03-22 21:30:00'),
+(15, 9, 3, '还要确认夜间是否有人值守。', 'NORMAL', '2026-03-23 13:05:00');
+
+INSERT INTO post_likes (post_id, user_id) VALUES
+(4, 2), (4, 3), (4, 6), (5, 2), (5, 3), (5, 5), (5, 7), (7, 3), (7, 5), (8, 2), (9, 2), (9, 6);
+
+INSERT INTO post_favorites (post_id, user_id) VALUES
+(4, 2), (4, 6), (5, 2), (5, 5), (5, 7), (7, 3), (7, 5), (8, 5), (9, 2), (9, 6);
+
+INSERT INTO adoption_pets (id, name, type, breed, gender, age_desc, city, health_status, personality, adoption_requirements, story, status, cover_url) VALUES
+(3, '花卷', 'CAT', '狸花猫', 'MALE', '8个月', '上海', '已绝育，疫苗齐全', '警惕但亲人', '需要有养猫经验，接受定期回访', '在园区被救助，适合安静家庭。', 'ONLINE', 'https://example.com/adoption-pet-3.jpg'),
+(4, '栗子', 'DOG', '泰迪', 'FEMALE', '2岁', '杭州', '体检正常，已驱虫', '活泼黏人', '需要每天遛狗，家人共同认可领养', '原主人因工作变动委托平台重新寻找家庭。', 'ONLINE', 'https://example.com/adoption-pet-4.jpg'),
+(5, '奶盖', 'CAT', '布偶混血', 'FEMALE', '1岁半', '苏州', '轻微软便恢复中', '温顺安静', '需接受后续肠胃调理建议', '救助后恢复中，适合耐心照顾。', 'OFFLINE', 'https://example.com/adoption-pet-5.jpg'),
+(6, '奥利奥', 'DOG', '边牧', 'MALE', '3岁', '上海', '疫苗齐全', '聪明，需要运动量', '需要有训犬经验和稳定户外活动时间', '前家庭无法满足运动需求，现寻找更合适环境。', 'ONLINE', 'https://example.com/adoption-pet-6.jpg');
+
+INSERT INTO adoption_applications (pet_id, user_id, experience_desc, living_condition_desc, contact_phone, status, review_remark, reviewed_by, reviewed_at, created_at) VALUES
+(3, 5, '有多年养狗经验，也照顾过朋友的猫。', '自有住房，家人支持，已准备隔离房间。', '13800000004', 'PENDING', NULL, NULL, NULL, '2026-03-21 10:00:00'),
+(4, 2, '目前有两只猫，第一次申请领养狗狗。', '家庭空间足够，但需要进一步确认遛狗安排。', '13800000001', 'REJECTED', '申请人与宠物需求匹配度不足，建议补充遛狗安排后再申请。', 1, '2026-03-22 14:00:00', '2026-03-21 13:40:00'),
+(6, 3, '熟悉边牧训练，有固定户外运动时间。', '近郊住房，附近有宠物友好公园。', '13800000002', 'PENDING', NULL, NULL, NULL, '2026-03-23 18:30:00');
+
+INSERT INTO service_categories (id, name, sort, status) VALUES
+(4, '训练', 4, 'ACTIVE'),
+(5, '上门护理', 5, 'ACTIVE');
+
+INSERT INTO merchants (id, name, district, address, phone, business_hours, score, status) VALUES
+(3, '爪爪训练营', '闵行区', '七莘路 299 号', '021-55550003', '09:30-19:30', 4.6, 'ACTIVE'),
+(4, '暖窝寄养中心', '长宁区', '虹桥路 520 号', '021-55550004', '08:00-21:00', 4.9, 'ACTIVE'),
+(5, '萌宠上门护理', '浦东新区', '张江路 88 号', '021-55550005', '10:00-18:00', 4.5, 'DISABLED');
+
+INSERT INTO merchant_services (id, merchant_id, category_id, name, price, duration_minutes, status) VALUES
+(4, 3, 4, '幼犬基础训练', 199.00, 60, 'ACTIVE'),
+(5, 3, 4, '行为纠正咨询', 299.00, 90, 'ACTIVE'),
+(6, 4, 2, '单犬豪华寄养', 220.00, 1440, 'ACTIVE'),
+(7, 4, 3, '入驻前健康检查', 99.00, 30, 'ACTIVE'),
+(8, 5, 5, '上门剪指甲', 79.00, 30, 'DISABLED');
+
+INSERT INTO service_bookings (user_id, merchant_id, merchant_service_id, booking_time, contact_name, contact_phone, status, remark, created_at) VALUES
+(5, 3, 4, '2026-03-24 15:00:00', '周先生', '13800000004', 'PENDING', '柯基召回训练咨询', '2026-03-21 09:00:00'),
+(6, 4, 6, '2026-03-25 09:30:00', '赵女士', '13800000005', 'CONFIRMED', '需要单独隔间', '2026-03-21 11:30:00'),
+(7, 1, 1, '2026-03-26 13:00:00', '孙女士', '13800000006', 'CANCELLED', '用户临时取消', '2026-03-20 16:20:00'),
+(2, 3, 5, '2026-03-27 10:00:00', '李女士', '13800000001', 'COMPLETED', '行为咨询已完成', '2026-03-18 12:00:00');
+
+INSERT INTO merchant_reviews (merchant_id, user_id, score, content, created_at) VALUES
+(3, 5, 5, '训练师会先观察狗狗状态，再给出家庭训练计划。', '2026-03-22 18:00:00'),
+(4, 6, 5, '寄养环境干净，照片反馈很及时。', '2026-03-23 20:00:00'),
+(1, 7, 4, '第一次洗护整体顺利，等待区也比较舒适。', '2026-03-24 14:20:00');
+
+INSERT INTO product_categories (id, name, pet_type, sort, status) VALUES
+(4, '玩具', 'ALL', 4, 'ACTIVE'),
+(5, '出行', 'DOG', 5, 'ACTIVE'),
+(6, '健康护理', 'ALL', 6, 'ACTIVE');
+
+INSERT INTO products (id, category_id, name, subtitle, image_url, price, stock, pet_type, status, description) VALUES
+(4, 4, '耐咬橡胶球', '适合中小型犬互动训练', 'https://example.com/product-4.jpg', 39.00, 150, 'DOG', 'ON_SALE', '弹性材质，适合日常互动和召回训练。'),
+(5, 4, '逗猫羽毛棒', '低敏羽毛替换头', 'https://example.com/product-5.jpg', 29.00, 200, 'CAT', 'ON_SALE', '提升猫咪运动量，建议在看护下使用。'),
+(6, 5, '宠物外出胸背', '反光织带，夜间更醒目', 'https://example.com/product-6.jpg', 89.00, 90, 'DOG', 'ON_SALE', '适合日常散步和短途出行。'),
+(7, 6, '宠物益生菌', '肠胃调理日常补充', 'https://example.com/product-7.jpg', 99.00, 70, 'ALL', 'ON_SALE', '换粮期和软便恢复期可按说明补充。'),
+(8, 3, '猫砂除臭喷雾', '温和气味控制', 'https://example.com/product-8.jpg', 45.00, 0, 'CAT', 'OFF_SHELF', '用于后台上下架和库存联调。');
+
+INSERT INTO cart_items (user_id, product_id, quantity, checked) VALUES
+(3, 4, 1, 1),
+(3, 7, 2, 1),
+(5, 4, 2, 1),
+(5, 6, 1, 0),
+(6, 5, 3, 1),
+(7, 7, 1, 1);
+
+INSERT INTO shop_orders (id, user_id, order_no, total_amount, pay_amount, status, receiver_name, receiver_phone, receiver_address, remark, created_at) VALUES
+(2, 2, 'PSP20260320101000DEMO002', 258.00, 258.00, 'PENDING', '李女士', '13800000001', '上海市浦东新区示例路 188 号', '请放门卫', '2026-03-20 10:10:00'),
+(3, 3, 'PSP20260321150000DEMO003', 237.00, 237.00, 'PAID', '陈先生', '13800000002', '上海市徐汇区示例路 66 号', '周末配送', '2026-03-21 15:00:00'),
+(4, 5, 'PSP20260322183000DEMO004', 167.00, 167.00, 'CANCELLED', '周先生', '13800000004', '上海市闵行区示例路 299 号', '用户取消', '2026-03-22 18:30:00');
+
+INSERT INTO shop_order_items (order_id, product_id, product_name, product_image_url, unit_price, quantity, subtotal_amount) VALUES
+(2, 1, '幼猫无谷主粮', 'https://example.com/product-1.jpg', 159.00, 1, 159.00),
+(2, 7, '宠物益生菌', 'https://example.com/product-7.jpg', 99.00, 1, 99.00),
+(3, 4, '耐咬橡胶球', 'https://example.com/product-4.jpg', 39.00, 1, 39.00),
+(3, 7, '宠物益生菌', 'https://example.com/product-7.jpg', 99.00, 2, 198.00),
+(4, 6, '宠物外出胸背', 'https://example.com/product-6.jpg', 89.00, 1, 89.00),
+(4, 5, '逗猫羽毛棒', 'https://example.com/product-5.jpg', 29.00, 1, 29.00),
+(4, 2, '冻干鸡肉粒', 'https://example.com/product-2.jpg', 49.00, 1, 49.00);
+
+INSERT INTO banners (id, title, image_url, link_url, status, sort, created_by) VALUES
+(3, '训练营体验课', 'https://example.com/banner-3.jpg', '/services/merchant/3', 'ACTIVE', 3, 1),
+(4, '肠胃护理专区', 'https://example.com/banner-4.jpg', '/shop', 'DISABLED', 4, 1);
+
+INSERT INTO recommendations (biz_type, biz_id, slot_code, status, sort, created_by) VALUES
+('post', 5, 'HOME_POST', 'ACTIVE', 3, 1),
+('post', 7, 'HOME_POST', 'ACTIVE', 4, 1),
+('service', 3, 'HOME_SERVICE', 'ACTIVE', 3, 1),
+('service', 4, 'HOME_SERVICE', 'ACTIVE', 4, 1),
+('product', 4, 'HOME_PRODUCT', 'ACTIVE', 3, 1),
+('product', 7, 'HOME_PRODUCT', 'ACTIVE', 4, 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -129,10 +129,9 @@
                 <img :src="pet.avatar || defaultPetAvatar" :alt="pet.name" class="pet-avatar" />
                 <div class="pet-info">
                   <h4 class="pet-name">{{ pet.name }}</h4>
-                  <p class="pet-desc">{{ pet.breed }} · {{ pet.age }}岁 · {{ pet.gender }}</p>
+                  <p class="pet-desc">{{ pet.breed || pet.type }} · {{ pet.ageText }} · {{ pet.genderText }}</p>
                   <div class="pet-tags">
-                    <span class="tag tag-vaccine">已疫苗</span>
-                    <span class="tag tag-health">健康</span>
+                    <span class="tag tag-health">档案</span>
                   </div>
                 </div>
               </article>
@@ -170,8 +169,7 @@
                 <h3 class="section-title-sm">成长时间轴</h3>
                 <div class="timeline-controls">
                   <select class="timeline-select">
-                    <option>曲奇</option>
-                    <option>糯米</option>
+                    <option v-for="pet in pets" :key="pet.id">{{ pet.name }}</option>
                   </select>
                   <button class="icon-btn-sm">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -180,14 +178,14 @@
                   </button>
                 </div>
               </div>
-              <div class="timeline-preview">
+              <div v-if="timelinePet" class="timeline-preview">
                 <div class="timeline-photo">
-                  <div class="photo-label">2023-05</div>
-                  <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=300&q=80" alt="Timeline Photo" />
+                  <div class="photo-label">{{ timelinePet.birthdayLabel }}</div>
+                  <img :src="timelinePet.avatar || defaultPetAvatar" :alt="timelinePet.name" />
                 </div>
                 <div class="timeline-text">
-                  <p class="timeline-title"><span class="pet-name-sm">曲奇 (Cookie)</span> - 第一次去草坪撒欢</p>
-                  <p class="timeline-desc">曲奇今天表现超级棒，跑累了就乖乖趴在身边，已经快40斤啦...</p>
+                  <p class="timeline-title"><span class="pet-name-sm">{{ timelinePet.name }}</span> - 宠物成长档案</p>
+                  <p class="timeline-desc">{{ timelinePet.description || '完善生日、体重和疫苗记录后，可以在这里查看更完整的成长时间线。' }}</p>
                   <div class="timeline-link">
                     <span>查看时间轴详情</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -208,7 +206,7 @@
                   </defs>
                   <path d="M 40 50 Q 120 10, 200 50 T 360 50" stroke="url(#sCurveGradient)" stroke-width="8" fill="none" stroke-linecap="round"/>
                 </svg>
-                <div class="milestones">
+                <div v-if="timelinePet" class="milestones">
                   <div class="milestone top">
                     <div class="milestone-icon">🐣</div>
                     <div class="milestone-label">出生</div>
@@ -219,7 +217,7 @@
                   </div>
                   <div class="milestone top">
                     <div class="milestone-icon accent">🎂</div>
-                    <div class="milestone-label accent">1岁</div>
+                    <div class="milestone-label accent">{{ timelinePet.ageText }}</div>
                   </div>
                   <div class="milestone bottom">
                     <div class="milestone-icon muted">🦴</div>
@@ -283,9 +281,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
+import { fetchMyPets } from "@/api/modules/pet";
+import { fetchOverview } from "@/api/modules/profile";
+import type { PetProfile } from "@/types/pet";
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -293,75 +294,50 @@ const auth = useAuthStore();
 const defaultAvatar = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80";
 const defaultPetAvatar = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=200&q=80";
 
+type DashboardPet = PetProfile & {
+  avatar?: string;
+  ageText: string;
+  genderText: string;
+  birthdayLabel: string;
+};
+
+type FavoritePost = {
+  id: number;
+  title: string;
+  cover_url?: string;
+  image?: string;
+  author?: {
+    nickname?: string;
+  };
+};
+
+type RecentActivity = {
+  text: string;
+  highlight: string;
+  time: string;
+  color: "primary" | "accent";
+};
+
 const userInfo = reactive({
-  nickname: auth.user?.nickname || "落日余晖下的铲屎官",
-  bio: "专注养宠3年 | 猫狗双全",
+  nickname: auth.user?.nickname || "未命名用户",
+  bio: "还没有填写个人简介",
   avatar: auth.user?.avatar_url || defaultAvatar
 });
 
 const stats = reactive({
-  dynamic_count: 12,
-  like_count: 256,
-  follow_count: 88,
-  pet_count: 3,
-  order_count: 5,
-  booking_count: 2
+  dynamic_count: 0,
+  like_count: 0,
+  follow_count: 0,
+  pet_count: 0,
+  order_count: 0,
+  booking_count: 0
 });
 
-const pets = reactive([
-  {
-    id: 1,
-    name: "曲奇 (Cookie)",
-    breed: "金毛",
-    age: 2,
-    gender: "男宝",
-    avatar: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    id: 2,
-    name: "糯米 (Mochi)",
-    breed: "布偶猫",
-    age: 1,
-    gender: "女宝",
-    avatar: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=200&q=80"
-  }
-]);
+const pets = ref<DashboardPet[]>([]);
+const timelinePet = computed(() => pets.value[0] || null);
 
-const favoritePosts = reactive([
-  {
-    id: 1,
-    title: "新手养猫必看！这些注意事项你都知道吗？",
-    cover_url: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=200&q=80",
-    author: { nickname: "喵星人" }
-  },
-  {
-    id: 2,
-    title: "自制狗狗零食，简单又健康！",
-    cover_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=200&q=80",
-    author: { nickname: "铲屎官小李" }
-  }
-]);
-
-const recentActivities = reactive([
-  {
-    text: "发布了帖子",
-    highlight: "《分享一下糯米刚回家的样子》",
-    time: "今天 10:24 · 社区",
-    color: "primary"
-  },
-  {
-    text: "完成了预约",
-    highlight: "萌宠洗护套餐 - 曲奇",
-    time: "昨日 15:40 · 宠物服务",
-    color: "accent"
-  },
-  {
-    text: "收藏了文章",
-    highlight: "《新手养猫必备清单》",
-    time: "2023-10-22 · 宠物知识",
-    color: "primary"
-  }
-]);
+const favoritePosts = ref<FavoritePost[]>([]);
+const recentActivities = ref<RecentActivity[]>([]);
 
 const orderTypes = reactive([
   {
@@ -403,6 +379,57 @@ const editAvatar = () => {
 const goToAddPet = () => {
   router.push("/profile/pets?action=add");
 };
+
+function getAgeText(birthday?: string) {
+  if (!birthday) return "年龄未知";
+  const birth = new Date(birthday);
+  if (Number.isNaN(birth.getTime())) return "年龄未知";
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  const hasHadBirthday =
+    now.getMonth() > birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
+  if (!hasHadBirthday) years -= 1;
+  return years > 0 ? `${years}岁` : "未满1岁";
+}
+
+function getGenderText(gender?: string) {
+  if (gender === "MALE" || gender === "公") return "男宝";
+  if (gender === "FEMALE" || gender === "母") return "女宝";
+  return "性别未知";
+}
+
+function getBirthdayLabel(birthday?: string) {
+  return birthday ? birthday.slice(0, 7) : "未记录";
+}
+
+function toDashboardPet(pet: PetProfile): DashboardPet {
+  return {
+    ...pet,
+    avatar: pet.avatar_url,
+    ageText: getAgeText(pet.birthday),
+    genderText: getGenderText(pet.gender),
+    birthdayLabel: getBirthdayLabel(pet.birthday)
+  };
+}
+
+async function loadProfile() {
+  const [overview, petList] = await Promise.all([fetchOverview(), fetchMyPets()]);
+  userInfo.nickname = overview.user.nickname || auth.user?.nickname || "未命名用户";
+  userInfo.bio = overview.user.bio || "还没有填写个人简介";
+  userInfo.avatar = overview.user.avatar_url || defaultAvatar;
+  stats.dynamic_count = overview.post_count;
+  stats.like_count = overview.favorite_count;
+  stats.follow_count = overview.unread_message_count;
+  stats.pet_count = overview.pet_count;
+  stats.order_count = overview.order_count;
+  stats.booking_count = overview.booking_count;
+  pets.value = petList.map(toDashboardPet);
+}
+
+onMounted(() => {
+  void loadProfile();
+});
 </script>
 
 <style scoped lang="scss">

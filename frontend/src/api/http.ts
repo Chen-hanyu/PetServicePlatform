@@ -15,7 +15,9 @@ const adminHttp = axios.create({
 const attachAuth = (client: typeof webHttp) => {
   client.interceptors.request.use((config) => {
     const store = useAuthStore();
-    if (store.token) {
+    const path = `${config.baseURL || ""}${config.url || ""}`;
+    const isAuthEntry = /\/api\/v1(\/admin)?\/auth\/(login|register|verify-code)$/.test(path);
+    if (store.token && !isAuthEntry) {
       config.headers.Authorization = `Bearer ${store.token}`;
     }
     return config;

@@ -165,7 +165,7 @@ import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchMerchantDetail } from "@/api/modules/services";
-import { getMockMerchantById, getMockPackagesByMerchantId, mockServiceAddons } from "@/mocks/services";
+import { toErrorMessage } from "@/api/http";
 import { useServiceBookingStore } from "@/store/serviceBooking";
 import type { ServiceBookingAddon, ServiceBookingMain } from "@/store/serviceBooking";
 
@@ -183,6 +183,8 @@ const booking = useServiceBookingStore();
 const loading = ref(true);
 const error = ref("");
 const merchant = ref<MerchantVm | null>(null);
+const serviceAddons: ServiceBookingAddon[] = [];
+const servicePackages: Array<{ id: string; merchantId: number; serviceIds: readonly number[]; name: string; price: number }> = [];
 
 const petOptions = ["小小黑 (金毛)", "二毛 (英短)", "憨憨 (柯基)"];
 const petLocal = ref(booking.petLabel);
@@ -235,7 +237,7 @@ const calendarCells = computed(() => {
 
 const addonGroups = computed(() => {
   const map = new Map<string, ServiceBookingAddon[]>();
-  for (const a of mockServiceAddons) {
+  for (const a of serviceAddons) {
     const g = a.group || "其他";
     if (!map.has(g)) map.set(g, []);
     map.get(g)!.push(a);
@@ -245,7 +247,7 @@ const addonGroups = computed(() => {
 
 const packages = computed(() => {
   if (!merchant.value) return [];
-  return getMockPackagesByMerchantId(merchant.value.id);
+  return servicePackages.filter((p) => p.merchantId === merchant.value.id);
 });
 
 function packageListSum(pkg: { serviceIds: readonly number[] }) {
@@ -288,19 +290,18 @@ function toggleMain(svc: MerchantVm["services"][0]) {
   booking.toggleMainService(toMain(svc));
 }
 
-function mergeMerchant(api: Record<string, unknown>, mock: MerchantVm | null): MerchantVm | null {
-  if (!api && !mock) return null;
-  const m = mock || ({} as MerchantVm);
-  const services = (api?.services as MerchantVm["services"]) || m.services || [];
+function mergeMerchant(api: Record<string, unknown>): MerchantVm | null {
+  if (!api) return null;
+  const services = (api?.services as MerchantVm["services"]) || [];
   return {
-    id: Number(api?.id ?? m.id),
-    name: String(api?.name ?? m.name),
-    cover_url: String((api as { cover_url?: string })?.cover_url ?? m.cover_url ?? ""),
+    id: Number(api?.id),
+    name: String(api?.name ?? ""),
+    cover_url: String((api as { cover_url?: string })?.cover_url ?? ""),
     services: services.map((s: { id: number; name: string; price: number; duration?: string }) => ({
       id: s.id,
       name: s.name,
       price: s.price,
-      duration: s.duration || m.services?.find((x) => x.id === s.id)?.duration || "—"
+      duration: s.duration || "—"
     }))
   };
 }
@@ -315,12 +316,12 @@ async function load() {
     return;
   }
 
-  const mock = getMockMerchantById(mid);
   try {
     const data = await fetchMerchantDetail(mid);
-    merchant.value = mergeMerchant(data as unknown as Record<string, unknown>, mock as MerchantVm | null);
-  } catch {
-    merchant.value = mock as MerchantVm | null;
+    merchant.value = mergeMerchant(data as unknown as Record<string, unknown>);
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    merchant.value = null;
   } finally {
     loading.value = false;
   }

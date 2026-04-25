@@ -144,7 +144,7 @@ import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchProduct } from "@/api/modules/shop";
-import { getMockProductById } from "@/mocks/shop";
+import { toErrorMessage } from "@/api/http";
 import type { ProductDetail } from "@/types/shop";
 import { useShopCartStore } from "@/store/shopCart";
 import { flyImageToCart } from "@/composables/useFlyToCart";
@@ -183,21 +183,18 @@ const descriptionParagraphs = computed(() => {
 
 const formatPrice = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
-function mergeDisplay(api: ProductDetail, mock: ReturnType<typeof getMockProductById>): DisplayProduct {
+function mergeDisplay(api: ProductDetail): DisplayProduct {
   const fromApiImgs = api.images?.filter(Boolean) ?? [];
-  const imgs = fromApiImgs.length > 0 ? fromApiImgs : api.image_url ? [api.image_url] : mock?.images?.length ? mock.images : [];
+  const imgs = fromApiImgs.length > 0 ? fromApiImgs : api.image_url ? [api.image_url] : [];
   return {
     id: api.id,
     name: api.name,
-    subtitle: api.subtitle || mock?.subtitle,
+    subtitle: api.subtitle,
     price: api.price,
-    original_price: mock?.original_price,
-    image_url: api.image_url || mock?.image_url,
-    images: imgs.length ? imgs : mock?.images || [],
+    image_url: api.image_url,
+    images: imgs,
     stock: api.stock,
-    sales: mock?.sales,
-    category: mock?.category,
-    description: api.description || mock?.description || api.subtitle
+    description: api.description || api.subtitle
   };
 }
 
@@ -215,30 +212,12 @@ async function load() {
     return;
   }
 
-  const mock = getMockProductById(id);
-
   try {
     const data = await fetchProduct(id);
-    product.value = mergeDisplay(data, mock);
-  } catch {
-    if (mock) {
-      product.value = {
-        id: mock.id,
-        name: mock.name,
-        subtitle: mock.subtitle,
-        price: mock.price,
-        original_price: mock.original_price,
-        image_url: mock.image_url,
-        images: mock.images,
-        stock: mock.stock,
-        sales: mock.sales,
-        category: mock.category,
-        description: mock.description
-      };
-    } else {
-      error.value = "";
-      product.value = null;
-    }
+    product.value = mergeDisplay(data);
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    product.value = null;
   } finally {
     loading.value = false;
   }

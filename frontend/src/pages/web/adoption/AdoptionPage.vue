@@ -220,7 +220,6 @@
 import { onMounted, reactive, ref, computed } from "vue";
 import DataState from "@/components/DataState.vue";
 import { createAdoptionApplication, fetchAdoptionPets } from "@/api/modules/adoption";
-import { mockAdoptionPets } from "@/mocks/adoption";
 import { toErrorMessage } from "@/api/http";
 import type { AdoptionPetDetail, AdoptionPetSummary } from "@/types/adoption";
 
@@ -295,8 +294,8 @@ const loadPets = async () => {
     const data = await fetchAdoptionPets({ page: 1, page_size: 20 });
     pets.value = data.list || [];
   } catch (e) {
-    console.warn("Failed to fetch pets, using mock data", e);
-    pets.value = mockAdoptionPets as any;
+    error.value = toErrorMessage(e);
+    pets.value = [];
   } finally {
     loading.value = false;
   }

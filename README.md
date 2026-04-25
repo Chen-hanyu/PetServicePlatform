@@ -1,3 +1,6 @@
+[![Backend Coverage](https://codecov.io/gh/Chen-hanyu/PetServicePlatform/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/Chen-hanyu/PetServicePlatform)
+[![Frontend Coverage](https://codecov.io/gh/Chen-hanyu/PetServicePlatform/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/Chen-hanyu/PetServicePlatform)
+
 # 宠物综合服务平台项目说明
 
 本仓库用于项目主题为宠物综合服务平台，采用“用户 Web 前台 + 管理员后台 + Spring Boot 后端”三端协同架构。
@@ -20,7 +23,7 @@
 | 时间 | 产出类型 | 具体产出 |
 |---|---|---|
 | 2026-03-10 | 文档基线 | 建立后端文档基线，完成 `docs/backend.md`、`docs/api.md` 初版整理。 |
-| 2026-03-19 | 架构与数据库文档 | 完成 `docs/architecture.md`、`docs/database.md`、`docs/sql-schema.md`、`docs/technology-selection.md`，明确后端架构、数据模型与技术选型。 |
+| 2026-03-19 | 架构与数据库文档 | 完成 `docs/architecture.md`、`docs/database.md`、`docs/technology-selection.md`，并落地 `backend/src/main/resources/sql/schema.sql` 与 `seed.sql`，明确后端架构、数据模型与技术选型。 |
 | 2026-03-19 | 后端工程搭建 | 初始化 Spring Boot 后端，完成 `application.yml` 配置，搭建分层目录：`controller`、`admin/controller`、`service`、`mapper`、`entity`、`dto`、`config`、`security`、`common`。 |
 | 2026-03-19 ~ 2026-03-21 | 数据库落地 | 创建并对齐数据库脚本：`backend/src/main/resources/sql/schema.sql`、`seed.sql`，覆盖用户、社区、领养、服务预约、商城、消息、运营配置等核心表。 |
 | 2026-03-21 | 业务实现 | 完成用户端与管理端核心接口实现：认证、首页、搜索、社区、领养、宠物档案、服务预约、商城、消息中心、后台管理。 |

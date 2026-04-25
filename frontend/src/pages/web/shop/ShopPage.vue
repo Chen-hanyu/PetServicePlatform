@@ -227,8 +227,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import DataState from "@/components/DataState.vue";
-import { fetchProducts } from "@/api/modules/shop";
-import { mockProducts } from "@/mocks/shop";
+import { fetchProducts, fetchShopCategories } from "@/api/modules/shop";
+import { toErrorMessage } from "@/api/http";
 
 const loading = ref(false);
 const error = ref("");
@@ -376,8 +376,9 @@ const loadProducts = async () => {
   try {
     const data = await fetchProducts({ page: 1, page_size: 20 });
     products.value = data.list || [];
-  } catch {
-    products.value = mockProducts;
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    products.value = [];
   } finally {
     loading.value = false;
   }
@@ -396,6 +397,12 @@ onMounted(async () => {
     { id: 4, name: "用品" },
     { id: 5, name: "保健" }
   ];
+  try {
+    categories.value = await fetchShopCategories();
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    categories.value = [];
+  }
   await loadProducts();
   slideTimer = window.setInterval(() => {
     slideIndex.value = (slideIndex.value + 1) % heroSlides.length;
