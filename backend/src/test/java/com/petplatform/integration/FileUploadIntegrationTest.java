@@ -57,8 +57,10 @@ class FileUploadIntegrationTest extends IntegrationTestSupport {
         String url = (String) data.get("url");
 
         assertThat(url).startsWith("/uploads/");
-        String[] pathSegments = url.substring("/uploads/".length()).split("/");
-        Path savedFile = Path.of("target", "test-uploads", pathSegments);
+        Path savedFile = Path.of("target", "test-uploads");
+        for (String segment : url.substring("/uploads/".length()).split("/")) {
+            savedFile = savedFile.resolve(segment);
+        }
         assertThat(savedFile).exists();
     }
 
