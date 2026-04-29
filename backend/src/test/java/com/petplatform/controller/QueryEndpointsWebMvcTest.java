@@ -157,7 +157,10 @@ class QueryEndpointsWebMvcTest {
     @DisplayName("我的订单列表接口应返回分页结果")
     void ordersShouldReturnPageResult() throws Exception {
         when(shopService.getOrderPage("PENDING", 1, 10)).thenReturn(new PageResponse<>(
-                List.of(new OrderSummaryResponse(1L, "PSP20260320000001AAAA1111", new BigDecimal("99.80"), new BigDecimal("99.80"), "PENDING", LocalDateTime.of(2026, 3, 20, 10, 0))),
+                List.of(new OrderSummaryResponse(
+                        1L, "PSP20260320000001AAAA1111",
+                        new BigDecimal("99.80"), new BigDecimal("99.80"),
+                        "PENDING", LocalDateTime.of(2026, 3, 20, 10, 0))),
                 1, 1, 10
         ));
 

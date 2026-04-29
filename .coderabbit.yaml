@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "zh-CN"
+early_access: false
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  review_details: false
+  poem: false
+  path_filters:
+    - "backend/**"
+    - ".github/**"
+    - "docs/contributions/09-cicd/**"
+    - "README.md"
+    - "!frontend/**"
+    - "!mock-server/**"
+    - "!resource/**"
+  path_instructions:
+    - path: "backend/**"
+      instructions: >
+        Review as a Java 17 Spring Boot 3 backend. Check controller-service-mapper
+        layering, API prefixes, unified {code,message,data} responses, security
+        separation between user and admin APIs, MyBatis-Plus usage, H2-compatible
+        tests, and JaCoCo/Checkstyle CI compatibility.
+    - path: ".github/**"
+      instructions: >
+        Review GitHub Actions and Dependabot changes for reproducible CI,
+        least-complex configuration, correct backend Maven commands, and reliable
+        coverage upload paths.
+  auto_review:
+    enabled: true
+    drafts: false
+
+chat:
+  auto_reply: true

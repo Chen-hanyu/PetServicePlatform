@@ -25,11 +25,11 @@ jobs:
           java-version: "17"
           cache: maven
 
-      - name: Run backend tests
+      - name: Run backend lint and tests
         working-directory: backend
         run: |
           chmod +x mvnw
-          ./mvnw test
+          ./mvnw -B checkstyle:check test
 
       - name: Upload backend coverage
         uses: codecov/codecov-action@v4
