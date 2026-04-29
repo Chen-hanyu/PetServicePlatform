@@ -40,28 +40,40 @@ public class SearchService {
             communityPostMapper.selectList(null).stream()
                     .filter(post -> "APPROVED".equals(post.getStatus()))
                     .filter(post -> contains(post.getTitle(), normalizedKeyword) || contains(post.getContent(), normalizedKeyword))
-                    .map(post -> new SearchResultResponse("community", post.getId(), post.getTitle(), excerpt(post.getContent()), post.getCoverUrl(), post.getStatus()))
+                    .map(post -> new SearchResultResponse(
+                            "community", post.getId(), post.getTitle(),
+                            excerpt(post.getContent()), post.getCoverUrl(), post.getStatus()))
                     .forEach(all::add);
         }
         if (module == null || module.isBlank() || "adoption".equalsIgnoreCase(module)) {
             adoptionPetMapper.selectList(null).stream()
                     .filter(pet -> "ONLINE".equals(pet.getStatus()))
-                    .filter(pet -> contains(pet.getName(), normalizedKeyword) || contains(pet.getStory(), normalizedKeyword) || contains(pet.getCity(), normalizedKeyword))
+                    .filter(pet -> contains(pet.getName(), normalizedKeyword)
+                            || contains(pet.getStory(), normalizedKeyword)
+                            || contains(pet.getCity(), normalizedKeyword))
                     .map(pet -> new SearchResultResponse("adoption", pet.getId(), pet.getName(), pet.getAgeDesc(), pet.getCoverUrl(), pet.getStatus()))
                     .forEach(all::add);
         }
         if (module == null || module.isBlank() || "services".equalsIgnoreCase(module)) {
             merchantMapper.selectList(null).stream()
                     .filter(merchant -> "ACTIVE".equals(merchant.getStatus()))
-                    .filter(merchant -> contains(merchant.getName(), normalizedKeyword) || contains(merchant.getDistrict(), normalizedKeyword) || contains(merchant.getAddress(), normalizedKeyword))
-                    .map(merchant -> new SearchResultResponse("services", merchant.getId(), merchant.getName(), merchant.getDistrict(), null, merchant.getStatus()))
+                    .filter(merchant -> contains(merchant.getName(), normalizedKeyword)
+                            || contains(merchant.getDistrict(), normalizedKeyword)
+                            || contains(merchant.getAddress(), normalizedKeyword))
+                    .map(merchant -> new SearchResultResponse(
+                            "services", merchant.getId(), merchant.getName(),
+                            merchant.getDistrict(), null, merchant.getStatus()))
                     .forEach(all::add);
         }
         if (module == null || module.isBlank() || "shop".equalsIgnoreCase(module)) {
             productMapper.selectList(null).stream()
                     .filter(product -> "ON_SALE".equals(product.getStatus()))
-                    .filter(product -> contains(product.getName(), normalizedKeyword) || contains(product.getSubtitle(), normalizedKeyword) || contains(product.getDescription(), normalizedKeyword))
-                    .map(product -> new SearchResultResponse("shop", product.getId(), product.getName(), product.getSubtitle(), product.getImageUrl(), product.getStatus()))
+                    .filter(product -> contains(product.getName(), normalizedKeyword)
+                            || contains(product.getSubtitle(), normalizedKeyword)
+                            || contains(product.getDescription(), normalizedKeyword))
+                    .map(product -> new SearchResultResponse(
+                            "shop", product.getId(), product.getName(),
+                            product.getSubtitle(), product.getImageUrl(), product.getStatus()))
                     .forEach(all::add);
         }
 
