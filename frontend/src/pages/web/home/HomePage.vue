@@ -155,7 +155,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import DataState from "@/components/DataState.vue";
 import { fetchHomeData } from "@/api/modules/home";
 import type { HomeBanner, HomeQuickEntry, HomeTip } from "@/types/home";
 import { toErrorMessage } from "@/api/http";
@@ -164,6 +163,7 @@ const router = useRouter();
 const loading = ref(false);
 const error = ref("");
 const entries = ref<HomeQuickEntry[]>([]);
+const banners = ref<HomeBanner[]>([]);
 const tips = ref<HomeTip[]>([]);
 const recommendedPosts = ref<any[]>([]);
 const recommendedServices = ref<any[]>([]);

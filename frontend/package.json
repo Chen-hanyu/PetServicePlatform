@@ -8,7 +8,8 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
-    "test": "vitest",
+    "lint": "eslint src --ext .vue,.js,.jsx,.ts,.tsx --max-warnings 0",
+    "test": "vitest --run",
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
@@ -20,15 +21,20 @@
   "devDependencies": {
     "@testing-library/user-event": "^14.6.1",
     "@testing-library/vue": "^8.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vitest/coverage-v8": "^4.1.5",
     "@vitest/ui": "^4.1.5",
     "@vue/test-utils": "^2.4.9",
+    "eslint": "^8.57.1",
+    "eslint-plugin-vue": "^9.33.0",
     "happy-dom": "^20.9.0",
     "sass": "^1.85.1",
     "typescript": "^5.8.2",
     "vite": "^6.2.0",
     "vitest": "^4.1.5",
+    "vue-eslint-parser": "^10.4.0",
     "vue-tsc": "^2.2.8"
   }
 }
