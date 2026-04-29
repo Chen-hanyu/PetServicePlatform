@@ -1,3 +1,4 @@
+[![CI](https://github.com/Chen-hanyu/PetServicePlatform/actions/workflows/ci.yml/badge.svg)](https://github.com/Chen-hanyu/PetServicePlatform/actions)
 [![Backend Coverage](https://codecov.io/gh/Chen-hanyu/PetServicePlatform/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/Chen-hanyu/PetServicePlatform)
 [![Frontend Coverage](https://codecov.io/gh/Chen-hanyu/PetServicePlatform/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/Chen-hanyu/PetServicePlatform)
 
