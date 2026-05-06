@@ -44,7 +44,11 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .headers(headers -> headers
                         .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
-                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'"))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+                                + "img-src 'self' data:; font-src 'self'; connect-src 'self'; "
+                                + "frame-ancestors 'none'"
+                        ))
                         .frameOptions(frame -> frame.sameOrigin())
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
