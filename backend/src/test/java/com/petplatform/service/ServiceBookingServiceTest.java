@@ -1,5 +1,27 @@
 package com.petplatform.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.petplatform.common.ResultCode;
 import com.petplatform.common.exception.BusinessException;
@@ -22,28 +44,6 @@ import com.petplatform.mapper.ServiceBookingMapper;
 import com.petplatform.mapper.ServiceCategoryMapper;
 import com.petplatform.mapper.UserMapper;
 import com.petplatform.security.CurrentUser;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBookingServiceTest {
@@ -120,6 +120,56 @@ class ServiceBookingServiceTest {
     }
 
     @Test
+    @DisplayName("按分类筛选但无匹配商家时应返回空分页")
+    void shouldReturnEmptyMerchantPageWhenCategoryHasNoMerchants() {
+        ServiceCategory category = new ServiceCategory();
+        category.setId(1L);
+        category.setName("洗护");
+        category.setStatus("ACTIVE");
+        when(serviceCategoryMapper.selectOne(any())).thenReturn(category);
+        when(merchantServiceMapper.selectList(any())).thenReturn(List.of());
+
+        assertThat(serviceBookingService.getMerchantPage("洗护", null, null, 1, 10).list()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("按区域筛选商家应返回对应区域结果")
+    void shouldFilterMerchantPageByDistrict() {
+        Page<Merchant> merchantPage = new Page<>(1, 10);
+        merchantPage.setRecords(List.of(activeMerchant(1L)));
+        merchantPage.setTotal(1);
+        when(merchantMapper.selectPage(any(), any())).thenReturn(merchantPage);
+
+        assertThat(serviceBookingService.getMerchantPage(null, "Pudong", null, 1, 10).list())
+                .extracting("name")
+                .containsExactly("安心宠护");
+    }
+
+    @Test
+    @DisplayName("获取不存在的商家详情时应抛出异常")
+    void shouldThrowWhenMerchantNotFound() {
+        when(merchantMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> serviceBookingService.getMerchantDetail(999L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
+    }
+
+    @Test
+    @DisplayName("获取已下架商家详情时应抛出异常")
+    void shouldThrowWhenMerchantInactive() {
+        Merchant merchant = activeMerchant(1L);
+        merchant.setStatus("INACTIVE");
+        when(merchantMapper.selectById(1L)).thenReturn(merchant);
+
+        assertThatThrownBy(() -> serviceBookingService.getMerchantDetail(1L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
+    }
+
+    @Test
     @DisplayName("预约成功时应写入预约并返回待确认状态")
     void shouldCreateBookingSuccessfully() {
         mockCurrentUser(10L);
@@ -144,6 +194,39 @@ class ServiceBookingServiceTest {
 
         assertThat(response.id()).isEqualTo(22L);
         assertThat(response.status()).isEqualTo("PENDING");
+    }
+
+    @Test
+    @DisplayName("创建预约时商家不存在应抛出异常")
+    void shouldRejectBookingWhenMerchantNotFound() {
+        mockCurrentUser(10L);
+        when(merchantMapper.selectById(999L)).thenReturn(null);
+
+        CreateServiceBookingRequest request = new CreateServiceBookingRequest(
+                999L, 2L, LocalDateTime.of(2026, 3, 20, 10, 0), "张三", "13800000000", "洗护预约"
+        );
+
+        assertThatThrownBy(() -> serviceBookingService.createBooking(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
+    }
+
+    @Test
+    @DisplayName("创建预约时服务项目不存在应抛出异常")
+    void shouldRejectBookingWhenServiceNotFound() {
+        mockCurrentUser(10L);
+        when(merchantMapper.selectById(1L)).thenReturn(activeMerchant(1L));
+        when(merchantServiceMapper.selectById(999L)).thenReturn(null);
+
+        CreateServiceBookingRequest request = new CreateServiceBookingRequest(
+                1L, 999L, LocalDateTime.of(2026, 3, 20, 10, 0), "张三", "13800000000", "洗护预约"
+        );
+
+        assertThatThrownBy(() -> serviceBookingService.createBooking(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
     }
 
     @Test
@@ -178,6 +261,30 @@ class ServiceBookingServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
                         .isEqualTo(ResultCode.INVALID_OPERATION.getCode()));
+    }
+
+    @Test
+    @DisplayName("取消预约时预约不存在应抛出异常")
+    void shouldRejectCancelWhenBookingNotFound() {
+        mockCurrentUser(10L);
+        when(serviceBookingMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> serviceBookingService.cancelBooking(999L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
+    }
+
+    @Test
+    @DisplayName("取消不属于当前用户的预约应抛出异常")
+    void shouldRejectCancelWhenBookingNotOwnedByUser() {
+        mockCurrentUser(10L);
+        when(serviceBookingMapper.selectById(30L)).thenReturn(booking(30L, 20L, "PENDING"));
+
+        assertThatThrownBy(() -> serviceBookingService.cancelBooking(30L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
     }
 
     @Test
@@ -218,6 +325,22 @@ class ServiceBookingServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
                         .isEqualTo(ResultCode.INVALID_OPERATION.getCode()));
+    }
+
+    @Test
+    @DisplayName("已评价过的商家再次提交评价应返回重复提交错误")
+    void shouldRejectReviewWhenAlreadyReviewed() {
+        mockCurrentUser(10L);
+        when(merchantMapper.selectById(1L)).thenReturn(activeMerchant(1L));
+        when(serviceBookingMapper.selectCount(any())).thenReturn(1L);
+        when(merchantReviewMapper.selectCount(any())).thenReturn(1L);
+
+        CreateMerchantReviewRequest request = new CreateMerchantReviewRequest(5, "服务很好");
+
+        assertThatThrownBy(() -> serviceBookingService.createReview(1L, request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.DUPLICATE_DATA.getCode()));
     }
 
     @Test
