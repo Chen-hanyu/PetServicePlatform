@@ -1,5 +1,26 @@
 package com.petplatform.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.petplatform.common.ResultCode;
 import com.petplatform.common.exception.BusinessException;
@@ -25,27 +46,6 @@ import com.petplatform.mapper.PostTagMapper;
 import com.petplatform.mapper.TagMapper;
 import com.petplatform.mapper.UserMapper;
 import com.petplatform.security.CurrentUser;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommunityServiceTest {
@@ -114,6 +114,19 @@ class CommunityServiceTest {
     }
 
     @Test
+    @DisplayName("按标签筛选但无匹配帖子时应返回空分页")
+    void shouldReturnEmptyPostPageWhenTagHasNoPosts() {
+        Tag tag = new Tag();
+        tag.setId(1L);
+        tag.setName("care");
+        tag.setStatus("ACTIVE");
+        when(tagMapper.selectOne(any())).thenReturn(tag);
+        when(postTagMapper.selectList(any())).thenReturn(List.of());
+
+        assertThat(communityService.getPostPage(null, null, "care", 1, 10).list()).isEmpty();
+    }
+
+    @Test
     @DisplayName("帖子详情应返回点赞收藏状态和图片")
     void shouldReturnPostDetailWithInteractionFlags() {
         mockCurrentUser(20L);
@@ -136,6 +149,17 @@ class CommunityServiceTest {
         assertThat(response.tags()).containsExactly("care");
         assertThat(response.isLiked()).isTrue();
         assertThat(response.isFavorited()).isTrue();
+    }
+
+    @Test
+    @DisplayName("获取不存在的帖子详情时应抛出异常")
+    void shouldThrowWhenPostNotFound() {
+        when(communityPostMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> communityService.getPostDetail(999L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
     }
 
     @Test
@@ -211,6 +235,17 @@ class CommunityServiceTest {
     }
 
     @Test
+    @DisplayName("获取不存在帖子的评论列表时应抛出异常")
+    void shouldThrowWhenGetCommentPageForNonExistentPost() {
+        when(communityPostMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> communityService.getCommentPage(999L, 1, 10))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
+    }
+
+    @Test
     @DisplayName("发表评论后应新增评论并更新帖子评论数")
     void shouldCreateCommentAndIncreaseCommentCount() {
         mockCurrentUser(20L);
@@ -233,6 +268,18 @@ class CommunityServiceTest {
         assertThat(response.id()).isEqualTo(88L);
         assertThat(post.getCommentCount()).isEqualTo(3);
         verify(communityPostMapper).updateById(post);
+    }
+
+    @Test
+    @DisplayName("对不存在帖子发表评论时应抛出异常")
+    void shouldThrowWhenCreateCommentForNonExistentPost() {
+        mockCurrentUser(20L);
+        when(communityPostMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> communityService.createComment(999L, new CreateCommentRequest("nice")))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
     }
 
     @Test
@@ -275,6 +322,18 @@ class CommunityServiceTest {
     }
 
     @Test
+    @DisplayName("对不存在帖子点赞时应抛出异常")
+    void shouldThrowWhenToggleLikeForNonExistentPost() {
+        mockCurrentUser(20L);
+        when(communityPostMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> communityService.toggleLike(999L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
+    }
+
+    @Test
     @DisplayName("收藏和取消收藏应更新收藏数")
     void shouldToggleFavorite() {
         mockCurrentUser(20L);
@@ -297,6 +356,18 @@ class CommunityServiceTest {
         verify(postFavoriteMapper).deleteById(44L);
         assertThat(removed.favorited()).isFalse();
         assertThat(removed.favoriteCount()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("对不存在帖子收藏时应抛出异常")
+    void shouldThrowWhenToggleFavoriteForNonExistentPost() {
+        mockCurrentUser(20L);
+        when(communityPostMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> communityService.toggleFavorite(999L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
     }
 
     @Test
@@ -324,6 +395,18 @@ class CommunityServiceTest {
     }
 
     @Test
+    @DisplayName("无收藏时应返回空分页")
+    void shouldReturnEmptyFavoritePostsWhenNoFavorites() {
+        mockCurrentUser(20L);
+        Page<PostFavorite> page = new Page<>(1, 10);
+        page.setRecords(List.of());
+        page.setTotal(0);
+        when(postFavoriteMapper.selectPage(any(), any())).thenReturn(page);
+
+        assertThat(communityService.getFavoritePosts(1, 10).list()).isEmpty();
+    }
+
+    @Test
     @DisplayName("移除收藏时应删除记录并扣减帖子收藏数")
     void shouldRemoveFavoriteAndDecreaseCount() {
         mockCurrentUser(20L);
@@ -336,6 +419,18 @@ class CommunityServiceTest {
         verify(postFavoriteMapper).delete(any());
         assertThat(post.getFavoriteCount()).isZero();
         verify(communityPostMapper).updateById(post);
+    }
+
+    @Test
+    @DisplayName("移除收藏时帖子不存在应抛出异常")
+    void shouldThrowWhenRemoveFavoriteForNonExistentPost() {
+        mockCurrentUser(20L);
+        when(communityPostMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> communityService.removeFavorite(999L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> assertThat(((BusinessException) exception).getCode())
+                        .isEqualTo(ResultCode.RESOURCE_NOT_FOUND.getCode()));
     }
 
     private void mockCurrentUser(Long userId) {
