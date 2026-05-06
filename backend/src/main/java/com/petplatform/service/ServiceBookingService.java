@@ -101,10 +101,19 @@ public class ServiceBookingService {
             if (serviceCategory == null) {
                 return new PageResponse<>(List.of(), 0, page, pageSize);
             }
-            queryWrapper.inSql(
-                    Merchant::getId,
-                    "select merchant_id from merchant_services where category_id = " + serviceCategory.getId() + " and status = 'ACTIVE'"
-            );
+            // 先查询符合条件的商家 ID 列表，避免字符串拼接 SQL
+            List<MerchantService> matchedServices = merchantServiceMapper.selectList(
+                    new LambdaQueryWrapper<MerchantService>()
+                            .eq(MerchantService::getCategoryId, serviceCategory.getId())
+                            .eq(MerchantService::getStatus, "ACTIVE"));
+            List<Long> merchantIds = matchedServices.stream()
+                    .map(MerchantService::getMerchantId)
+                    .distinct()
+                    .toList();
+            if (merchantIds.isEmpty()) {
+                return new PageResponse<>(List.of(), 0, page, pageSize);
+            }
+            queryWrapper.in(Merchant::getId, merchantIds);
         }
 
         if ("score_desc".equalsIgnoreCase(sort) || "distance_asc".equalsIgnoreCase(sort)) {

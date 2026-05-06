@@ -98,7 +98,18 @@ public class CommunityService {
             if (targetTag == null) {
                 return new PageResponse<>(List.of(), 0, page, pageSize);
             }
-            queryWrapper.inSql(CommunityPost::getId, "select post_id from post_tags where tag_id = " + targetTag.getId());
+            // 先查询符合条件的帖子 ID 列表，避免字符串拼接 SQL
+            List<PostTag> postTags = postTagMapper.selectList(
+                    new LambdaQueryWrapper<PostTag>()
+                            .eq(PostTag::getTagId, targetTag.getId()));
+            List<Long> postIds = postTags.stream()
+                    .map(PostTag::getPostId)
+                    .distinct()
+                    .toList();
+            if (postIds.isEmpty()) {
+                return new PageResponse<>(List.of(), 0, page, pageSize);
+            }
+            queryWrapper.in(CommunityPost::getId, postIds);
         }
 
         IPage<CommunityPost> postPage = communityPostMapper.selectPage(pager, queryWrapper);

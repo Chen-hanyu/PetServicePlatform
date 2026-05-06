@@ -25,13 +25,13 @@ springdoc:
     path: /swagger-ui.html
 
 jwt:
-  secret: ${JWT_SECRET:replace-with-a-secure-secret-key-1234567890}
+  secret: ${JWT_SECRET}
   expiration-seconds: ${JWT_EXPIRATION_SECONDS:7200}
 
 verify-code:
   expiration-seconds: ${VERIFY_CODE_EXPIRATION_SECONDS:300}
-  allow-default-code: ${VERIFY_CODE_ALLOW_DEFAULT_CODE:true}
-  default-code: ${VERIFY_CODE_DEFAULT_CODE:123456}
+  allow-default-code: ${VERIFY_CODE_ALLOW_DEFAULT_CODE:false}
+  default-code: ${VERIFY_CODE_DEFAULT_CODE:}
 
 file:
   storage:
