@@ -22,7 +22,7 @@
 
 ## PR 链接
 
-- 待 PR 创建后补充
+- https://github.com/Chen-hanyu/PetServicePlatform/pull/33
 
 ## CI 运行链接
 
