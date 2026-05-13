@@ -35,6 +35,11 @@ coverage/
 # Env files
 .env
 .env.*
+# 但允许 .env.example 被跟踪
+!.env.example
+
+# Docker secrets (local copies, not committed)
+secrets/
 
 # Temporary files
 *.tmp
