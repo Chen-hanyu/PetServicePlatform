@@ -18,7 +18,7 @@
       </button>
     </div>
 
-    <DataState :loading="loading" :empty="filteredBookings.length === 0" empty-text="暂无相关预约">
+    <DataState :loading="loading" :error="error" :empty="filteredBookings.length === 0" empty-text="暂无相关预约">
       <div class="bookings-list">
         <article v-for="booking in filteredBookings" :key="booking.id" class="booking-card card">
           <div class="booking-type-icon" :class="booking.type">
@@ -117,8 +117,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import DataState from "@/components/DataState.vue";
+import { fetchMyBookings, cancelMyBooking } from "@/api/modules/services";
+import { toErrorMessage } from "@/api/http";
 
 const loading = ref(false);
+const error = ref("");
 const filterStatus = ref("all");
 const detailBooking = ref<any>(null);
 
@@ -147,56 +150,36 @@ const getTypeIcon = (type: string) => {
   return map[type] || "🐾";
 };
 
-const loadBookings = () => {
-  bookings.value = [
-    {
-      id: 1,
-      type: "美容",
-      service_name: "精致洗护套餐",
-      merchant_name: "爪爪宠物美容",
-      booking_time: "2026-04-02 14:00",
-      address: "朝阳区望京街道宠物广场B座102",
-      price: 188,
-      status: "pending",
-      status_text: "待确认",
-      contact_phone: "138****8888",
-      remark: "猫咪胆小，请轻声操作"
-    },
-    {
-      id: 2,
-      type: "医疗",
-      service_name: "年度体检 + 疫苗注射",
-      merchant_name: "萌友宠物医院",
-      booking_time: "2026-04-05 10:00",
-      address: "海淀区中关村大街18号",
-      price: 350,
-      status: "confirmed",
-      status_text: "已确认",
-      contact_phone: "139****6666"
-    },
-    {
-      id: 3,
-      type: "洗澡",
-      service_name: "深层清洁spa",
-      merchant_name: "毛孩子SPA馆",
-      booking_time: "2026-03-28 15:00",
-      address: "东城区东直门外大街88号",
-      price: 98,
-      status: "completed",
-      status_text: "已完成",
-      contact_phone: "137****2222",
-      remark: "金毛，中长发质"
-    }
-  ];
+/** 从后端加载预约列表 */
+const loadBookings = async () => {
+  loading.value = true;
+  error.value = "";
+  try {
+    const params: Record<string, string | number | undefined> = { page: 1, page_size: 50 };
+    if (filterStatus.value !== "all") params.status = filterStatus.value;
+    const res = await fetchMyBookings(params);
+    bookings.value = res.list || [];
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    bookings.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
 
 const openBookingDetail = (booking: any) => {
   detailBooking.value = booking;
 };
 
-const cancelBooking = (id: number) => {
+/** 取消预约 */
+const cancelBooking = async (id: number) => {
   if (confirm("确定要取消该预约吗？")) {
-    bookings.value = bookings.value.map(b => b.id === id ? { ...b, status: "cancelled", status_text: "已取消" } : b);
+    try {
+      await cancelMyBooking(id);
+      await loadBookings();
+    } catch (e) {
+      error.value = toErrorMessage(e);
+    }
   }
 };
 

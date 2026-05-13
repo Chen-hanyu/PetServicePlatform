@@ -286,7 +286,9 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { fetchMyPets } from "@/api/modules/pet";
 import { fetchOverview } from "@/api/modules/profile";
+import { fetchMyFavorites } from "@/api/modules/community";
 import type { PetProfile } from "@/types/pet";
+import type { PostSummary } from "@/types/community";
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -414,7 +416,11 @@ function toDashboardPet(pet: PetProfile): DashboardPet {
 }
 
 async function loadProfile() {
-  const [overview, petList] = await Promise.all([fetchOverview(), fetchMyPets()]);
+  const [overview, petList, favResult] = await Promise.all([
+    fetchOverview(),
+    fetchMyPets(),
+    fetchMyFavorites({ page: 1, page_size: 4 }).catch(() => ({ list: [] }))
+  ]);
   userInfo.nickname = overview.user.nickname || auth.user?.nickname || "未命名用户";
   userInfo.bio = overview.user.bio || "还没有填写个人简介";
   userInfo.avatar = overview.user.avatar_url || defaultAvatar;
@@ -425,6 +431,53 @@ async function loadProfile() {
   stats.order_count = overview.order_count;
   stats.booking_count = overview.booking_count;
   pets.value = petList.map(toDashboardPet);
+
+  // 加载收藏列表（卡片展示前4条）
+  favoritePosts.value = (favResult.list || []).map((item: PostSummary) => ({
+    id: item.id,
+    title: item.title,
+    cover_url: item.cover_url,
+    image: item.cover_url,
+    author: item.author ? { nickname: item.author.nickname } : undefined
+  }));
+
+  // 生成最近动态（基于用户数据）
+  const now = new Date();
+  const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const activities: RecentActivity[] = [];
+  if (overview.post_count > 0) {
+    activities.push({
+      text: "发布了",
+      highlight: `${overview.post_count} 条新动态`,
+      time: "今天 " + timeStr,
+      color: "primary"
+    });
+  }
+  if (overview.favorite_count > 0) {
+    activities.push({
+      text: "收藏了",
+      highlight: `${overview.favorite_count} 篇内容`,
+      time: "今天 " + timeStr,
+      color: "accent"
+    });
+  }
+  if (overview.pet_count > 0) {
+    activities.push({
+      text: "记录了",
+      highlight: `${overview.pet_count} 只宠物`,
+      time: "今天 " + timeStr,
+      color: "primary"
+    });
+  }
+  if (activities.length === 0) {
+    activities.push({
+      text: "还没有动态，快去",
+      highlight: "探索社区",
+      time: "现在",
+      color: "primary"
+    });
+  }
+  recentActivities.value = activities;
 }
 
 onMounted(() => {

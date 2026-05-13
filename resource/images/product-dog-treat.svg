@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" rx="20" fill="#E3F2FD"/>
+  <g transform="translate(200,160)">
+    <ellipse cx="-25" cy="-10" rx="20" ry="12" fill="#A1887F" transform="rotate(-30 -25 -10)"/>
+    <ellipse cx="25" cy="-10" rx="20" ry="12" fill="#A1887F" transform="rotate(30 25 -10)"/>
+    <rect x="-25" y="-12" width="50" height="24" rx="8" fill="#A1887F"/>
+    <ellipse cx="-25" cy="10" rx="20" ry="12" fill="#A1887F" transform="rotate(30 -25 10)"/>
+    <ellipse cx="25" cy="10" rx="20" ry="12" fill="#A1887F" transform="rotate(-30 25 10)"/>
+    <ellipse cx="0" cy="0" rx="15" ry="10" fill="#D7CCC8"/>
+</g>
+  <rect x="100" y="320" width="200" height="40" rx="20" fill="#42A5F5"/>
+  <text x="200" y="346" text-anchor="middle" fill="white" font-size="16" font-weight="bold">冻干零食</text>
+</svg>

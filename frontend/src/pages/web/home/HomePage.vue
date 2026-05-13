@@ -49,14 +49,14 @@
         >
           <RouterLink :to="`/community/post/${post.id}`" class="post-link">
             <div class="post-image">
-              <img :src="post.cover" :alt="post.title" />
+              <img :src="post.cover_url" :alt="post.title" />
             </div>
             <div class="post-content">
               <h3>{{ post.title }}</h3>
               <div class="post-meta">
                 <div class="author">
-                  <img :src="post.author.avatar" alt="Avatar" />
-                  <span>{{ post.author.name }}</span>
+                  <img :src="post.author?.avatar_url" alt="Avatar" />
+                  <span>{{ post.author?.nickname }}</span>
                 </div>
                 <div class="post-stats">
                   <span
@@ -67,7 +67,7 @@
                     <svg viewBox="0 0 24 24" :fill="post.isLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
                       <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
                     </svg>
-                    {{ post.likes }}
+                    {{ post.like_count }}
                   </span>
                   <span
                     class="stat-btn"
@@ -76,7 +76,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
                     </svg>
-                    {{ post.comments }}
+                    {{ post.comment_count }}
                   </span>
                 </div>
               </div>
@@ -103,18 +103,16 @@
           class="service-card"
         >
           <div class="service-image">
-            <img :src="service.image" :alt="service.name" />
+            <img :src="service.cover_url || '/static/images/merchant-grooming.svg'" :alt="service.name" />
             <div class="service-rating">
-              <span class="star">⭐</span> {{ service.rating }}
+              <span class="star">⭐</span> {{ service.score || service.rating }}
             </div>
           </div>
           <div class="service-info">
             <h3>{{ service.name }}</h3>
-            <p class="service-location">📍 {{ service.location }}</p>
-            <div class="service-tags">
-              <span v-for="tag in service.tags" :key="tag" class="tag">{{ tag }}</span>
-            </div>
+            <p class="service-location">📍 {{ service.district || service.location }}</p>
           </div>
+
         </RouterLink>
       </div>
     </section>
@@ -136,14 +134,12 @@
           class="product-card"
         >
           <div class="product-image">
-            <img :src="product.image" :alt="product.name" />
-            <div v-if="product.badge" class="product-badge">{{ product.badge }}</div>
+            <img :src="product.image_url" :alt="product.name" />
           </div>
           <div class="product-info">
             <h3>{{ product.name }}</h3>
             <div class="product-bottom">
               <span class="price">¥{{ product.price }}</span>
-              <span class="sales">销量 {{ product.sales }}+</span>
             </div>
           </div>
         </RouterLink>
