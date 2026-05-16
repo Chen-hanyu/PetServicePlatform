@@ -1,0 +1,87 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pet-platform-frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  backend:
+    build:
+      context: ./backend
+    container_name: pet-platform-backend
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pet_service_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/db_password
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      FILE_STORAGE_LOCAL_PATH: /app/uploads/
+      FILE_STORAGE_ACCESS_PATH: /uploads/
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - backend-uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    secrets:
+      - db_password
+      - jwt_secret
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  mysql:
+    image: mysql:8.4
+    container_name: pet-platform-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: pet_service_platform
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_password
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/src/main/resources/sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p$(cat /run/secrets/db_password)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    secrets:
+      - db_password
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+volumes:
+  mysql-data:
+  backend-uploads:
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt

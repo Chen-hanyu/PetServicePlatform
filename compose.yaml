@@ -1,0 +1,58 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: builder
+    container_name: pet-platform-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    command: npm run dev
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    container_name: pet-platform-backend-dev
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pet_service_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456
+      JWT_SECRET: replace-with-a-secure-secret-key-1234567890
+      FILE_STORAGE_LOCAL_PATH: /app/uploads/
+      FILE_STORAGE_ACCESS_PATH: /uploads/
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - backend-uploads:/app/uploads
+
+  mysql:
+    image: mysql:8.4
+    container_name: pet-platform-mysql-dev
+    environment:
+      MYSQL_DATABASE: pet_service_platform
+      MYSQL_ROOT_PASSWORD: 123456
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/src/main/resources/sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-data:
+  backend-uploads:
