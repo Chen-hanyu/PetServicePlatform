@@ -1,6 +1,6 @@
 # 云服务部署贡献说明
 
-姓名：屈天顺
+姓名：qutianshun
 学号：2323040522
 日期：2026-05-27
 
@@ -34,11 +34,9 @@
 - 问题：前端构建时 `npm run build` 包含 TypeScript 类型检查，可能因后端 API 类型未就绪而失败
   解决方案：确保 `vercel.json` 中的构建命令使用 `vite build` 而非 `npm run build`（跳过 tsc 检查），或确保类型定义完整
 
-## PR 链接
-- PR #X: https://github.com/Chen-hanyu/PetServicePlatform/pull/X（请提交后替换为实际 PR 号）
 
 ## 在线地址
-https://pet-service-platform.vercel.app（请替换为实际部署后的地址）
+
 
 ## 心得体会
 通过本次云服务部署作业，我学会了：
