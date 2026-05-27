@@ -17,7 +17,8 @@ const menus = [
   { name: "内容审核", path: "/admin/content" },
   { name: "领养管理", path: "/admin/adoption" },
   { name: "服务管理", path: "/admin/services" },
-  { name: "商城管理", path: "/admin/shop" }
+  { name: "商城管理", path: "/admin/shop" },
+  { name: "监控面板", path: "/admin/monitoring" }
 ];
 </script>
 

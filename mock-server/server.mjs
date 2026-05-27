@@ -116,6 +116,15 @@ async function handle(req, res) {
   const path = u.pathname;
   const query = u.searchParams;
 
+  if (req.method === "GET" && path === "/api/v1/health") {
+    ok(res, {
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      version: "1.0.0-mock"
+    });
+    return;
+  }
+
   if (req.method === "GET" && path === "/api/v1/home") {
     ok(res, homeData);
     return;
