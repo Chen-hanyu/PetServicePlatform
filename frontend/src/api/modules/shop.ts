@@ -34,3 +34,9 @@ export const createOrder = async (payload: CreateOrderPayload) => {
   const { data } = await webHttp.post<ApiResponse<Record<string, unknown>>>("/shop/orders", payload);
   return unwrap(data);
 };
+
+/** 获取我的订单列表 */
+export const fetchOrders = async (params: Record<string, string | number | undefined>) => {
+  const { data } = await webHttp.get<ApiResponse<PageResult<any>>>("/shop/orders", { params });
+  return unwrap(data);
+};

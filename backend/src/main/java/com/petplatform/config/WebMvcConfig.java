@@ -25,6 +25,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         String accessPath = ensureEndsWithSlash(fileStorageProperties.getAccessPath());
         registry.addResourceHandler(accessPath + "**")
                 .addResourceLocations(localStoragePath.toUri().toString());
+
+        // Serve static placeholder images from resource/images/
+        registry.addResourceHandler("/static/images/**")
+                .addResourceLocations("file:./resource/images/");
     }
 
     @Override

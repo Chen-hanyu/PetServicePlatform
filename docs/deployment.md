@@ -7,6 +7,32 @@
 - **后端**：部署到 **Railway**（Docker 容器化部署）
 - **数据库**：由后端服务管理（如 Railway 内置数据库或外部 MySQL）
 
+## 部署架构
+
+```
+用户浏览器
+    │
+    ▼
+┌─────────────────────┐
+│   Vercel (前端)      │
+│   Vue 3 + Vite      │
+│   vercel.json 配置   │
+└─────────┬───────────┘
+          │ /api/* 代理
+          ▼
+┌─────────────────────┐
+│  Railway (后端)      │
+│  Spring Boot 3      │
+│  Docker 容器化       │
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  MySQL 数据库        │
+│  (Railway 或外部)    │
+└─────────────────────┘
+```
+
 ---
 
 ## 1. 前端部署（Vercel）
@@ -25,10 +51,10 @@
 3. 选择你的 GitHub 仓库（`PetServicePlatform`）
 4. 在配置页面中：
    - **Framework Preset**: 选择 `Vue.js`
-   - **Root Directory**: 保持默认（项目根目录）
-   - **Build Command**: `cd frontend && npm install && npm run build`
-   - **Output Directory**: `frontend/dist`
-   - **Install Command**: `cd frontend && npm install`
+   - **Root Directory**: `frontend`（通过 `vercel.json` 中的 `rootDirectory` 指定）
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+   - **Install Command**: `npm install`
 5. 点击 **"Environment Variables"** 添加环境变量（见下方）
 6. 点击 **"Deploy"** 开始部署
 
@@ -72,23 +98,72 @@ Vercel 默认会自动部署：
 
 ## 2. 后端部署（Railway）
 
-> 后端部署由后端开发同学负责，此处仅作简要说明。
+### 2.1 平台选择
 
-### 2.1 部署步骤
+- **平台**：Railway
+- **部署方式**：Docker（基于现有 backend/Dockerfile）
+- **数据库**：Railway 提供的 MySQL 插件 / 外部 MySQL 服务
+
+### 2.2 配置文件
+
+项目根目录下的 `railway.toml` 定义了 Railway 部署配置：
+
+```toml
+[build]
+  builder = "DOCKERFILE"
+  dockerfilePath = "backend/Dockerfile"
+  buildContext = "backend"
+
+[deploy]
+  healthcheckPath = "/health"
+  healthcheckTimeout = 30
+  restartPolicyType = "ON_FAILURE"
+  restartPolicyMaxRetries = 3
+  port = 8080
+```
+
+### 2.3 部署步骤
 
 1. 打开 [Railway Dashboard](https://railway.app/dashboard)
 2. 点击 **"New Project" → "Deploy from GitHub repo"**
-3. 选择仓库，Railway 会自动检测 `Dockerfile`
+3. 选择仓库，Railway 会自动检测 `railway.toml` 并使用 Dockerfile 构建
 4. 配置环境变量（见下方）
 5. 部署完成后获取分配的域名
 
-### 2.2 环境变量
+### 2.4 环境变量配置
 
-| 变量名 | 说明 |
-|--------|------|
-| `DATABASE_URL` | 数据库连接字符串 |
-| `JWT_SECRET` | JWT 签名密钥 |
-| `NODE_ENV` | `production` |
+在 Railway Dashboard 中配置以下环境变量：
+
+| 变量名 | 说明 | 示例值 |
+|--------|------|--------|
+| `SERVER_PORT` | 服务端口 | 8080 |
+| `SPRING_DATASOURCE_URL` | 数据库连接 URL | jdbc:mysql://host:3306/pet_service_platform |
+| `SPRING_DATASOURCE_USERNAME` | 数据库用户名 | root |
+| `SPRING_DATASOURCE_PASSWORD` | 数据库密码 | your-password |
+| `JWT_SECRET` | JWT 签名密钥 | your-jwt-secret |
+| `JWT_EXPIRATION_SECONDS` | JWT 过期时间（秒） | 7200 |
+| `FILE_STORAGE_TYPE` | 文件存储类型 | local |
+| `FILE_STORAGE_LOCAL_PATH` | 本地文件存储路径 | uploads/ |
+| `DEEPSEEK_API_KEY` | DeepSeek AI API 密钥（可选） | your-api-key |
+| `AI_BASE_URL` | AI API 基础 URL | https://api.deepseek.com |
+| `AI_MODEL` | AI 模型 | deepseek-chat |
+
+### 2.5 自动部署配置
+
+1. 在 Railway 中连接 GitHub 仓库
+2. 选择 PetServicePlatform 仓库
+3. 配置部署分支为 main
+4. Railway 会自动检测 railway.toml 并使用 Dockerfile 构建
+5. 每次推送到 main 分支时自动触发部署
+
+### 2.6 数据库配置
+
+推荐使用 Railway 提供的 MySQL 插件：
+
+1. 在 Railway Dashboard 中创建 MySQL 插件
+2. 获取数据库连接信息（主机、端口、用户名、密码）
+3. 在 Railway 中执行数据库初始化脚本：`backend/src/main/resources/sql/schema.sql` 和 `seed.sql`
+4. 将数据库连接信息配置为环境变量
 
 ---
 
@@ -117,35 +192,52 @@ Vercel 默认会自动部署：
 
 ---
 
-## 4. 部署架构图
+## 4. 本地部署
 
+### 4.1 后端
+
+```bash
+cd backend
+mvn clean install
+mvn spring-boot:run
 ```
-用户浏览器
-    │
-    ▼
-┌─────────────────────┐
-│   Vercel (前端)      │
-│   Vue 3 + Vite      │
-│   vercel.json 配置   │
-└─────────┬───────────┘
-          │ /api/* 代理
-          ▼
-┌─────────────────────┐
-│  Railway (后端)      │
-│  Spring Boot 3      │
-│  Docker 容器化       │
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│  MySQL 数据库        │
-│  (Railway 或外部)    │
-└─────────────────────┘
+
+### 4.2 前端
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 4.3 Docker 部署
+
+```bash
+# 开发环境
+docker compose up -d
+
+# 生产环境
+docker compose -f compose.prod.yaml up -d
 ```
 
 ---
 
-## 5. 常见问题
+## 5. 健康检查
+
+- 后端健康检查端点：`GET /health`
+- 返回示例：`{ "status": "UP", "service": "pet-service-platform", "timestamp": "..." }`
+
+---
+
+## 6. 在线地址
+
+- 后端 API：`https://your-app.railway.app`
+- 接口文档：`https://your-app.railway.app/swagger-ui.html`
+- 前端：`https://your-app.vercel.app`
+
+---
+
+## 7. 常见问题
 
 ### Q: 部署后页面白屏/404
 - 确认 `vercel.json` 中的 `rewrites` 配置正确，SPA 路由需要 fallback 到 `index.html`
@@ -160,9 +252,23 @@ Vercel 默认会自动部署：
 - 在 Vercel Dashboard 中重新添加环境变量并重新部署
 - 前端环境变量必须以 `VITE_` 开头才能在构建时被 Vite 识别
 
+### Q: 数据库初始化
+- 首次部署后需要手动执行 SQL 初始化脚本创建表结构和种子数据
+
+### Q: 文件存储
+- Railway 的临时文件系统不支持持久化，如需文件上传功能，建议配置 MinIO 或云存储服务
+
 ---
 
-## 6. 相关链接
+## 8. 注意事项
+
+1. **敏感信息**：数据库密码、JWT 密钥等务必通过平台 Dashboard 配置，不要硬编码在代码中
+2. **跨域配置**：前端 Vercel 域名需要添加到后端的允许跨域列表中
+3. **环境变量**：敏感信息务必通过 Railway Dashboard 配置，不要硬编码在代码中
+
+---
+
+## 9. 相关链接
 
 - [Vercel 文档](https://vercel.com/docs)
 - [Railway 文档](https://docs.railway.app/)

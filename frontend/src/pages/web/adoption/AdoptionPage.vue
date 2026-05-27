@@ -98,7 +98,7 @@
         
         <!-- Hero Image -->
         <div class="detail-hero">
-          <img :src="selectedPet.images?.[0] || selectedPet.cover_url" :alt="selectedPet.name" />
+          <img :src="selectedPet.cover_url" :alt="selectedPet.name" />
           <span class="image-count">1/5 张图片</span>
         </div>
 
@@ -206,13 +206,54 @@
 
           <!-- CTA -->
           <div class="detail-cta">
-            <button class="btn-primary-full" @click="submitApplication">申请领养</button>
+            <button class="btn-primary-full" @click="openApplicationForm">申请领养</button>
             <button class="btn-secondary-full">在线咨询</button>
             <p class="cta-tip">温馨提示：领养不收任何费用，请勿相信任何形式的线上转账要求</p>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 领养申请表弹窗 -->
+    <Teleport to="body">
+      <div v-if="showApplicationForm" class="modal-overlay" @click.self="showApplicationForm = false">
+        <div class="modal-content form-modal">
+          <button class="close-btn" @click="showApplicationForm = false">×</button>
+          <div class="detail-body">
+            <div class="detail-header">
+              <div class="detail-title">
+                <h2>领养申请表</h2>
+                <span class="status-badge">申请领养 {{ selectedPet?.name }}</span>
+              </div>
+            </div>
+
+            <p v-if="submitError" class="error-banner">{{ submitError }}</p>
+
+            <form @submit.prevent="doSubmitApplication" class="application-form">
+              <div class="form-group">
+                <label>联系电话</label>
+                <input v-model="applicationForm.contact_phone" type="tel" placeholder="请输入手机号" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label>养宠经验</label>
+                <textarea v-model="applicationForm.experience_desc" placeholder="请描述您是否有养宠经验，养过什么宠物" class="form-input form-textarea" rows="3" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>居住情况</label>
+                <textarea v-model="applicationForm.living_condition_desc" placeholder="请描述您的居住环境（如：自有住房/租房、有无阳台、家庭成员等）" class="form-input form-textarea" rows="3" required></textarea>
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn-cancel" @click="showApplicationForm = false">取消</button>
+                <button type="submit" class="btn-primary-full" :disabled="submitting">
+                  <span v-if="submitting" class="spinner" />
+                  {{ submitting ? '提交中…' : '提交申请' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </section>
 </template>
 
@@ -229,6 +270,16 @@ const pets = ref<(AdoptionPetSummary & { gender?: string, story?: string })[]>([
 const selectedPet = ref<AdoptionPetDetail | null>(null);
 const currentPage = ref(1);
 const pageSize = 6;
+
+// 领养申请表
+const showApplicationForm = ref(false);
+const applicationForm = reactive({
+  contact_phone: "",
+  experience_desc: "",
+  living_condition_desc: ""
+});
+const submitting = ref(false);
+const submitError = ref("");
 
 const filter = reactive({ type: "", age: "", gender: "" });
 
@@ -305,10 +356,34 @@ const selectPet = (pet: any) => {
   selectedPet.value = pet;
 };
 
-const submitApplication = async () => {
+const openApplicationForm = () => {
   if (!selectedPet.value) return;
-  alert(`申请已提交！我们会尽快联系您。`);
-  selectedPet.value = null;
+  submitError.value = "";
+  applicationForm.contact_phone = "";
+  applicationForm.experience_desc = "";
+  applicationForm.living_condition_desc = "";
+  showApplicationForm.value = true;
+};
+
+const doSubmitApplication = async () => {
+  if (!selectedPet.value) return;
+  submitting.value = true;
+  submitError.value = "";
+  try {
+    await createAdoptionApplication({
+      pet_id: selectedPet.value.id,
+      contact_phone: applicationForm.contact_phone,
+      experience_desc: applicationForm.experience_desc,
+      living_condition_desc: applicationForm.living_condition_desc
+    });
+    showApplicationForm.value = false;
+    selectedPet.value = null;
+    alert("申请已提交！我们会尽快联系您。");
+  } catch (e) {
+    submitError.value = toErrorMessage(e);
+  } finally {
+    submitting.value = false;
+  }
 };
 
 onMounted(loadPets);
@@ -970,6 +1045,105 @@ onMounted(loadPets);
   font-size: 12px;
   color: var(--muted);
   text-align: center;
+}
+
+// 申请表弹窗
+.form-modal {
+  max-width: 560px;
+}
+
+.application-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-heading);
+  }
+}
+
+.form-input {
+  padding: 12px 16px;
+  border: 1px solid var(--border-input);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 155, 122, 0.15);
+  }
+
+  &::placeholder {
+    color: var(--muted-soft);
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.btn-cancel {
+  padding: 12px 24px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border-warm);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--chip-active-bg);
+    color: var(--text-heading);
+  }
+}
+
+.error-banner {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(223, 122, 122, 0.12);
+  border: 1px solid rgba(223, 122, 122, 0.35);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {

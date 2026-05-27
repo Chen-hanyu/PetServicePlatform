@@ -82,6 +82,7 @@ function mergeMerchant(api: Record<string, unknown>): MerchantVm | null {
     cover_url?: string;
     description?: string;
     rating?: number;
+    score?: number;
   };
   return {
     id: Number(api?.id),
@@ -90,9 +91,9 @@ function mergeMerchant(api: Record<string, unknown>): MerchantVm | null {
     address: String(api?.address ?? ""),
     phone: String(api?.phone ?? ""),
     business_hours: String(api?.business_hours ?? ""),
-    status: String(api?.status ?? "营业中"),
-    rating: Number(a.rating ?? 0),
-    cover_url: String(a.cover_url ?? ""),
+    status: String(api?.status === "ACTIVE" ? "营业中" : (api?.status ?? "营业中")),
+    rating: Number(a.score ?? a.rating ?? 0),
+    cover_url: String(a.cover_url ?? "/static/images/merchant-grooming.svg"),
     description: String(a.description ?? ""),
     services: services.map((s: { id: number; name: string; price: number; duration?: string }) => ({
       id: s.id,

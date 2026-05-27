@@ -96,12 +96,7 @@ https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%
 
 ## 部署方式
 
-- 推荐保留两种部署口径：`本地部署` 与 `Docker 部署`
-- 前端与后端继续保持前后端分离，业务数据存储在 `MySQL`
-- 文件存储开发阶段使用本地目录即可，后续可按需扩展 `MinIO`
-- `Redis` 为可选增强组件，不作为当前阶段最小可运行依赖
-
-- 本地部署：
+### 本地部署
 - 前端：在 `frontend/` 目录执行 `npm install` 和 `npm run dev`
 - 后端：在 `backend/` 目录执行 `mvn clean install` 和 `mvn spring-boot:run`
 - 数据库：本地安装并启动 `MySQL`，按 `docs/database.md` 中的数据模型准备数据库
@@ -109,14 +104,20 @@ https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%
 - 后端接口地址：`http://127.0.0.1:8080`
 - 接口文档地址：`http://127.0.0.1:8080/swagger-ui.html`
 
-- Docker 部署：
+### Docker 部署
 - 根目录提供 `docker-compose.yml`，统一启动 `backend` 与 `mysql`
 - 后端通过 `backend/Dockerfile` 构建 Spring Boot 服务镜像
 - 数据库初始化通过挂载 SQL 脚本或启动后手动导入完成
 - 启动命令为 `docker-compose up -d`
 - 服务启动后通过 `docker-compose ps` 检查容器状态
 
+### 云平台部署
+- **后端**：部署在 Railway 平台，通过 `railway.toml` 配置 Docker 构建
+- **前端**：部署在 Vercel 平台
+- 详细部署说明见 [docs/deployment.md](docs/deployment.md)
+
 对于当前课程项目，建议优先保证本地部署和 Docker 部署都可运行，再考虑缓存和对象存储等增强能力。
+
 
 
 ## 分支策略

@@ -18,7 +18,7 @@
       </button>
     </div>
 
-    <DataState :loading="loading" :empty="filteredOrders.length === 0" empty-text="暂无相关订单">
+    <DataState :loading="loading" :error="error" :empty="filteredOrders.length === 0" empty-text="暂无相关订单">
       <div class="orders-list">
         <article v-for="order in filteredOrders" :key="order.id" class="order-card card">
           <div class="order-header">
@@ -114,8 +114,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import DataState from "@/components/DataState.vue";
+import { fetchOrders } from "@/api/modules/shop";
+import { toErrorMessage } from "@/api/http";
 
 const loading = ref(false);
+const error = ref("");
 const filterStatus = ref("all");
 const detailOrder = ref<any>(null);
 
@@ -133,46 +136,21 @@ const filteredOrders = computed(() => {
   return orders.value.filter(o => o.status === filterStatus.value);
 });
 
-const loadOrders = () => {
-  orders.value = [
-    {
-      id: 1,
-      order_no: "DD20260330001",
-      shop_name: "宠物零食专营店",
-      status: "completed",
-      status_text: "已完成",
-      total_amount: 299.00,
-      created_at: "2026-03-30 14:30",
-      items: [
-        { id: 1, name: "天然无谷猫粮 10kg", price: 299, quantity: 1, image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=100&q=80" }
-      ]
-    },
-    {
-      id: 2,
-      order_no: "DD20260328002",
-      shop_name: "萌宠玩具工坊",
-      status: "pending",
-      status_text: "待付款",
-      total_amount: 89.00,
-      created_at: "2026-03-28 09:15",
-      items: [
-        { id: 2, name: "猫咪逗猫棒 3件套", price: 49, quantity: 1, image: "https://images.unsplash.com/photo-1545249390-6bdfa2860f3c?auto=format&fit=crop&w=100&q=80" },
-        { id: 3, name: "宠物毛绒球", price: 40, quantity: 1, image: "https://images.unsplash.com/photo-1591946614720-90a587da4a36?auto=format&fit=crop&w=100&q=80" }
-      ]
-    },
-    {
-      id: 3,
-      order_no: "DD20260325003",
-      shop_name: "智能宠物用品",
-      status: "cancelled",
-      status_text: "已取消",
-      total_amount: 159.00,
-      created_at: "2026-03-25 16:45",
-      items: [
-        { id: 4, name: "智能喂食器 WiFi版", price: 159, quantity: 1, image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=100&q=80" }
-      ]
-    }
-  ];
+/** 从后端加载订单列表 */
+const loadOrders = async () => {
+  loading.value = true;
+  error.value = "";
+  try {
+    const params: Record<string, string | number | undefined> = { page: 1, page_size: 50 };
+    if (filterStatus.value !== "all") params.status = filterStatus.value;
+    const res = await fetchOrders(params);
+    orders.value = res.list || [];
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    orders.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
 
 const openOrderDetail = (order: any) => {

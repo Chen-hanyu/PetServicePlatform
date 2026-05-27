@@ -59,10 +59,10 @@ ALTER TABLE banners AUTO_INCREMENT = 1;
 ALTER TABLE recommendations AUTO_INCREMENT = 1;
 
 INSERT INTO users (id, role, phone, nickname, avatar_url, gender, status, bio) VALUES
-(1, 'ADMIN', '13900000000', '系统管理员', 'https://example.com/admin.jpg', 'UNKNOWN', 'ACTIVE', '负责平台内容与运营管理'),
-(2, 'USER', '13800000001', '团子妈', 'https://example.com/user1.jpg', 'FEMALE', 'ACTIVE', '两只猫的铲屎官'),
-(3, 'USER', '13800000002', '柴犬研究员', 'https://example.com/user2.jpg', 'MALE', 'ACTIVE', '热爱宠物护理和训练'),
-(4, 'USER', '13800000003', '猫咪观察员', 'https://example.com/user3.jpg', 'FEMALE', 'ACTIVE', '喜欢记录毛孩子的日常');
+(1, 'ADMIN', '13900000000', '系统管理员', '/static/images/avatar-admin.svg', 'UNKNOWN', 'ACTIVE', '负责平台内容与运营管理'),
+(2, 'USER', '13800000001', '团子妈', '/static/images/avatar-user1.svg', 'FEMALE', 'ACTIVE', '两只猫的铲屎官'),
+(3, 'USER', '13800000002', '柴犬研究员', '/static/images/avatar-user2.svg', 'MALE', 'ACTIVE', '热爱宠物护理和训练'),
+(4, 'USER', '13800000003', '猫咪观察员', '/static/images/avatar-user3.svg', 'FEMALE', 'ACTIVE', '喜欢记录毛孩子的日常');
 
 UPDATE users SET password_hash = '$2a$10$tlnMMJ2lktQPQ6wSxcD5o.AXnU.yP61/.rCjZwO3MhVWfW3NC2WwS' WHERE id = 1;
 UPDATE users SET password_hash = '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW' WHERE id IN (2, 3, 4);
@@ -74,9 +74,9 @@ INSERT INTO messages (user_id, type, title, content, is_read) VALUES
 (4, 'SYSTEM', '订单已发货', '你购买的冻干零食已发货，请留意物流动态。', 0);
 
 INSERT INTO pets (id, user_id, name, type, breed, gender, birthday, weight, avatar_url, description) VALUES
-(1, 2, '团子', 'CAT', '英短蓝猫', 'MALE', '2024-04-12', 4.20, 'https://example.com/pet-tuanzi.jpg', '性格稳定，喜欢晒太阳'),
-(2, 2, '糯米', 'CAT', '布偶猫', 'FEMALE', '2024-08-01', 3.50, 'https://example.com/pet-nuomi.jpg', '很黏人，喜欢被梳毛'),
-(3, 3, '阿柴', 'DOG', '柴犬', 'MALE', '2023-11-08', 8.60, 'https://example.com/pet-achai.jpg', '活泼好动，外出精力旺盛');
+(1, 2, '团子', 'CAT', '英短蓝猫', 'MALE', '2024-04-12', 4.20, '/static/images/pet-cat-tuanzi.svg', '性格稳定，喜欢晒太阳'),
+(2, 2, '糯米', 'CAT', '布偶猫', 'FEMALE', '2024-08-01', 3.50, '/static/images/pet-cat-nuomi.svg', '很黏人，喜欢被梳毛'),
+(3, 3, '阿柴', 'DOG', '柴犬', 'MALE', '2023-11-08', 8.60, '/static/images/pet-dog-achai.svg', '活泼好动，外出精力旺盛');
 
 INSERT INTO pet_vaccines (pet_id, vaccine_name, vaccinated_at, next_due_at, remark) VALUES
 (1, '猫三联', '2025-01-10', '2026-01-10', '基础免疫已完成'),
@@ -88,8 +88,8 @@ INSERT INTO pet_weights (pet_id, weight, recorded_at) VALUES
 (2, 3.50, '2026-03-15 20:30:00');
 
 INSERT INTO pet_albums (pet_id, image_url, caption) VALUES
-(1, 'https://example.com/pet-album-1.jpg', '第一次晒太阳'),
-(2, 'https://example.com/pet-album-2.jpg', '午睡时间');
+(1, '/static/images/pet-cat-tuanzi.svg', '第一次晒太阳'),
+(2, '/static/images/pet-cat-nuomi.svg', '午睡时间');
 
 INSERT INTO tags (id, name, type, status, sort) VALUES
 (1, '新手养宠', 'community', 'ACTIVE', 1),
@@ -97,9 +97,9 @@ INSERT INTO tags (id, name, type, status, sort) VALUES
 (3, '洗护', 'community', 'ACTIVE', 3);
 
 INSERT INTO community_posts (id, user_id, category, title, content, cover_url, status, review_remark, like_count, favorite_count, comment_count, published_at) VALUES
-(1, 2, 'knowledge', '幼猫疫苗时间表整理', '整理了幼猫常见疫苗接种节点和注意事项，适合第一次养猫的同学收藏。', 'https://example.com/post-cover-1.jpg', 'APPROVED', '内容符合社区规范', 12, 6, 2, '2026-03-18 10:00:00'),
-(2, 3, 'daily', '柴犬春季掉毛护理经验', '最近家里掉毛明显增多，我整理了自己这两周用过的梳毛和清洁办法。', 'https://example.com/post-cover-2.jpg', 'APPROVED', '内容符合社区规范', 8, 3, 1, '2026-03-19 09:30:00'),
-(3, 4, 'help', '第一次领养猫咪要准备什么', '准备去领养小猫，想先了解猫砂、猫粮、猫窝和疫苗这些基础事项。', 'https://example.com/post-cover-3.jpg', 'PENDING', NULL, 0, 0, 0, NULL);
+(1, 2, 'knowledge', '幼猫疫苗时间表整理', '整理了幼猫常见疫苗接种节点和注意事项，适合第一次养猫的同学收藏。', '/static/images/post-cover-vaccine.svg', 'APPROVED', '内容符合社区规范', 12, 6, 2, '2026-03-18 10:00:00'),
+(2, 3, 'daily', '柴犬春季掉毛护理经验', '最近家里掉毛明显增多，我整理了自己这两周用过的梳毛和清洁办法。', '/static/images/post-cover-shedding.svg', 'APPROVED', '内容符合社区规范', 8, 3, 1, '2026-03-19 09:30:00'),
+(3, 4, 'help', '第一次领养猫咪要准备什么', '准备去领养小猫，想先了解猫砂、猫粮、猫窝和疫苗这些基础事项。', '/static/images/post-cover-adopt.svg', 'PENDING', NULL, 0, 0, 0, NULL);
 
 INSERT INTO post_tags (post_id, tag_id) VALUES
 (1, 1), (1, 2), (2, 1), (2, 3), (3, 1);
@@ -116,8 +116,8 @@ INSERT INTO post_favorites (post_id, user_id) VALUES
 (1, 3), (1, 4), (2, 2);
 
 INSERT INTO adoption_pets (id, name, type, breed, gender, age_desc, city, health_status, personality, adoption_requirements, story, status, cover_url) VALUES
-(1, '奶糕', 'CAT', '中华田园猫', 'FEMALE', '4个月', '上海', '已完成基础体检和驱虫', '亲人活泼', '需稳定居住环境，有封窗条件', '在小区被救助后逐渐恢复健康，现在状态很好。', 'ONLINE', 'https://example.com/adoption-pet-1.jpg'),
-(2, '豆包', 'DOG', '柯基', 'MALE', '1岁', '上海', '疫苗齐全', '喜欢互动', '需有遛狗时间，接受回访', '原主人搬家无法继续照顾，正在寻找新家庭。', 'ONLINE', 'https://example.com/adoption-pet-2.jpg');
+(1, '奶糕', 'CAT', '中华田园猫', 'FEMALE', '4个月', '上海', '已完成基础体检和驱虫', '亲人活泼', '需稳定居住环境，有封窗条件', '在小区被救助后逐渐恢复健康，现在状态很好。', 'ONLINE', '/static/images/adoption-cat-naigao.svg'),
+(2, '豆包', 'DOG', '柯基', 'MALE', '1岁', '上海', '疫苗齐全', '喜欢互动', '需有遛狗时间，接受回访', '原主人搬家无法继续照顾，正在寻找新家庭。', 'ONLINE', '/static/images/adoption-dog-doubao.svg');
 
 INSERT INTO adoption_applications (pet_id, user_id, experience_desc, living_condition_desc, contact_phone, status, review_remark, reviewed_by, reviewed_at, created_at) VALUES
 (1, 2, '有两年养猫经验，熟悉喂药和日常护理。', '自有住房，已封窗，可长期照顾。', '13800000001', 'PENDING', NULL, NULL, NULL, '2026-03-19 20:00:00'),
@@ -151,9 +151,9 @@ INSERT INTO product_categories (id, name, pet_type, sort, status) VALUES
 (3, '清洁护理', 'ALL', 3, 'ACTIVE');
 
 INSERT INTO products (id, category_id, name, subtitle, image_url, price, stock, pet_type, status, description) VALUES
-(1, 1, '幼猫无谷主粮', '适合 2-12 月龄幼猫', 'https://example.com/product-1.jpg', 159.00, 80, 'CAT', 'ON_SALE', '高蛋白配方，适合幼猫成长阶段。'),
-(2, 2, '冻干鸡肉粒', '训练奖励小零食', 'https://example.com/product-2.jpg', 49.00, 120, 'DOG', 'ON_SALE', '单一肉源，适口性好。'),
-(3, 3, '宠物免洗泡沫', '日常清洁护理', 'https://example.com/product-3.jpg', 69.00, 60, 'ALL', 'ON_SALE', '适合外出后简单清洁使用。');
+(1, 1, '幼猫无谷主粮', '适合 2-12 月龄幼猫', '/static/images/product-cat-food.svg', 159.00, 80, 'CAT', 'ON_SALE', '高蛋白配方，适合幼猫成长阶段。'),
+(2, 2, '冻干鸡肉粒', '训练奖励小零食', '/static/images/product-dog-treat.svg', 49.00, 120, 'DOG', 'ON_SALE', '单一肉源，适口性好。'),
+(3, 3, '宠物免洗泡沫', '日常清洁护理', '/static/images/product-cleaner.svg', 69.00, 60, 'ALL', 'ON_SALE', '适合外出后简单清洁使用。');
 
 INSERT INTO cart_items (user_id, product_id, quantity, checked) VALUES
 (2, 1, 1, 1),
@@ -164,11 +164,11 @@ INSERT INTO shop_orders (id, user_id, order_no, total_amount, pay_amount, status
 (1, 4, 'PSP20260319153000DEMO001', 49.00, 49.00, 'SHIPPED', '王小姐', '13800000003', '上海市长宁区示例路 88 号', '工作日送达', '2026-03-19 15:30:00');
 
 INSERT INTO shop_order_items (order_id, product_id, product_name, product_image_url, unit_price, quantity, subtotal_amount) VALUES
-(1, 2, '冻干鸡肉粒', 'https://example.com/product-2.jpg', 49.00, 1, 49.00);
+(1, 2, '冻干鸡肉粒', '/static/images/product-dog-treat.svg', 49.00, 1, 49.00);
 
 INSERT INTO banners (id, title, image_url, link_url, status, sort, created_by) VALUES
-(1, '春季养宠指南', 'https://example.com/banner-1.jpg', '/community/posts/1', 'ACTIVE', 1, 1),
-(2, '领养代替购买', 'https://example.com/banner-2.jpg', '/adoption', 'ACTIVE', 2, 1);
+(1, '春季养宠指南', '/static/images/banner-spring.svg', '/community/posts/1', 'ACTIVE', 1, 1),
+(2, '领养代替购买', '/static/images/banner-adoption.svg', '/adoption', 'ACTIVE', 2, 1);
 
 INSERT INTO recommendations (biz_type, biz_id, slot_code, status, sort, created_by) VALUES
 ('post', 1, 'HOME_POST', 'ACTIVE', 1, 1),
@@ -180,10 +180,10 @@ INSERT INTO recommendations (biz_type, biz_id, slot_code, status, sort, created_
 
 -- Additional demo data for frontend/backend integration testing.
 INSERT INTO users (id, role, phone, password_hash, nickname, avatar_url, gender, status, bio) VALUES
-(5, 'USER', '13800000004', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '布丁爸爸', 'https://example.com/user4.jpg', 'MALE', 'ACTIVE', '关注狗狗训练和日常陪伴'),
-(6, 'USER', '13800000005', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '小橘饲养员', 'https://example.com/user5.jpg', 'FEMALE', 'ACTIVE', '记录流浪猫救助和领养回访'),
-(7, 'USER', '13800000006', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '豆豆家', 'https://example.com/user6.jpg', 'UNKNOWN', 'ACTIVE', '第一次养宠的新手家庭'),
-(8, 'USER', '13800000007', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '暂禁用户', 'https://example.com/user7.jpg', 'UNKNOWN', 'DISABLED', '用于后台账号状态联调');
+(5, 'USER', '13800000004', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '布丁爸爸', '/static/images/avatar-user4.svg', 'MALE', 'ACTIVE', '关注狗狗训练和日常陪伴'),
+(6, 'USER', '13800000005', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '小橘饲养员', '/static/images/avatar-user5.svg', 'FEMALE', 'ACTIVE', '记录流浪猫救助和领养回访'),
+(7, 'USER', '13800000006', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '豆豆家', '/static/images/avatar-user6.svg', 'UNKNOWN', 'ACTIVE', '第一次养宠的新手家庭'),
+(8, 'USER', '13800000007', '$2b$10$4b1fjzD6eRm7RfYBoPGxMeow/8Ay.9EH9gcet7MdU6at7Dqo16AzW', '暂禁用户', '/static/images/avatar-user6.svg', 'UNKNOWN', 'DISABLED', '用于后台账号状态联调');
 
 INSERT INTO messages (user_id, type, title, content, is_read) VALUES
 (2, 'ORDER', '订单已签收', '你的主粮订单已完成签收，欢迎评价本次购物体验。', 0),
@@ -192,10 +192,10 @@ INSERT INTO messages (user_id, type, title, content, is_read) VALUES
 (6, 'ADOPTION', '领养回访提醒', '请在本周内提交领养回访照片，帮助平台确认宠物适应情况。', 0);
 
 INSERT INTO pets (id, user_id, name, type, breed, gender, birthday, weight, avatar_url, description) VALUES
-(4, 5, '布丁', 'DOG', '柯基', 'MALE', '2023-06-18', 11.20, 'https://example.com/pet-buding.jpg', '精力旺盛，正在进行召回训练'),
-(5, 5, '可乐', 'DOG', '拉布拉多', 'FEMALE', '2022-09-02', 24.60, 'https://example.com/pet-kele.jpg', '温顺亲人，适合服务预约联调'),
-(6, 6, '小橘', 'CAT', '中华田园猫', 'MALE', '2024-01-15', 4.00, 'https://example.com/pet-xiaoju.jpg', '救助后恢复良好，已完成驱虫'),
-(7, 7, '豆豆', 'DOG', '比熊', 'FEMALE', '2025-02-05', 3.30, 'https://example.com/pet-doudou.jpg', '新手家庭宠物，适合档案新增测试');
+(4, 5, '布丁', 'DOG', '柯基', 'MALE', '2023-06-18', 11.20, '/static/images/pet-dog-buding.svg', '精力旺盛，正在进行召回训练'),
+(5, 5, '可乐', 'DOG', '拉布拉多', 'FEMALE', '2022-09-02', 24.60, '/static/images/pet-dog-kele.svg', '温顺亲人，适合服务预约联调'),
+(6, 6, '小橘', 'CAT', '中华田园猫', 'MALE', '2024-01-15', 4.00, '/static/images/pet-cat-xiaoju.svg', '救助后恢复良好，已完成驱虫'),
+(7, 7, '豆豆', 'DOG', '比熊', 'FEMALE', '2025-02-05', 3.30, '/static/images/pet-dog-doudou.svg', '新手家庭宠物，适合档案新增测试');
 
 INSERT INTO pet_vaccines (pet_id, vaccine_name, vaccinated_at, next_due_at, remark) VALUES
 (4, '狂犬疫苗', '2025-10-12', '2026-10-12', '年度加强针'),
@@ -213,10 +213,10 @@ INSERT INTO pet_weights (pet_id, weight, recorded_at) VALUES
 (7, 3.10, '2026-03-17 09:00:00');
 
 INSERT INTO pet_albums (pet_id, image_url, caption) VALUES
-(4, 'https://example.com/pet-album-3.jpg', '第一次完成坐下训练'),
-(5, 'https://example.com/pet-album-4.jpg', '洗护后蓬松的一天'),
-(6, 'https://example.com/pet-album-5.jpg', '救助后的第一个春天'),
-(7, 'https://example.com/pet-album-6.jpg', '新家适应记录');
+(4, '/static/images/pet-dog-buding.svg', '第一次完成坐下训练'),
+(5, '/static/images/pet-dog-kele.svg', '洗护后蓬松的一天'),
+(6, '/static/images/pet-cat-xiaoju.svg', '救助后的第一个春天'),
+(7, '/static/images/pet-dog-doudou.svg', '新家适应记录');
 
 INSERT INTO tags (id, name, type, status, sort) VALUES
 (4, '饮食', 'community', 'ACTIVE', 4),
@@ -225,13 +225,13 @@ INSERT INTO tags (id, name, type, status, sort) VALUES
 (7, '健康记录', 'community', 'ACTIVE', 7);
 
 INSERT INTO community_posts (id, user_id, category, title, content, cover_url, status, review_remark, like_count, favorite_count, comment_count, published_at) VALUES
-(4, 5, 'training', '柯基召回训练一周记录', '每天固定两次短时间训练，比长时间重复更容易保持狗狗注意力。', 'https://example.com/post-cover-4.jpg', 'APPROVED', '内容符合社区规范', 15, 7, 3, '2026-03-20 10:20:00'),
-(5, 6, 'rescue', '小橘救助后的适应过程', '从躲在纸箱到主动蹭手，大概用了两周时间，稳定环境很重要。', 'https://example.com/post-cover-5.jpg', 'APPROVED', '内容符合社区规范', 21, 12, 4, '2026-03-21 16:40:00'),
-(6, 7, 'daily', '第一次给比熊剪指甲的准备清单', '先熟悉脚掌触碰，再准备止血粉和奖励零食，过程不要着急。', 'https://example.com/post-cover-6.jpg', 'PENDING', NULL, 0, 0, 0, NULL),
-(7, 2, 'knowledge', '猫咪换粮过渡比例怎么安排', '建议用 7 到 10 天逐步替换，观察软便、呕吐和食欲变化。', 'https://example.com/post-cover-7.jpg', 'APPROVED', '内容符合社区规范', 18, 9, 2, '2026-03-22 09:15:00'),
-(8, 3, 'help', '狗狗外出后脚垫发红怎么办', '散步回家后发现脚垫偏红，想确认是否需要立刻就医。', 'https://example.com/post-cover-8.jpg', 'APPROVED', '内容符合社区规范', 6, 2, 2, '2026-03-22 20:10:00'),
-(9, 5, 'daily', '寄养前需要和商家确认哪些细节', '包括喂食次数、遛狗频率、是否单独隔间以及突发情况联系流程。', 'https://example.com/post-cover-9.jpg', 'APPROVED', '内容符合社区规范', 10, 5, 1, '2026-03-23 12:30:00'),
-(10, 6, 'knowledge', '领养回访照片怎么拍更清楚', '建议拍摄正脸、全身、食盆和活动区域，便于平台了解适应情况。', 'https://example.com/post-cover-10.jpg', 'REJECTED', '图片信息不足，请补充更清晰的环境照片', 0, 0, 0, NULL);
+(4, 5, 'training', '柯基召回训练一周记录', '每天固定两次短时间训练，比长时间重复更容易保持狗狗注意力。', '/static/images/post-cover-training.svg', 'APPROVED', '内容符合社区规范', 15, 7, 3, '2026-03-20 10:20:00'),
+(5, 6, 'rescue', '小橘救助后的适应过程', '从躲在纸箱到主动蹭手，大概用了两周时间，稳定环境很重要。', '/static/images/post-cover-rescue.svg', 'APPROVED', '内容符合社区规范', 21, 12, 4, '2026-03-21 16:40:00'),
+(6, 7, 'daily', '第一次给比熊剪指甲的准备清单', '先熟悉脚掌触碰，再准备止血粉和奖励零食，过程不要着急。', '/static/images/post-cover-nail.svg', 'PENDING', NULL, 0, 0, 0, NULL),
+(7, 2, 'knowledge', '猫咪换粮过渡比例怎么安排', '建议用 7 到 10 天逐步替换，观察软便、呕吐和食欲变化。', '/static/images/post-cover-food.svg', 'APPROVED', '内容符合社区规范', 18, 9, 2, '2026-03-22 09:15:00'),
+(8, 3, 'help', '狗狗外出后脚垫发红怎么办', '散步回家后发现脚垫偏红，想确认是否需要立刻就医。', '/static/images/post-cover-paw.svg', 'APPROVED', '内容符合社区规范', 6, 2, 2, '2026-03-22 20:10:00'),
+(9, 5, 'daily', '寄养前需要和商家确认哪些细节', '包括喂食次数、遛狗频率、是否单独隔间以及突发情况联系流程。', '/static/images/post-cover-boarding.svg', 'APPROVED', '内容符合社区规范', 10, 5, 1, '2026-03-23 12:30:00'),
+(10, 6, 'knowledge', '领养回访照片怎么拍更清楚', '建议拍摄正脸、全身、食盆和活动区域，便于平台了解适应情况。', '/static/images/post-cover-followup.svg', 'REJECTED', '图片信息不足，请补充更清晰的环境照片', 0, 0, 0, NULL);
 
 INSERT INTO post_tags (post_id, tag_id) VALUES
 (4, 5), (4, 1), (5, 6), (5, 1), (6, 1), (7, 4), (7, 7), (8, 7), (9, 3), (10, 6);
@@ -257,10 +257,10 @@ INSERT INTO post_favorites (post_id, user_id) VALUES
 (4, 2), (4, 6), (5, 2), (5, 5), (5, 7), (7, 3), (7, 5), (8, 5), (9, 2), (9, 6);
 
 INSERT INTO adoption_pets (id, name, type, breed, gender, age_desc, city, health_status, personality, adoption_requirements, story, status, cover_url) VALUES
-(3, '花卷', 'CAT', '狸花猫', 'MALE', '8个月', '上海', '已绝育，疫苗齐全', '警惕但亲人', '需要有养猫经验，接受定期回访', '在园区被救助，适合安静家庭。', 'ONLINE', 'https://example.com/adoption-pet-3.jpg'),
-(4, '栗子', 'DOG', '泰迪', 'FEMALE', '2岁', '杭州', '体检正常，已驱虫', '活泼黏人', '需要每天遛狗，家人共同认可领养', '原主人因工作变动委托平台重新寻找家庭。', 'ONLINE', 'https://example.com/adoption-pet-4.jpg'),
-(5, '奶盖', 'CAT', '布偶混血', 'FEMALE', '1岁半', '苏州', '轻微软便恢复中', '温顺安静', '需接受后续肠胃调理建议', '救助后恢复中，适合耐心照顾。', 'OFFLINE', 'https://example.com/adoption-pet-5.jpg'),
-(6, '奥利奥', 'DOG', '边牧', 'MALE', '3岁', '上海', '疫苗齐全', '聪明，需要运动量', '需要有训犬经验和稳定户外活动时间', '前家庭无法满足运动需求，现寻找更合适环境。', 'ONLINE', 'https://example.com/adoption-pet-6.jpg');
+(3, '花卷', 'CAT', '狸花猫', 'MALE', '8个月', '上海', '已绝育，疫苗齐全', '警惕但亲人', '需要有养猫经验，接受定期回访', '在园区被救助，适合安静家庭。', 'ONLINE', '/static/images/adoption-cat-huajuan.svg'),
+(4, '栗子', 'DOG', '泰迪', 'FEMALE', '2岁', '杭州', '体检正常，已驱虫', '活泼黏人', '需要每天遛狗，家人共同认可领养', '原主人因工作变动委托平台重新寻找家庭。', 'ONLINE', '/static/images/adoption-dog-lizi.svg'),
+(5, '奶盖', 'CAT', '布偶混血', 'FEMALE', '1岁半', '苏州', '轻微软便恢复中', '温顺安静', '需接受后续肠胃调理建议', '救助后恢复中，适合耐心照顾。', 'OFFLINE', '/static/images/adoption-cat-naigai.svg'),
+(6, '奥利奥', 'DOG', '边牧', 'MALE', '3岁', '上海', '疫苗齐全', '聪明，需要运动量', '需要有训犬经验和稳定户外活动时间', '前家庭无法满足运动需求，现寻找更合适环境。', 'ONLINE', '/static/images/adoption-dog-aoliao.svg');
 
 INSERT INTO adoption_applications (pet_id, user_id, experience_desc, living_condition_desc, contact_phone, status, review_remark, reviewed_by, reviewed_at, created_at) VALUES
 (3, 5, '有多年养狗经验，也照顾过朋友的猫。', '自有住房，家人支持，已准备隔离房间。', '13800000004', 'PENDING', NULL, NULL, NULL, '2026-03-21 10:00:00'),
@@ -300,11 +300,11 @@ INSERT INTO product_categories (id, name, pet_type, sort, status) VALUES
 (6, '健康护理', 'ALL', 6, 'ACTIVE');
 
 INSERT INTO products (id, category_id, name, subtitle, image_url, price, stock, pet_type, status, description) VALUES
-(4, 4, '耐咬橡胶球', '适合中小型犬互动训练', 'https://example.com/product-4.jpg', 39.00, 150, 'DOG', 'ON_SALE', '弹性材质，适合日常互动和召回训练。'),
-(5, 4, '逗猫羽毛棒', '低敏羽毛替换头', 'https://example.com/product-5.jpg', 29.00, 200, 'CAT', 'ON_SALE', '提升猫咪运动量，建议在看护下使用。'),
-(6, 5, '宠物外出胸背', '反光织带，夜间更醒目', 'https://example.com/product-6.jpg', 89.00, 90, 'DOG', 'ON_SALE', '适合日常散步和短途出行。'),
-(7, 6, '宠物益生菌', '肠胃调理日常补充', 'https://example.com/product-7.jpg', 99.00, 70, 'ALL', 'ON_SALE', '换粮期和软便恢复期可按说明补充。'),
-(8, 3, '猫砂除臭喷雾', '温和气味控制', 'https://example.com/product-8.jpg', 45.00, 0, 'CAT', 'OFF_SHELF', '用于后台上下架和库存联调。');
+(4, 4, '耐咬橡胶球', '适合中小型犬互动训练', '/static/images/product-toy-ball.svg', 39.00, 150, 'DOG', 'ON_SALE', '弹性材质，适合日常互动和召回训练。'),
+(5, 4, '逗猫羽毛棒', '低敏羽毛替换头', '/static/images/product-feather.svg', 29.00, 200, 'CAT', 'ON_SALE', '提升猫咪运动量，建议在看护下使用。'),
+(6, 5, '宠物外出胸背', '反光织带，夜间更醒目', '/static/images/product-harness.svg', 89.00, 90, 'DOG', 'ON_SALE', '适合日常散步和短途出行。'),
+(7, 6, '宠物益生菌', '肠胃调理日常补充', '/static/images/product-probiotic.svg', 99.00, 70, 'ALL', 'ON_SALE', '换粮期和软便恢复期可按说明补充。'),
+(8, 3, '猫砂除臭喷雾', '温和气味控制', '/static/images/product-cleaner.svg', 45.00, 0, 'CAT', 'OFF_SHELF', '用于后台上下架和库存联调。');
 
 INSERT INTO cart_items (user_id, product_id, quantity, checked) VALUES
 (3, 4, 1, 1),
@@ -320,17 +320,17 @@ INSERT INTO shop_orders (id, user_id, order_no, total_amount, pay_amount, status
 (4, 5, 'PSP20260322183000DEMO004', 167.00, 167.00, 'CANCELLED', '周先生', '13800000004', '上海市闵行区示例路 299 号', '用户取消', '2026-03-22 18:30:00');
 
 INSERT INTO shop_order_items (order_id, product_id, product_name, product_image_url, unit_price, quantity, subtotal_amount) VALUES
-(2, 1, '幼猫无谷主粮', 'https://example.com/product-1.jpg', 159.00, 1, 159.00),
-(2, 7, '宠物益生菌', 'https://example.com/product-7.jpg', 99.00, 1, 99.00),
-(3, 4, '耐咬橡胶球', 'https://example.com/product-4.jpg', 39.00, 1, 39.00),
-(3, 7, '宠物益生菌', 'https://example.com/product-7.jpg', 99.00, 2, 198.00),
-(4, 6, '宠物外出胸背', 'https://example.com/product-6.jpg', 89.00, 1, 89.00),
-(4, 5, '逗猫羽毛棒', 'https://example.com/product-5.jpg', 29.00, 1, 29.00),
-(4, 2, '冻干鸡肉粒', 'https://example.com/product-2.jpg', 49.00, 1, 49.00);
+(2, 1, '幼猫无谷主粮', '/static/images/product-cat-food.svg', 159.00, 1, 159.00),
+(2, 7, '宠物益生菌', '/static/images/product-probiotic.svg', 99.00, 1, 99.00),
+(3, 4, '耐咬橡胶球', '/static/images/product-toy-ball.svg', 39.00, 1, 39.00),
+(3, 7, '宠物益生菌', '/static/images/product-probiotic.svg', 99.00, 2, 198.00),
+(4, 6, '宠物外出胸背', '/static/images/product-harness.svg', 89.00, 1, 89.00),
+(4, 5, '逗猫羽毛棒', '/static/images/product-feather.svg', 29.00, 1, 29.00),
+(4, 2, '冻干鸡肉粒', '/static/images/product-dog-treat.svg', 49.00, 1, 49.00);
 
 INSERT INTO banners (id, title, image_url, link_url, status, sort, created_by) VALUES
-(3, '训练营体验课', 'https://example.com/banner-3.jpg', '/services/merchant/3', 'ACTIVE', 3, 1),
-(4, '肠胃护理专区', 'https://example.com/banner-4.jpg', '/shop', 'DISABLED', 4, 1);
+(3, '训练营体验课', '/static/images/banner-training.svg', '/services/merchant/3', 'ACTIVE', 3, 1),
+(4, '肠胃护理专区', '/static/images/banner-health.svg', '/shop', 'DISABLED', 4, 1);
 
 INSERT INTO recommendations (biz_type, biz_id, slot_code, status, sort, created_by) VALUES
 ('post', 5, 'HOME_POST', 'ACTIVE', 3, 1),
