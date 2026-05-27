@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" rx="20" fill="#E8F5E9"/>
+  <g transform="translate(200,160)">
+    <rect x="-20" y="-35" width="40" height="70" rx="8" fill="#A5D6A7"/>
+    <rect x="-15" y="-25" width="30" height="15" rx="4" fill="#81C784"/>
+    <rect x="-15" y="-5" width="30" height="15" rx="4" fill="#81C784"/>
+    <rect x="-15" y="15" width="30" height="15" rx="4" fill="#81C784"/>
+    <circle cx="0" cy="-45" r="8" fill="#66BB6A"/>
+    <text x="0" y="-42" text-anchor="middle" fill="white" font-size="10" font-weight="bold">+</text>
+</g>
+  <rect x="100" y="320" width="200" height="40" rx="20" fill="#66BB6A"/>
+  <text x="200" y="346" text-anchor="middle" fill="white" font-size="16" font-weight="bold">宠物益生菌</text>
+</svg>

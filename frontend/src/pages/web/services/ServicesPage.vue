@@ -60,28 +60,26 @@
             @click="goDetail(m.id)"
           >
             <div class="merchant-image">
-              <img :src="m.cover_url" :alt="m.name" />
+              <img :src="m.cover_url || '/static/images/merchant-grooming.svg'" :alt="m.name" />
               <div class="merchant-rating">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
-                {{ m.rating }}
+                {{ m.score || m.rating }}
               </div>
             </div>
             <div class="merchant-info">
               <h3>{{ m.name }}</h3>
-              <p class="merchant-desc">{{ m.description }}</p>
+              <p class="merchant-desc">{{ m.description || m.address }}</p>
               <div class="merchant-tags">
-                <span class="tag-success" v-if="m.tags?.includes('24h')">24h急诊</span>
-                <span class="tag-primary" v-if="m.tags?.includes('专业')">专业医疗</span>
-                <span class="tag" v-else>优质服务</span>
+                <span class="tag">营业时间: {{ m.business_hours }}</span>
               </div>
               <div class="merchant-footer">
                 <span class="merchant-location">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                   </svg>
-                  {{ m.district }} · 1.2km
+                  {{ m.district }}
                 </span>
                 <button class="btn-book">立即预约</button>
               </div>
@@ -119,9 +117,12 @@ const merchants = ref<
     id: number;
     name: string;
     district: string;
+    address?: string;
     description?: string;
     cover_url: string;
+    score?: number;
     rating: number;
+    business_hours?: string;
     status: string;
     category?: string;
     tags?: string[];

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250">
+  <rect width="400" height="250" rx="12" fill="#E3F2FD"/>
+  <g transform="translate(200,100)">
+    <circle cx="0" cy="0" r="25" fill="#42A5F5"/>
+    <text x="0" y="8" text-anchor="middle" font-size="28" font-weight="bold" fill="white">?</text>
+</g>
+  <text x="200" y="180" text-anchor="middle" font-size="14" font-weight="bold" fill="#5D4037">脚垫发红怎么办</text>
+</svg>

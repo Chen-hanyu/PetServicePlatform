@@ -1,60 +1,7 @@
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: pet-platform-frontend
-    ports:
-      - "80:80"
-    restart: unless-stopped
-    depends_on:
-      - backend
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-
-  backend:
-    build:
-      context: ./backend
-    container_name: pet-platform-backend
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-    environment:
-      SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pet_service_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/db_password
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
-      FILE_STORAGE_LOCAL_PATH: /app/uploads/
-      FILE_STORAGE_ACCESS_PATH: /uploads/
-    depends_on:
-      mysql:
-        condition: service_healthy
-    volumes:
-      - backend-uploads:/app/uploads
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    secrets:
-      - db_password
-      - jwt_secret
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
   mysql:
     image: mysql:8.4
-    container_name: pet-platform-mysql
+    container_name: pet-platform-mysql-prod
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: pet_service_platform
@@ -74,7 +21,56 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
+
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY:-chen-hanyu/petserviceplatform}/backend:${VERSION:-latest}
+    container_name: pet-platform-backend-prod
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pet_service_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/db_password
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      FILE_STORAGE_LOCAL_PATH: /app/uploads/
+      FILE_STORAGE_ACCESS_PATH: /uploads/
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.deepseek.com}
+      AI_MODEL: ${AI_MODEL:-deepseek-chat}
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend-uploads:/app/uploads
+      - ./resource/images:/app/resource/images
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    secrets:
+      - db_password
+      - jwt_secret
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY:-chen-hanyu/petserviceplatform}/frontend:${VERSION:-latest}
+    container_name: pet-platform-frontend-prod
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
 volumes:
   mysql-data:

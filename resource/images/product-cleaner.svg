@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" rx="20" fill="#E8F5E9"/>
+  <g transform="translate(200,160)">
+    <rect x="-15" y="-50" width="30" height="60" rx="8" fill="#90CAF9"/>
+    <rect x="-20" y="-55" width="40" height="12" rx="4" fill="#64B5F6"/>
+    <circle cx="0" cy="-60" r="6" fill="#64B5F6"/>
+    <circle cx="-5" cy="-70" r="3" fill="#90CAF9" opacity="0.7"/>
+    <circle cx="5" cy="-72" r="2.5" fill="#90CAF9" opacity="0.5"/>
+    <circle cx="0" cy="-78" r="2" fill="#90CAF9" opacity="0.3"/>
+</g>
+  <rect x="100" y="320" width="200" height="40" rx="20" fill="#66BB6A"/>
+  <text x="200" y="346" text-anchor="middle" fill="white" font-size="16" font-weight="bold">清洁护理</text>
+</svg>

@@ -21,3 +21,9 @@ export const createAdoptionApplication = async (payload: AdoptionApplicationPayl
   const { data } = await webHttp.post<ApiResponse<Record<string, unknown>>>("/adoption/applications", payload);
   return unwrap(data);
 };
+
+/** 获取我的领养申请列表 */
+export const fetchMyApplications = async (params: Record<string, string | number | undefined>) => {
+  const { data } = await webHttp.get<ApiResponse<PageResult<any>>>("/adoption/applications", { params });
+  return unwrap(data);
+};
