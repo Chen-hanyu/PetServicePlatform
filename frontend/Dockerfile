@@ -1,3 +1,4 @@
+# ===== 构建阶段 =====
 FROM node:20-alpine AS builder
 WORKDIR /build
 
@@ -7,7 +8,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-
+# ===== 运行阶段 =====
 FROM nginx:1.27-alpine
 
 # 创建非 root 用户
@@ -32,6 +33,10 @@ RUN mkdir -p /var/cache/nginx/client_temp \
 RUN sed -i 's/user  nginx;/user  appuser;/g' /etc/nginx/nginx.conf
 
 EXPOSE 80
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget -qO- http://localhost:80/ || exit 1
 
 USER appuser
 
