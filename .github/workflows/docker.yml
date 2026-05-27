@@ -31,7 +31,7 @@ jobs:
         with:
           context: ./backend
           push: ${{ github.event_name == 'push' }}
-          tags: ghcr.io/${{ github.repository }}/backend:latest
+          tags: ghcr.io/${{ github.repository_owner }}/pet-service-platform-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -40,14 +40,14 @@ jobs:
         with:
           context: ./frontend
           push: ${{ github.event_name == 'push' }}
-          tags: ghcr.io/${{ github.repository }}/frontend:latest
+          tags: ghcr.io/${{ github.repository_owner }}/pet-service-platform-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Scan backend image for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ github.repository }}/backend:latest
+          image-ref: ghcr.io/${{ github.repository_owner }}/pet-service-platform-backend:latest
           severity: CRITICAL,HIGH
           format: table
           exit-code: 0
@@ -55,7 +55,7 @@ jobs:
       - name: Scan frontend image for vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ github.repository }}/frontend:latest
+          image-ref: ghcr.io/${{ github.repository_owner }}/pet-service-platform-frontend:latest
           severity: CRITICAL,HIGH
           format: table
           exit-code: 0
