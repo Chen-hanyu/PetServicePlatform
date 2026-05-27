@@ -20,7 +20,7 @@ RUN mkdir -p /app/resource/images && chown -R appuser:appuser /app
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+  CMD wget -qO- http://localhost:8080/health || exit 1
 
 EXPOSE 8080
 

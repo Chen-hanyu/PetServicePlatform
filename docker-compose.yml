@@ -39,6 +39,7 @@ services:
     volumes:
       - backend-uploads:/app/uploads
       - ./resource/images:/app/resource/images
+      - ~/.m2:/root/.m2 # 共享本地 Maven 缓存加速构建
     restart: unless-stopped
 
   frontend:
