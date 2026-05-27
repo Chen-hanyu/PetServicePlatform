@@ -104,6 +104,11 @@ const menus = [
     name: "商城管理",
     path: "/admin/shop",
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>'
+  },
+  {
+    name: "监控面板",
+    path: "/admin/monitoring",
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>'
   }
 ];
 
