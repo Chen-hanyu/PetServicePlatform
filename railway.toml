@@ -6,8 +6,8 @@
   builder = "DOCKERFILE"
   # Dockerfile 路径（相对于项目根目录）
   dockerfilePath = "backend/Dockerfile"
-  # 构建上下文目录（与 GitHub Actions 统一为 backend 目录）
-  buildContext = "backend"
+  # 构建上下文目录（使用项目根目录，Dockerfile 使用 backend/ 前缀路径）
+  buildContext = "."
 
 [deploy]
   # 健康检查路径
