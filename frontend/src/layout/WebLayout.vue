@@ -384,7 +384,8 @@ const links = [
   { name: "领养", path: "/adoption" },
   { name: "服务", path: "/services" },
   { name: "商城", path: "/shop" },
-  { name: "我的", path: "/profile" }
+  { name: "我的", path: "/profile" },
+  { name: "系统状态", path: "/health" }
 ];
 
 const profileQuickLinks: { label: string; tab?: ProfileSectionTab }[] = [

@@ -13,6 +13,7 @@ const router = createRouter({
     { path: "/", component: () => import("@/layout/WebLayout.vue"), children: [
       { path: "", redirect: "/home" },
       { path: "home", component: () => import("@/pages/web/home/HomePage.vue") },
+      { path: "health", component: () => import("@/pages/web/monitoring/HealthCheckPage.vue") },
       { path: "community", component: () => import("@/pages/web/community/CommunityPage.vue") },
       { path: "community/create", component: () => import("@/pages/web/community/PostCreatePage.vue"), meta: { requiresAuth: true } },
       { path: "community/post/:id", component: () => import("@/pages/web/community/PostDetailPage.vue") },
@@ -44,7 +45,8 @@ const router = createRouter({
       { path: "content", component: () => import("@/pages/admin/content/ContentPage.vue") },
       { path: "adoption", component: () => import("@/pages/admin/adoption/AdoptionAdminPage.vue") },
       { path: "services", component: () => import("@/pages/admin/services/ServicesAdminPage.vue") },
-      { path: "shop", component: () => import("@/pages/admin/shop/ShopAdminPage.vue") }
+      { path: "shop", component: () => import("@/pages/admin/shop/ShopAdminPage.vue") },
+      { path: "monitoring", component: () => import("@/pages/admin/monitoring/MonitorDashboard.vue") }
     ] }
   ]
 });

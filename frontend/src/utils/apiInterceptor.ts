@@ -1,10 +1,7 @@
 import { apiLogger, generateId } from "./apiLogger";
-import type { AxiosRequestConfig, AxiosResponse } from "axios";
-import axios from "axios";
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
-type RequestLogIdMap = WeakMap<AxiosRequestConfig, string>;
-
-const requestIdMap = new RequestLogIdMap();
+const requestIdMap = new WeakMap<AxiosRequestConfig, string>();
 
 const extractPath = (url: string, baseURL?: string): string => {
   if (!baseURL) return url;
@@ -15,18 +12,14 @@ const normalizeMethod = (method?: string): "GET" | "POST" | "PUT" | "DELETE" | "
   return (method?.toUpperCase() as "GET" | "POST" | "PUT" | "DELETE" | "PATCH") || "GET";
 };
 
-export const setupApiInterceptors = (httpClient: typeof import("axios").default.create) => {
-  const client = typeof httpClient === "function" ? httpClient : httpClient;
-
+export const setupApiInterceptors = (client: AxiosInstance) => {
   client.interceptors.request.use(
     (config) => {
       if (!apiLogger.isEnabled()) return config;
 
       const id = generateId();
       requestIdMap.set(config, id);
-      const startTime = Date.now();
-      
-      (config as AxiosRequestConfig & { metadata?: { startTime: number } }).metadata = { startTime };
+      (config as AxiosRequestConfig & { metadata?: { startTime: number } }).metadata = { startTime: Date.now() };
 
       apiLogger.addLog({
         method: normalizeMethod(config.method),
@@ -87,10 +80,10 @@ export const setupApiInterceptors = (httpClient: typeof import("axios").default.
   );
 };
 
-export const setupAllInterceptors = (httpClients: typeof import("axios").default) => {
-  Object.values(httpClients).forEach((client) => {
-    if (axios.isAxiosInstance(client)) {
-      setupApiInterceptors(client as unknown as typeof axios.default.create);
+export const setupAllInterceptors = (clients: Record<string, AxiosInstance>) => {
+  Object.values(clients).forEach((client) => {
+    if (client && typeof client.interceptors !== "undefined") {
+      setupApiInterceptors(client);
     }
   });
 };

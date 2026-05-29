@@ -60,7 +60,7 @@
 
 ## PR 链接
 
-- PR #X: https://github.com/Chen-hanyu/PetServicePlatform/pull/X
+- https://github.com/Chen-hanyu/PetServicePlatform/pull/44
 
 ## 在线地址
 
