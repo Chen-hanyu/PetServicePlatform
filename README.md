@@ -115,6 +115,7 @@ https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%
 - **后端**：部署在 Railway 平台，通过 `railway.toml` 配置 Docker 构建
 - **前端**：部署在 Vercel 平台
 - 详细部署说明见 [docs/deployment.md](docs/deployment.md)
+- Railway MySQL 建库与初始化见 [docs/railway-mysql.md](docs/railway-mysql.md)
 
 对于当前课程项目，建议优先保证本地部署和 Docker 部署都可运行，再考虑缓存和对象存储等增强能力。
 

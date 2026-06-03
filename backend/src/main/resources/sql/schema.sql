@@ -1,13 +1,10 @@
 SET NAMES utf8mb4;
 
-DROP DATABASE IF EXISTS pet_service_platform;
-CREATE DATABASE pet_service_platform
-  DEFAULT CHARACTER SET utf8mb4
-  DEFAULT COLLATE utf8mb4_unicode_ci;
+-- The application connects to an existing database configured by
+-- SPRING_DATASOURCE_URL. Do not create/drop databases here; managed
+-- platforms such as Railway provide the database name dynamically.
 
-USE pet_service_platform;
-
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     role VARCHAR(20) NOT NULL,
     phone VARCHAR(20) NOT NULL,
@@ -25,7 +22,7 @@ CREATE TABLE users (
     KEY idx_users_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     type VARCHAR(30) NOT NULL,
@@ -37,7 +34,7 @@ CREATE TABLE messages (
     CONSTRAINT fk_messages_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE pets (
+CREATE TABLE IF NOT EXISTS pets (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     name VARCHAR(50) NOT NULL,
@@ -54,7 +51,7 @@ CREATE TABLE pets (
     CONSTRAINT fk_pets_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE pet_vaccines (
+CREATE TABLE IF NOT EXISTS pet_vaccines (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     pet_id BIGINT NOT NULL,
     vaccine_name VARCHAR(100) NOT NULL,
@@ -66,7 +63,7 @@ CREATE TABLE pet_vaccines (
     CONSTRAINT fk_pet_vaccines_pet_id FOREIGN KEY (pet_id) REFERENCES pets(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE pet_weights (
+CREATE TABLE IF NOT EXISTS pet_weights (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     pet_id BIGINT NOT NULL,
     weight DECIMAL(8, 2) NOT NULL,
@@ -76,7 +73,7 @@ CREATE TABLE pet_weights (
     CONSTRAINT fk_pet_weights_pet_id FOREIGN KEY (pet_id) REFERENCES pets(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE pet_albums (
+CREATE TABLE IF NOT EXISTS pet_albums (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     pet_id BIGINT NOT NULL,
     image_url VARCHAR(255) NOT NULL,
@@ -86,7 +83,7 @@ CREATE TABLE pet_albums (
     CONSTRAINT fk_pet_albums_pet_id FOREIGN KEY (pet_id) REFERENCES pets(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE community_posts (
+CREATE TABLE IF NOT EXISTS community_posts (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     category VARCHAR(30) NOT NULL,
@@ -107,7 +104,7 @@ CREATE TABLE community_posts (
     CONSTRAINT fk_community_posts_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE post_comments (
+CREATE TABLE IF NOT EXISTS post_comments (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -120,7 +117,7 @@ CREATE TABLE post_comments (
     CONSTRAINT fk_post_comments_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE post_likes (
+CREATE TABLE IF NOT EXISTS post_likes (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -131,7 +128,7 @@ CREATE TABLE post_likes (
     CONSTRAINT fk_post_likes_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE post_favorites (
+CREATE TABLE IF NOT EXISTS post_favorites (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -142,7 +139,7 @@ CREATE TABLE post_favorites (
     CONSTRAINT fk_post_favorites_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     type VARCHAR(30) NOT NULL,
@@ -152,7 +149,7 @@ CREATE TABLE tags (
     UNIQUE KEY uk_tags_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE post_tags (
+CREATE TABLE IF NOT EXISTS post_tags (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id BIGINT NOT NULL,
     tag_id BIGINT NOT NULL,
@@ -162,7 +159,7 @@ CREATE TABLE post_tags (
     CONSTRAINT fk_post_tags_tag_id FOREIGN KEY (tag_id) REFERENCES tags(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE adoption_pets (
+CREATE TABLE IF NOT EXISTS adoption_pets (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     type VARCHAR(20) NOT NULL,
@@ -182,7 +179,7 @@ CREATE TABLE adoption_pets (
     KEY idx_adoption_pets_status_created (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE adoption_applications (
+CREATE TABLE IF NOT EXISTS adoption_applications (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     pet_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -202,7 +199,7 @@ CREATE TABLE adoption_applications (
     CONSTRAINT fk_adoption_applications_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE service_categories (
+CREATE TABLE IF NOT EXISTS service_categories (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     sort INT NOT NULL DEFAULT 0,
@@ -210,7 +207,7 @@ CREATE TABLE service_categories (
     UNIQUE KEY uk_service_categories_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE merchants (
+CREATE TABLE IF NOT EXISTS merchants (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     district VARCHAR(50) NOT NULL,
@@ -225,7 +222,7 @@ CREATE TABLE merchants (
     KEY idx_merchants_status_score (status, score)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE merchant_services (
+CREATE TABLE IF NOT EXISTS merchant_services (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     merchant_id BIGINT NOT NULL,
     category_id BIGINT NOT NULL,
@@ -240,7 +237,7 @@ CREATE TABLE merchant_services (
     CONSTRAINT fk_merchant_services_category_id FOREIGN KEY (category_id) REFERENCES service_categories(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE merchant_reviews (
+CREATE TABLE IF NOT EXISTS merchant_reviews (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     merchant_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -254,7 +251,7 @@ CREATE TABLE merchant_reviews (
     CONSTRAINT fk_merchant_reviews_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE service_bookings (
+CREATE TABLE IF NOT EXISTS service_bookings (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     merchant_id BIGINT NOT NULL,
@@ -274,7 +271,7 @@ CREATE TABLE service_bookings (
     CONSTRAINT fk_service_bookings_merchant_service_id FOREIGN KEY (merchant_service_id) REFERENCES merchant_services(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE product_categories (
+CREATE TABLE IF NOT EXISTS product_categories (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     pet_type VARCHAR(20),
@@ -283,7 +280,7 @@ CREATE TABLE product_categories (
     UNIQUE KEY uk_product_categories_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     category_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -302,7 +299,7 @@ CREATE TABLE products (
     CONSTRAINT fk_products_category_id FOREIGN KEY (category_id) REFERENCES product_categories(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE cart_items (
+CREATE TABLE IF NOT EXISTS cart_items (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
@@ -316,7 +313,7 @@ CREATE TABLE cart_items (
     CONSTRAINT fk_cart_items_product_id FOREIGN KEY (product_id) REFERENCES products(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE shop_orders (
+CREATE TABLE IF NOT EXISTS shop_orders (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     order_no VARCHAR(64) NOT NULL,
@@ -334,7 +331,7 @@ CREATE TABLE shop_orders (
     CONSTRAINT fk_shop_orders_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE shop_order_items (
+CREATE TABLE IF NOT EXISTS shop_order_items (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
@@ -349,7 +346,7 @@ CREATE TABLE shop_order_items (
     CONSTRAINT fk_shop_order_items_product_id FOREIGN KEY (product_id) REFERENCES products(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE banners (
+CREATE TABLE IF NOT EXISTS banners (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(100) NOT NULL,
     image_url VARCHAR(255) NOT NULL,
@@ -364,7 +361,7 @@ CREATE TABLE banners (
     CONSTRAINT fk_banners_created_by FOREIGN KEY (created_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE recommendations (
+CREATE TABLE IF NOT EXISTS recommendations (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     biz_type VARCHAR(30) NOT NULL,
     biz_id BIGINT NOT NULL,
