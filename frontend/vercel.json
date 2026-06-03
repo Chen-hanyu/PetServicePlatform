@@ -1,7 +1,4 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
-  "framework": "vite",
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -15,8 +12,5 @@
       "source": "/:path*",
       "destination": "/index.html"
     }
-  ],
-  "github": {
-    "silent": true
-  }
+  ]
 }
