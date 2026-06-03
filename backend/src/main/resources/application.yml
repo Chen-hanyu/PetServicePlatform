@@ -15,7 +15,13 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:123456}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
-
+  sql:
+    init:
+      mode: ${SPRING_SQL_INIT_MODE:never}
+      schema-locations:
+        - classpath:sql/schema.sql
+      data-locations:
+        - classpath:sql/seed.sql
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true

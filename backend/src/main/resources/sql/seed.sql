@@ -1,6 +1,6 @@
 SET NAMES utf8mb4;
 
-USE pet_service_platform;
+-- Seed data is loaded into the database selected by SPRING_DATASOURCE_URL.
 
 SET FOREIGN_KEY_CHECKS = 0;
 
