@@ -502,6 +502,8 @@ onMounted(() => {
     }
     if (foundPost) {
       post.value = foundPost;
+      isLiked.value = foundPost.is_liked ?? false;
+      isCollected.value = foundPost.is_favorited ?? false;
       likeCount.value = foundPost.like_count || 0;
       commentCount.value = comments.value.length;
       postViews.value = (foundPost as any).view_count || 0;

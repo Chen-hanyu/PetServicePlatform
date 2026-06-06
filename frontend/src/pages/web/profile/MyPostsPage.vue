@@ -11,7 +11,15 @@
     </div>
 
     <div class="posts-container">
-      <div v-if="posts.length === 0" class="empty-state">
+      <div v-if="loading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">加载中...</p>
+      </div>
+      <div v-else-if="error" class="error-state">
+        <p class="error-text">{{ error }}</p>
+        <button class="retry-btn" @click="loadPosts">重试</button>
+      </div>
+      <div v-else-if="posts.length === 0" class="empty-state">
         <div class="empty-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
@@ -192,6 +200,65 @@ onMounted(loadPosts);
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 32px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 16px;
+    border: 3px solid var(--surface-muted);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-text {
+    font-size: 16px;
+    color: var(--muted);
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+
+  .error-text {
+    font-size: 16px;
+    color: #E97A7A;
+    margin: 0 0 24px;
+  }
+
+  .retry-btn {
+    padding: 12px 24px;
+    border: 1px solid var(--primary);
+    background: none;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+  }
 }
 
 .empty-state {

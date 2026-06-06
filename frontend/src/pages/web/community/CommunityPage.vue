@@ -220,8 +220,19 @@ const currentUser = computed(() => ({
   likeCount: 0
 }));
 
+const categoryMap: Record<string, string> = {
+  "推荐": "",
+  "晒宠": "pet",
+  "问答": "qa",
+  "种草": "share",
+  "日常": "daily",
+  "知识": "knowledge",
+  "视频": "video",
+  "好物": "goods"
+};
+
 const activeCategory = ref("推荐");
-const categories = ["推荐", "晒宠", "问答", "种草", "日常", "知识", "视频", "好物"];
+const categories = Object.keys(categoryMap);
 
 const searchKeywords = [
   "新手养猫", "猫粮推荐", "猫咪训练", "猫咪疫苗", "猫咪洗澡", "自制猫饭",
@@ -266,8 +277,9 @@ const loadPosts = async () => {
   loading.value = true;
   error.value = "";
   try {
+    const categoryValue = categoryMap[activeCategory.value] || activeCategory.value;
     const params: Record<string, string | number | undefined> = {
-      tab: activeCategory.value,
+      tab: categoryValue,
       page: currentPage.value,
       page_size: PAGE_SIZE
     };
