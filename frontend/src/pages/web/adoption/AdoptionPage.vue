@@ -6,8 +6,8 @@
         <h1>用领养代替购买，给它一个温暖的家</h1>
         <p>每一个流浪的小生命都值得被温柔以待</p>
         <div class="hero-actions">
-          <button class="btn-hero-primary">领养流程指南</button>
-          <button class="btn-hero-secondary">查看领养要求</button>
+          <button class="btn-hero-primary" @click="scrollToSection('adoption-process')">领养流程指南</button>
+          <button class="btn-hero-secondary" @click="scrollToSection('adoption-requirements')">查看领养要求</button>
         </div>
       </div>
     </div>
@@ -149,7 +149,7 @@
           </div>
 
           <!-- Requirements -->
-          <div class="detail-section">
+          <div id="adoption-requirements" class="detail-section">
             <h3 class="section-title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               领养要求
@@ -175,7 +175,7 @@
           </div>
 
           <!-- Adoption Process -->
-          <div class="detail-section">
+          <div id="adoption-process" class="detail-section">
             <h3 class="section-title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               领养流程
@@ -323,9 +323,16 @@ const petTypes = [
   { label: "其他", value: "other" }
 ];
 
+const scrollToSection = (id: string) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+};
+
 const filteredPets = computed(() => {
   return pets.value.filter(pet => {
-    if (filter.type && !pet.breed?.toLowerCase().includes(filter.type)) return false;
+    if (filter.type && pet.type !== filter.type) return false;
     return true;
   });
 });

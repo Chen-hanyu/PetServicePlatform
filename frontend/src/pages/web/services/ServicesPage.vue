@@ -134,6 +134,14 @@ const filteredMerchants = computed(() => {
   if (selectedCategory.value) {
     result = result.filter(m => m.category === selectedCategory.value);
   }
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase();
+    result = result.filter(m =>
+      m.name.toLowerCase().includes(q) ||
+      (m.description && m.description.toLowerCase().includes(q)) ||
+      (m.tags && m.tags.some(t => t.toLowerCase().includes(q)))
+    );
+  }
   return result;
 });
 

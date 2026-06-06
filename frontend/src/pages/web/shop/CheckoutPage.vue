@@ -85,7 +85,7 @@
 
           <!-- Options Section -->
           <div class="section-card">
-            <div class="option-item">
+            <div class="option-item" @click="showCouponPicker = true" style="cursor: pointer;">
               <div class="option-left">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
@@ -93,7 +93,7 @@
                 <span>优惠券</span>
               </div>
               <div class="option-right">
-                <span class="coupon-badge">2张可用</span>
+                <span class="coupon-badge">{{ selectedCoupon ? selectedCoupon.name : '2张可用' }}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
@@ -190,12 +190,53 @@
       </div>
     </template>
 
+    <!-- 优惠券选择弹窗 -->
+    <Teleport to="body">
+      <div v-if="showCouponPicker" class="modal-overlay" @click.self="showCouponPicker = false">
+        <div class="coupon-modal">
+          <div class="coupon-modal-head">
+            <h3>选择优惠券</h3>
+            <button type="button" class="close-btn" @click="showCouponPicker = false">×</button>
+          </div>
+          <div class="coupon-modal-body">
+            <div
+              v-for="c in couponList"
+              :key="c.id"
+              :class="['coupon-card', { selected: selectedCoupon?.id === c.id }]"
+              @click="selectCoupon(c)"
+            >
+              <div class="coupon-amount">
+                <span class="coupon-symbol">¥</span>
+                <span class="coupon-value">{{ c.value }}</span>
+              </div>
+              <div class="coupon-info">
+                <p class="coupon-name">{{ c.name }}</p>
+                <p class="coupon-condition">{{ c.condition }}</p>
+                <p class="coupon-expire">有效期至：{{ c.expire }}</p>
+              </div>
+              <div class="coupon-check">
+                <span v-if="selectedCoupon?.id === c.id" class="check-mark">✓</span>
+              </div>
+            </div>
+            <div class="coupon-empty" v-if="couponList.length === 0">
+              <p>暂无可用优惠券</p>
+            </div>
+          </div>
+          <div class="coupon-modal-foot">
+            <button class="btn-cancel" @click="showCouponPicker = false">取消</button>
+            <button class="btn-primary" @click="showCouponPicker = false">确定</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <CommerceDock />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+
 import { useRoute, useRouter } from "vue-router";
 import CommerceDock from "@/components/shop/CommerceDock.vue";
 import { useShopCartStore } from "@/store/shopCart";
@@ -210,6 +251,17 @@ const buyNowProduct = ref<any>(null);
 const remark = ref("");
 const usePoints = ref(false);
 const paymentMethod = ref("wechat");
+
+// 优惠券选择
+const showCouponPicker = ref(false);
+const selectedCoupon = ref<{ id: number; name: string; value: number; condition: string; expire: string } | null>(null);
+const couponList = ref([
+  { id: 1, name: "新人专享券", value: 20, condition: "满100元可用", expire: "2026-12-31" },
+  { id: 2, name: "满减券", value: 10, condition: "满50元可用", expire: "2026-12-31" }
+]);
+const selectCoupon = (c: { id: number; name: string; value: number; condition: string; expire: string }) => {
+  selectedCoupon.value = selectedCoupon.value?.id === c.id ? null : c;
+};
 
 const isBuyNow = computed(() => route.query.buyNow === "1");
 const buyNowId = computed(() => Number(route.query.id));
@@ -797,6 +849,195 @@ input:checked + .slider:before {
   
   strong {
     color: var(--text-heading);
+  }
+}
+
+// 优惠券弹窗样式
+.coupon-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  background: var(--surface);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.coupon-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-warm);
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-heading);
+  }
+
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--chip-bg);
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--chip-active-bg);
+      color: var(--text-heading);
+    }
+  }
+}
+
+.coupon-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.coupon-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border-warm);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    border-color: var(--primary);
+    background: rgba(255, 155, 122, 0.04);
+  }
+
+  &.selected {
+    border-color: var(--primary);
+    background: rgba(255, 155, 122, 0.08);
+  }
+}
+
+.coupon-amount {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.coupon-symbol {
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.coupon-value {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.coupon-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.coupon-name {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.coupon-condition {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.coupon-expire {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-soft);
+}
+
+.coupon-check {
+  flex-shrink: 0;
+}
+
+.check-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.coupon-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.coupon-modal-foot {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-warm);
+
+  .btn-cancel {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border-warm);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: var(--chip-border);
+      color: var(--text-heading);
+    }
+  }
+
+  .btn-primary {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--primary-strong);
+    }
   }
 }
 
