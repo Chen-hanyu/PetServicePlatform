@@ -126,12 +126,16 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { fetchOrders } from "@/api/modules/shop";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 const route = useRoute();
 
+const loading = ref(false);
+const error = ref("");
 const activeTab = ref((route.query.tab as string) || "all");
 
 interface Product {
@@ -154,104 +158,73 @@ interface Order {
   createdAt: string;
 }
 
-const tabs = reactive([
+const tabs = computed(() => [
   { key: "all", label: "全部", badge: 0 },
-  { key: "pending", label: "待付款", badge: 1 },
-  { key: "shipping", label: "待发货", badge: 0 },
-  { key: "receiving", label: "待收货", badge: 1 },
-  { key: "review", label: "待评价", badge: 2 },
-  { key: "afterSale", label: "退换/售后", badge: 0 }
+  { key: "pending", label: "待付款", badge: orders.value.filter(o => o.status === "pending").length },
+  { key: "shipping", label: "待发货", badge: orders.value.filter(o => o.status === "shipping").length },
+  { key: "receiving", label: "待收货", badge: orders.value.filter(o => o.status === "receiving").length },
+  { key: "review", label: "待评价", badge: orders.value.filter(o => o.status === "review").length },
+  { key: "afterSale", label: "退换/售后", badge: orders.value.filter(o => o.status === "afterSale").length }
 ]);
 
-const orders = reactive<Order[]>([
-  {
-    id: 1,
-    shopName: "萌宠生活馆",
-    status: "pending",
-    statusText: "待付款",
-    products: [
-      {
-        id: 1,
-        name: "皇家宠物食品 幼猫粮",
-        spec: "2kg装",
-        price: 168,
-        count: 1,
-        image: "https://images.unsplash.com/photo-1625316708582-7c38734be31d?auto=format&fit=crop&w=200&q=80"
-      }
-    ],
-    totalCount: 1,
-    totalPrice: 168,
-    createdAt: "2024-01-15 14:30"
-  },
-  {
-    id: 2,
-    shopName: "宠物玩具专营店",
-    status: "receiving",
-    statusText: "待收货",
-    products: [
-      {
-        id: 2,
-        name: "智能逗猫激光灯",
-        spec: "蓝色",
-        price: 59,
-        count: 2,
-        image: "https://images.unsplash.com/photo-1535294435445-d7249524ef2e?auto=format&fit=crop&w=200&q=80"
-      }
-    ],
-    totalCount: 2,
-    totalPrice: 118,
-    createdAt: "2024-01-14 09:20"
-  },
-  {
-    id: 3,
-    shopName: "宠物医疗专营",
-    status: "review",
-    statusText: "待评价",
-    products: [
-      {
-        id: 3,
-        name: "宠物体内驱虫药",
-        spec: "大型犬款",
-        price: 45,
-        count: 3,
-        image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=200&q=80"
-      }
-    ],
-    totalCount: 3,
-    totalPrice: 135,
-    createdAt: "2024-01-12 16:45"
-  },
-  {
-    id: 4,
-    shopName: "猫咪用品专营",
-    status: "review",
-    statusText: "待评价",
-    products: [
-      {
-        id: 4,
-        name: "猫爬架大型多层",
-        spec: "灰色",
-        price: 399,
-        count: 1,
-        image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=200&q=80"
-      }
-    ],
-    totalCount: 1,
-    totalPrice: 399,
-    createdAt: "2024-01-10 11:00"
-  }
-]);
+const orders = ref<Order[]>([]);
 
 const filteredOrders = computed(() => {
   if (activeTab.value === "all") {
-    return orders;
+    return orders.value;
   }
-  return orders.filter(order => order.status === activeTab.value);
+  return orders.value.filter(order => order.status === activeTab.value);
 });
 
 const goBack = () => {
   router.back();
 };
+
+/** 从后端加载订单列表 */
+async function loadOrders() {
+  loading.value = true;
+  error.value = "";
+  try {
+    const params: Record<string, string | number | undefined> = { page: 1, page_size: 50 };
+    if (activeTab.value !== "all") params.status = activeTab.value;
+    const data = await fetchOrders(params);
+    const list = data.list || [];
+    orders.value = list.map((item: any) => ({
+      id: item.id,
+      shopName: item.shopName || "宠物之家自营",
+      status: item.status || "pending",
+      statusText: item.statusText || getStatusText(item.status),
+      products: (item.products || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        spec: p.spec || "默认",
+        price: p.price,
+        count: p.quantity || p.count || 1,
+        image: p.image || p.image_url || "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=200&q=80"
+      })),
+      totalCount: item.totalCount || item.products?.length || 0,
+      totalPrice: item.totalPrice || item.total_amount || 0,
+      createdAt: item.createdAt || item.created_at || ""
+    }));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    orders.value = [];
+  } finally {
+    loading.value = false;
+  }
+}
+
+function getStatusText(status: string): string {
+  const map: Record<string, string> = {
+    pending: "待付款",
+    shipping: "待发货",
+    receiving: "待收货",
+    review: "待评价",
+    completed: "已完成",
+    afterSale: "退换/售后"
+  };
+  return map[status] || status;
+}
 
 const payOrder = (order: Order) => {
   alert(`去支付订单: ${order.id}`);
@@ -259,10 +232,7 @@ const payOrder = (order: Order) => {
 
 const cancelOrder = (order: Order) => {
   if (confirm("确定要取消该订单吗？")) {
-    const index = orders.findIndex(o => o.id === order.id);
-    if (index > -1) {
-      orders.splice(index, 1);
-    }
+    orders.value = orders.value.filter(o => o.id !== order.id);
   }
 };
 
@@ -285,7 +255,10 @@ const afterSale = (order: Order) => {
 const viewAfterSale = (order: Order) => {
   alert(`查看售后进度: ${order.id}`);
 };
+
+onMounted(loadOrders);
 </script>
+
 
 <style scoped lang="scss">
 .orders-hub {

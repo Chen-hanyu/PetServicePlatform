@@ -38,7 +38,8 @@
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
               </button>
-              <button class="action-btn delete" @click="deletePost(post)">
+              <button class="action-btn delete" @click="handleDeletePost(post)">
+
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                 </svg>
@@ -83,11 +84,17 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "@/store/auth";
+import { fetchMyPosts, deletePost as deletePostApi } from "@/api/modules/community";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
+const auth = useAuthStore();
 
+const loading = ref(false);
+const error = ref("");
 const defaultAvatar = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80";
 
 interface Post {
@@ -102,32 +109,7 @@ interface Post {
   createdAt: string;
 }
 
-const posts = reactive<Post[]>([
-  {
-    id: 1,
-    authorName: "落日余晖下的铲屎官",
-    authorAvatar: "",
-    content: "分享一下糯米刚回家的样子，太可爱了！第一天就适应了新环境，已经开始到处探索了。希望它能健康快乐地成长～",
-    images: [
-      "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80"
-    ],
-    likeCount: 128,
-    commentCount: 32,
-    shareCount: 5,
-    createdAt: "今天 10:24"
-  },
-  {
-    id: 2,
-    authorName: "落日余晖下的铲屎官",
-    authorAvatar: "",
-    content: "曲奇今天表现超级棒！第一次去草坪撒欢，跑累了就乖乖趴在身边。感觉它真的很享受户外活动~",
-    images: [],
-    likeCount: 256,
-    commentCount: 45,
-    shareCount: 12,
-    createdAt: "昨天 15:30"
-  }
-]);
+const posts = ref<Post[]>([]);
 
 const goBack = () => {
   router.back();
@@ -137,19 +119,50 @@ const goToCommunity = () => {
   router.push("/community");
 };
 
+/** 从后端加载我的动态列表 */
+async function loadPosts() {
+  loading.value = true;
+  error.value = "";
+  try {
+    const data = await fetchMyPosts({ page: 1, page_size: 50 });
+    const list = data.list || [];
+    posts.value = list.map((item: any) => ({
+      id: item.id,
+      authorName: auth.user?.nickname || "我",
+      authorAvatar: auth.user?.avatar_url || defaultAvatar,
+      content: item.content || item.excerpt || "",
+      images: item.images || (item.cover_url ? [item.cover_url] : []),
+      likeCount: item.like_count || 0,
+      commentCount: item.comment_count || 0,
+      shareCount: item.share_count || 0,
+      createdAt: item.created_at || item.createdAt || ""
+    }));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    posts.value = [];
+  } finally {
+    loading.value = false;
+  }
+}
+
 const editPost = (post: Post) => {
   alert(`编辑动态: ${post.id}`);
 };
 
-const deletePost = (post: Post) => {
+const handleDeletePost = async (post: Post) => {
   if (confirm("确定要删除这条动态吗？")) {
-    const index = posts.findIndex(p => p.id === post.id);
-    if (index > -1) {
-      posts.splice(index, 1);
+    try {
+      await deletePostApi(post.id);
+      posts.value = posts.value.filter(p => p.id !== post.id);
+    } catch (e) {
+      console.error("删除动态失败", e);
     }
   }
 };
+
+onMounted(loadPosts);
 </script>
+
 
 <style scoped lang="scss">
 .posts-hub {

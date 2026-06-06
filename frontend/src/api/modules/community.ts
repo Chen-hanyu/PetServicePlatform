@@ -46,3 +46,17 @@ export const removeFavorite = async (postId: number) => {
   const { data } = await webHttp.delete<ApiResponse<void>>(`/community/favorites/${postId}`);
   return unwrap(data);
 };
+
+/** 获取我的动态列表 */
+export const fetchMyPosts = async (params: Record<string, string | number | undefined>) => {
+  const { data } = await webHttp.get<ApiResponse<PageResult<PostSummary>>>("/community/posts/mine", { params });
+  return unwrap(data);
+};
+
+/** 删除我的动态 */
+export const deletePost = async (postId: number) => {
+  const { data } = await webHttp.delete<ApiResponse<void>>(`/community/posts/${postId}`);
+  return unwrap(data);
+};
+
+

@@ -90,11 +90,15 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { fetchMyApplications, cancelApplication as cancelApplicationApi } from "@/api/modules/adoption";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 
+const loading = ref(false);
+const error = ref("");
 const activeTab = ref("all");
 
 interface Application {
@@ -112,48 +116,20 @@ interface Application {
   feedback?: string;
 }
 
-const tabs = reactive([
+const tabs = computed(() => [
   { key: "all", label: "全部", badge: 0 },
-  { key: "pending", label: "待审核", badge: 1 },
-  { key: "approved", label: "已通过", badge: 1 },
-  { key: "rejected", label: "已拒绝", badge: 0 }
+  { key: "pending", label: "待审核", badge: applications.value.filter(a => a.status === "pending").length },
+  { key: "approved", label: "已通过", badge: applications.value.filter(a => a.status === "approved").length },
+  { key: "rejected", label: "已拒绝", badge: applications.value.filter(a => a.status === "rejected").length }
 ]);
 
-const applications = reactive<Application[]>([
-  {
-    id: 1,
-    petName: "小白",
-    petBreed: "萨摩耶",
-    petAge: "2岁",
-    petGender: "男",
-    petStatus: "待领养",
-    petImage: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&q=80",
-    status: "pending",
-    statusText: "待审核",
-    appliedAt: "2024-01-15 10:30",
-    reason: "非常喜欢萨摩耶，希望能够给它一个温暖的家。我有充足的的时间和空间照顾它。"
-  },
-  {
-    id: 2,
-    petName: "小橘",
-    petBreed: "中华田园猫",
-    petAge: "1岁",
-    petGender: "女",
-    petStatus: "待领养",
-    petImage: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80",
-    status: "approved",
-    statusText: "已通过",
-    appliedAt: "2024-01-10 14:20",
-    reason: "家里已经有一只猫了，想给它找个伴。",
-    feedback: "恭喜您通过审核！请于本周六上午10点携带身份证到我机构办理领养手续。"
-  }
-]);
+const applications = ref<Application[]>([]);
 
 const filteredApplications = computed(() => {
   if (activeTab.value === "all") {
-    return applications;
+    return applications.value;
   }
-  return applications.filter(app => app.status === activeTab.value);
+  return applications.value.filter(app => app.status === activeTab.value);
 });
 
 const goBack = () => {
@@ -164,11 +140,52 @@ const goToAdoption = () => {
   router.push("/adoption");
 };
 
-const cancelApplication = (app: Application) => {
+/** 从后端加载领养申请列表 */
+async function loadApplications() {
+  loading.value = true;
+  error.value = "";
+  try {
+    const data = await fetchMyApplications({ page: 1, page_size: 50 });
+    const list = data.list || [];
+    applications.value = list.map((item: any) => ({
+      id: item.id,
+      petName: item.petName || item.pet_name || "未知宠物",
+      petBreed: item.petBreed || item.pet_breed || "未知品种",
+      petAge: item.petAge || item.pet_age || "未知年龄",
+      petGender: item.petGender || item.pet_gender || "未知",
+      petStatus: item.petStatus || item.pet_status || "待领养",
+      petImage: item.petImage || item.pet_image || "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&q=80",
+      status: item.status || "pending",
+      statusText: item.statusText || getStatusText(item.status),
+      appliedAt: item.appliedAt || item.applied_at || "",
+      reason: item.reason || "",
+      feedback: item.feedback
+    }));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    applications.value = [];
+  } finally {
+    loading.value = false;
+  }
+}
+
+function getStatusText(status: string): string {
+  const map: Record<string, string> = {
+    pending: "待审核",
+    approved: "已通过",
+    rejected: "已拒绝",
+    cancelled: "已撤销"
+  };
+  return map[status] || status;
+}
+
+const cancelApplication = async (app: Application) => {
   if (confirm("确定要撤销该申请吗？")) {
-    const index = applications.findIndex(a => a.id === app.id);
-    if (index > -1) {
-      applications.splice(index, 1);
+    try {
+      await cancelApplicationApi(app.id);
+      applications.value = applications.value.filter(a => a.id !== app.id);
+    } catch (e) {
+      console.error("撤销申请失败", e);
     }
   }
 };
@@ -180,7 +197,10 @@ const viewDetails = (app: Application) => {
 const reApply = (app: Application) => {
   alert(`重新申请: ${app.id}`);
 };
+
+onMounted(loadApplications);
 </script>
+
 
 <style scoped lang="scss">
 .applications-hub {

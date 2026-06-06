@@ -232,7 +232,8 @@
     <footer class="fixed-action-bar" v-if="!loading && post">
       <div class="action-bar-inner">
         <div class="input-area" @click="focusComment">
-          <img :src="'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'" class="user-avatar-small" />
+          <img :src="auth.user?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'" class="user-avatar-small" />
+
           <span class="placeholder-text">说点什么...</span>
         </div>
         <div class="action-icons">
@@ -339,8 +340,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/store/auth";
 import { fetchPostComments, fetchPostDetail, fetchPosts } from "@/api/modules/community";
 import type { PostComment, PostDetail, PostSummary } from "@/types/community";
+
+const auth = useAuthStore();
+
 
 type CommentVm = PostComment & {
   user?: PostComment["author"];
@@ -506,7 +511,7 @@ const submitComment = () => {
   
   comments.value.unshift({
     id: Date.now(),
-    user: { nickname: "当前用户", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" },
+    user: { id: auth.user?.id || 0, nickname: auth.user?.nickname || "当前用户", avatar_url: auth.user?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" },
     content: commentText.value,
     created_at: new Date().toLocaleString("zh-CN"),
     like_count: 0,
@@ -517,6 +522,7 @@ const submitComment = () => {
   commentCount.value = comments.value.length;
   closeCommentPopup();
 };
+
 
 const handleShare = () => {
   sharePopupVisible.value = true;

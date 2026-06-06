@@ -61,7 +61,8 @@
 
               <div v-if="!msg.isRead" class="unread-dot"></div>
 
-              <button class="delete-btn" @click.stop="deleteMessage(msg)">
+              <button class="delete-btn" @click.stop="handleDeleteMessage(msg)">
+
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                 </svg>
@@ -75,8 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { fetchMessages, markAllMessagesRead, deleteMessage as deleteMessageApi } from "@/api/modules/messages";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 
@@ -90,59 +93,20 @@ interface Message {
   link?: string;
 }
 
-const messages = reactive<Message[]>([
-  {
-    id: 1,
-    type: "system",
-    title: "系统通知",
-    content: "您的账号已完成实名认证，感谢您对宠物之家的支持！",
-    time: "刚刚",
-    isRead: false
-  },
-  {
-    id: 2,
-    type: "order",
-    title: "订单发货提醒",
-    content: "您购买的【智能逗猫激光灯】已发货，快递单号：SF1234567890，预计3天内送达。",
-    time: "10分钟前",
-    isRead: false
-  },
-  {
-    id: 3,
-    type: "like",
-    title: "收到点赞",
-    content: "您的帖子《分享一下糯米刚回家的样子》收到了 15 个赞，继续加油哦~",
-    time: "2小时前",
-    isRead: false
-  },
-  {
-    id: 4,
-    type: "comment",
-    title: "新评论",
-    content: "用户「萌宠达人」评论了您的帖子：\"糯米好可爱呀！请问是什么品种的猫猫？\"",
-    time: "昨天",
-    isRead: true
-  },
-  {
-    id: 5,
-    type: "system",
-    title: "领养申请通过",
-    content: "恭喜！您申请领养的【小橘】已通过审核，请于本周六上午10点携带身份证到机构办理手续。",
-    time: "昨天",
-    isRead: true
-  }
-]);
+const loading = ref(false);
+const error = ref("");
+const messages = ref<Message[]>([]);
 
-const hasUnread = computed(() => messages.some(msg => !msg.isRead));
+const hasUnread = computed(() => messages.value.some(msg => !msg.isRead));
 
 const groupedMessages = computed(() => {
   const groups: { date: string; messages: Message[] }[] = [];
   const today = "今天";
   const yesterday = "昨天";
 
-  const todayMsgs = messages.filter(m => m.time.includes("刚刚") || m.time.includes("分钟前") || m.time.includes("小时前"));
-  const yesterdayMsgs = messages.filter(m => m.time.includes("昨天"));
-  const olderMsgs = messages.filter(m => !m.time.includes("刚刚") && !m.time.includes("分钟前") && !m.time.includes("小时前") && !m.time.includes("昨天"));
+  const todayMsgs = messages.value.filter(m => m.time.includes("刚刚") || m.time.includes("分钟前") || m.time.includes("小时前"));
+  const yesterdayMsgs = messages.value.filter(m => m.time.includes("昨天"));
+  const olderMsgs = messages.value.filter(m => !m.time.includes("刚刚") && !m.time.includes("分钟前") && !m.time.includes("小时前") && !m.time.includes("昨天"));
 
   if (todayMsgs.length > 0) {
     groups.push({ date: today, messages: todayMsgs });
@@ -161,10 +125,39 @@ const goBack = () => {
   router.back();
 };
 
-const markAllRead = () => {
-  messages.forEach(msg => {
-    msg.isRead = true;
-  });
+/** 从后端加载消息列表 */
+async function loadMessages() {
+  loading.value = true;
+  error.value = "";
+  try {
+    const data = await fetchMessages({ page: 1, page_size: 50 });
+    const list = data.list || [];
+    messages.value = list.map((item: any) => ({
+      id: item.id,
+      type: item.type || "system",
+      title: item.title,
+      content: item.content,
+      time: item.time || item.created_at || "",
+      isRead: item.isRead ?? item.is_read ?? false,
+      link: item.link
+    }));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    messages.value = [];
+  } finally {
+    loading.value = false;
+  }
+}
+
+const markAllRead = async () => {
+  try {
+    await markAllMessagesRead();
+    messages.value.forEach(msg => {
+      msg.isRead = true;
+    });
+  } catch (e) {
+    console.error("标记已读失败", e);
+  }
 };
 
 const viewMessage = (msg: Message) => {
@@ -174,15 +167,20 @@ const viewMessage = (msg: Message) => {
   }
 };
 
-const deleteMessage = (msg: Message) => {
+const handleDeleteMessage = async (msg: Message) => {
   if (confirm("确定要删除该消息吗？")) {
-    const index = messages.findIndex(m => m.id === msg.id);
-    if (index > -1) {
-      messages.splice(index, 1);
+    try {
+      await deleteMessageApi(msg.id);
+      messages.value = messages.value.filter(m => m.id !== msg.id);
+    } catch (e) {
+      console.error("删除消息失败", e);
     }
   }
 };
+
+onMounted(loadMessages);
 </script>
+
 
 <style scoped lang="scss">
 .messages-hub {
