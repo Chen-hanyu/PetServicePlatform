@@ -354,15 +354,20 @@ const handlePublish = async () => {
   if (!canPublish.value) return;
   
   try {
-    await createPost({
+    const result = await createPost({
       title: form.title,
       content: form.content,
       category: selectedCategory.value,
       images: form.images
     });
     showToast("发布成功！", "success");
+    const newPostId = (result as any)?.id;
     setTimeout(() => {
-      router.push("/community");
+      if (newPostId) {
+        router.push(`/community/post/${newPostId}`);
+      } else {
+        router.push("/community");
+      }
     }, 1500);
   } catch (e) {
     showToast(toErrorMessage(e), "error");

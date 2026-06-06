@@ -126,13 +126,17 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { fetchOrders } from "@/api/modules/shop";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 const route = useRoute();
 
 const activeTab = ref((route.query.tab as string) || "all");
+const loading = ref(false);
+const error = ref("");
 
 interface Product {
   id: number;
@@ -154,99 +158,69 @@ interface Order {
   createdAt: string;
 }
 
-const tabs = reactive([
+const tabs = [
   { key: "all", label: "全部", badge: 0 },
-  { key: "pending", label: "待付款", badge: 1 },
+  { key: "pending", label: "待付款", badge: 0 },
   { key: "shipping", label: "待发货", badge: 0 },
-  { key: "receiving", label: "待收货", badge: 1 },
-  { key: "review", label: "待评价", badge: 2 },
+  { key: "receiving", label: "待收货", badge: 0 },
+  { key: "review", label: "待评价", badge: 0 },
   { key: "afterSale", label: "退换/售后", badge: 0 }
-]);
+];
 
-const orders = reactive<Order[]>([
-  {
-    id: 1,
-    shopName: "萌宠生活馆",
-    status: "pending",
-    statusText: "待付款",
-    products: [
-      {
-        id: 1,
-        name: "皇家宠物食品 幼猫粮",
-        spec: "2kg装",
-        price: 168,
-        count: 1,
-        image: "https://images.unsplash.com/photo-1625316708582-7c38734be31d?auto=format&fit=crop&w=200&q=80"
-      }
-    ],
-    totalCount: 1,
-    totalPrice: 168,
-    createdAt: "2024-01-15 14:30"
-  },
-  {
-    id: 2,
-    shopName: "宠物玩具专营店",
-    status: "receiving",
-    statusText: "待收货",
-    products: [
-      {
-        id: 2,
-        name: "智能逗猫激光灯",
-        spec: "蓝色",
-        price: 59,
-        count: 2,
-        image: "https://images.unsplash.com/photo-1535294435445-d7249524ef2e?auto=format&fit=crop&w=200&q=80"
-      }
-    ],
-    totalCount: 2,
-    totalPrice: 118,
-    createdAt: "2024-01-14 09:20"
-  },
-  {
-    id: 3,
-    shopName: "宠物医疗专营",
-    status: "review",
-    statusText: "待评价",
-    products: [
-      {
-        id: 3,
-        name: "宠物体内驱虫药",
-        spec: "大型犬款",
-        price: 45,
-        count: 3,
-        image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=200&q=80"
-      }
-    ],
-    totalCount: 3,
-    totalPrice: 135,
-    createdAt: "2024-01-12 16:45"
-  },
-  {
-    id: 4,
-    shopName: "猫咪用品专营",
-    status: "review",
-    statusText: "待评价",
-    products: [
-      {
-        id: 4,
-        name: "猫爬架大型多层",
-        spec: "灰色",
-        price: 399,
-        count: 1,
-        image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=200&q=80"
-      }
-    ],
-    totalCount: 1,
-    totalPrice: 399,
-    createdAt: "2024-01-10 11:00"
+const orders = ref<Order[]>([]);
+
+const loadOrders = async () => {
+  loading.value = true;
+  error.value = "";
+  try {
+    const data = await fetchOrders({ page: 1, page_size: 20 });
+    const list = data.list ?? [];
+    orders.value = list.map((item: any) => ({
+      id: item.id,
+      shopName: item.shop?.name || "宠物商城",
+      status: item.status || "pending",
+      statusText: getStatusText(item.status),
+      products: (item.items || []).map((p: any) => ({
+        id: p.id,
+        name: p.product?.name || "商品",
+        spec: p.spec || "",
+        price: p.price || 0,
+        count: p.quantity || 1,
+        image: p.product?.images?.[0] || "https://images.unsplash.com/photo-1625316708582-7c38734be31d?auto=format&fit=crop&w=200&q=80"
+      })),
+      totalCount: item.total_quantity || 0,
+      totalPrice: item.total_price || 0,
+      createdAt: item.created_at || ""
+    }));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    orders.value = [];
+  } finally {
+    loading.value = false;
   }
-]);
+};
+
+const getStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    pending: "待付款",
+    paid: "已付款",
+    shipping: "待发货",
+    shipped: "已发货",
+    receiving: "待收货",
+    received: "已收货",
+    review: "待评价",
+    completed: "已完成",
+    cancelled: "已取消",
+    afterSale: "退换/售后"
+  };
+  return map[status] || status;
+};
 
 const filteredOrders = computed(() => {
   if (activeTab.value === "all") {
-    return orders;
+    return orders.value;
   }
-  return orders.filter(order => order.status === activeTab.value);
+  return orders.value.filter(order => order.status === activeTab.value);
 });
 
 const goBack = () => {
@@ -259,9 +233,9 @@ const payOrder = (order: Order) => {
 
 const cancelOrder = (order: Order) => {
   if (confirm("确定要取消该订单吗？")) {
-    const index = orders.findIndex(o => o.id === order.id);
+    const index = orders.value.findIndex(o => o.id === order.id);
     if (index > -1) {
-      orders.splice(index, 1);
+      orders.value.splice(index, 1);
     }
   }
 };
@@ -285,6 +259,8 @@ const afterSale = (order: Order) => {
 const viewAfterSale = (order: Order) => {
   alert(`查看售后进度: ${order.id}`);
 };
+
+onMounted(loadOrders);
 </script>
 
 <style scoped lang="scss">

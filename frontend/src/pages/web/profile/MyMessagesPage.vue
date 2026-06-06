@@ -75,10 +75,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
+
+const loading = ref(true);
 
 interface Message {
   id: number;
@@ -90,59 +92,72 @@ interface Message {
   link?: string;
 }
 
-const messages = reactive<Message[]>([
-  {
-    id: 1,
-    type: "system",
-    title: "系统通知",
-    content: "您的账号已完成实名认证，感谢您对宠物之家的支持！",
-    time: "刚刚",
-    isRead: false
-  },
-  {
-    id: 2,
-    type: "order",
-    title: "订单发货提醒",
-    content: "您购买的【智能逗猫激光灯】已发货，快递单号：SF1234567890，预计3天内送达。",
-    time: "10分钟前",
-    isRead: false
-  },
-  {
-    id: 3,
-    type: "like",
-    title: "收到点赞",
-    content: "您的帖子《分享一下糯米刚回家的样子》收到了 15 个赞，继续加油哦~",
-    time: "2小时前",
-    isRead: false
-  },
-  {
-    id: 4,
-    type: "comment",
-    title: "新评论",
-    content: "用户「萌宠达人」评论了您的帖子：\"糯米好可爱呀！请问是什么品种的猫猫？\"",
-    time: "昨天",
-    isRead: true
-  },
-  {
-    id: 5,
-    type: "system",
-    title: "领养申请通过",
-    content: "恭喜！您申请领养的【小橘】已通过审核，请于本周六上午10点携带身份证到机构办理手续。",
-    time: "昨天",
-    isRead: true
-  }
-]);
+const messages = ref<Message[]>([]);
 
-const hasUnread = computed(() => messages.some(msg => !msg.isRead));
+const loadMessages = async () => {
+  loading.value = true;
+  // TODO: 当后端消息 API 就绪后，替换为真实 API 调用
+  // import { fetchNotifications } from "@/api/modules/xxx";
+  // const data = await fetchNotifications({ page: 1, page_size: 20 });
+  // messages.value = data.list ?? [];
+  
+  // 当前使用模拟数据
+  await new Promise(resolve => setTimeout(resolve, 300));
+  messages.value = [
+    {
+      id: 1,
+      type: "system",
+      title: "系统通知",
+      content: "您的账号已完成实名认证，感谢您对宠物之家的支持！",
+      time: "刚刚",
+      isRead: false
+    },
+    {
+      id: 2,
+      type: "order",
+      title: "订单发货提醒",
+      content: "您购买的【智能逗猫激光灯】已发货，快递单号：SF1234567890，预计3天内送达。",
+      time: "10分钟前",
+      isRead: false
+    },
+    {
+      id: 3,
+      type: "like",
+      title: "收到点赞",
+      content: "您的帖子《分享一下糯米刚回家的样子》收到了 15 个赞，继续加油哦~",
+      time: "2小时前",
+      isRead: false
+    },
+    {
+      id: 4,
+      type: "comment",
+      title: "新评论",
+      content: "用户「萌宠达人」评论了您的帖子：\"糯米好可爱呀！请问是什么品种的猫猫？\"",
+      time: "昨天",
+      isRead: true
+    },
+    {
+      id: 5,
+      type: "system",
+      title: "领养申请通过",
+      content: "恭喜！您申请领养的【小橘】已通过审核，请于本周六上午10点携带身份证到机构办理手续。",
+      time: "昨天",
+      isRead: true
+    }
+  ];
+  loading.value = false;
+};
+
+const hasUnread = computed(() => messages.value.some(msg => !msg.isRead));
 
 const groupedMessages = computed(() => {
   const groups: { date: string; messages: Message[] }[] = [];
   const today = "今天";
   const yesterday = "昨天";
 
-  const todayMsgs = messages.filter(m => m.time.includes("刚刚") || m.time.includes("分钟前") || m.time.includes("小时前"));
-  const yesterdayMsgs = messages.filter(m => m.time.includes("昨天"));
-  const olderMsgs = messages.filter(m => !m.time.includes("刚刚") && !m.time.includes("分钟前") && !m.time.includes("小时前") && !m.time.includes("昨天"));
+  const todayMsgs = messages.value.filter(m => m.time.includes("刚刚") || m.time.includes("分钟前") || m.time.includes("小时前"));
+  const yesterdayMsgs = messages.value.filter(m => m.time.includes("昨天"));
+  const olderMsgs = messages.value.filter(m => !m.time.includes("刚刚") && !m.time.includes("分钟前") && !m.time.includes("小时前") && !m.time.includes("昨天"));
 
   if (todayMsgs.length > 0) {
     groups.push({ date: today, messages: todayMsgs });
@@ -162,7 +177,7 @@ const goBack = () => {
 };
 
 const markAllRead = () => {
-  messages.forEach(msg => {
+  messages.value.forEach(msg => {
     msg.isRead = true;
   });
 };
@@ -176,12 +191,14 @@ const viewMessage = (msg: Message) => {
 
 const deleteMessage = (msg: Message) => {
   if (confirm("确定要删除该消息吗？")) {
-    const index = messages.findIndex(m => m.id === msg.id);
+    const index = messages.value.findIndex(m => m.id === msg.id);
     if (index > -1) {
-      messages.splice(index, 1);
+      messages.value.splice(index, 1);
     }
   }
 };
+
+onMounted(loadMessages);
 </script>
 
 <style scoped lang="scss">
