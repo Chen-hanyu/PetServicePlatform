@@ -22,24 +22,17 @@
       </div>
 
       <div v-else class="posts-list">
-        <article v-for="post in posts" :key="post.id" class="post-card">
+        <article v-for="post in posts" :key="post.id" class="post-card" @click="goToPost(post.id)">
           <div class="post-header">
             <div class="post-author">
-              <img :src="post.authorAvatar || defaultAvatar" :alt="post.authorName" class="author-avatar" />
+              <img :src="post.author?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'" :alt="post.author?.nickname" class="author-avatar" />
               <div class="author-info">
-                <span class="author-name">{{ post.authorName }}</span>
-                <span class="post-time">{{ post.createdAt }}</span>
+                <span class="author-name">{{ post.author?.nickname || '匿名用户' }}</span>
+                <span class="post-time">{{ formatTime(post.published_at) }}</span>
               </div>
             </div>
             <div class="post-actions">
-              <button class="action-btn" @click="editPost(post)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
-              <button class="action-btn delete" @click="handleDeletePost(post)">
-
+              <button class="action-btn delete" @click.stop="deletePost(post)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                 </svg>
@@ -48,9 +41,10 @@
           </div>
 
           <div class="post-content">
-            <p class="post-text">{{ post.content }}</p>
-            <div v-if="post.images && post.images.length > 0" class="post-images">
-              <img v-for="(img, idx) in post.images" :key="idx" :src="img" :alt="`Image ${idx + 1}`" class="post-image" />
+            <h3 class="post-title">{{ post.title }}</h3>
+            <p class="post-text">{{ post.excerpt || post.title }}</p>
+            <div v-if="post.cover_url" class="post-images">
+              <img :src="post.cover_url" alt="封面" class="post-image" />
             </div>
           </div>
 
@@ -59,13 +53,13 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
               </svg>
-              <span>{{ post.likeCount }} 点赞</span>
+              <span>{{ post.like_count }} 点赞</span>
             </div>
             <div class="stat-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
               </svg>
-              <span>{{ post.commentCount }} 评论</span>
+              <span>{{ post.comment_count }} 评论</span>
             </div>
             <div class="stat-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -74,7 +68,7 @@
                 <circle cx="18" cy="19" r="3"/>
                 <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/>
               </svg>
-              <span>{{ post.shareCount }} 分享</span>
+              <span>{{ post.favorite_count }} 收藏</span>
             </div>
           </div>
         </article>
@@ -86,30 +80,43 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/store/auth";
-import { fetchMyPosts, deletePost as deletePostApi } from "@/api/modules/community";
+import { fetchPosts } from "@/api/modules/community";
 import { toErrorMessage } from "@/api/http";
+import type { PostSummary } from "@/types/community";
 
 const router = useRouter();
-const auth = useAuthStore();
 
 const loading = ref(false);
 const error = ref("");
-const defaultAvatar = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80";
+const posts = ref<PostSummary[]>([]);
 
-interface Post {
-  id: number;
-  authorName: string;
-  authorAvatar: string;
-  content: string;
-  images: string[];
-  likeCount: number;
-  commentCount: number;
-  shareCount: number;
-  createdAt: string;
-}
+const loadPosts = async () => {
+  loading.value = true;
+  error.value = "";
+  try {
+    const data = await fetchPosts({ page: 1, page_size: 20 });
+    posts.value = data.list ?? [];
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    posts.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
 
-const posts = ref<Post[]>([]);
+const formatTime = (time?: string) => {
+  if (!time) return "";
+  const date = new Date(time);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  
+  if (diff < 60000) return "刚刚";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`;
+  
+  return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
+};
 
 const goBack = () => {
   router.back();
@@ -119,50 +126,22 @@ const goToCommunity = () => {
   router.push("/community");
 };
 
-/** 从后端加载我的动态列表 */
-async function loadPosts() {
-  loading.value = true;
-  error.value = "";
-  try {
-    const data = await fetchMyPosts({ page: 1, page_size: 50 });
-    const list = data.list || [];
-    posts.value = list.map((item: any) => ({
-      id: item.id,
-      authorName: auth.user?.nickname || "我",
-      authorAvatar: auth.user?.avatar_url || defaultAvatar,
-      content: item.content || item.excerpt || "",
-      images: item.images || (item.cover_url ? [item.cover_url] : []),
-      likeCount: item.like_count || 0,
-      commentCount: item.comment_count || 0,
-      shareCount: item.share_count || 0,
-      createdAt: item.created_at || item.createdAt || ""
-    }));
-  } catch (e) {
-    error.value = toErrorMessage(e);
-    posts.value = [];
-  } finally {
-    loading.value = false;
-  }
-}
-
-const editPost = (post: Post) => {
-  alert(`编辑动态: ${post.id}`);
+const goToPost = (postId: number) => {
+  router.push(`/community/post/${postId}`);
 };
 
-const handleDeletePost = async (post: Post) => {
+const deletePost = async (post: PostSummary) => {
   if (confirm("确定要删除这条动态吗？")) {
-    try {
-      await deletePostApi(post.id);
-      posts.value = posts.value.filter(p => p.id !== post.id);
-    } catch (e) {
-      console.error("删除动态失败", e);
+    // 调用删除 API（如果后端提供）
+    const index = posts.value.findIndex(p => p.id === post.id);
+    if (index > -1) {
+      posts.value.splice(index, 1);
     }
   }
 };
 
 onMounted(loadPosts);
 </script>
-
 
 <style scoped lang="scss">
 .posts-hub {

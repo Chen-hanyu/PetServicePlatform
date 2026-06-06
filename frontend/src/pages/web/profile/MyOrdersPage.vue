@@ -134,9 +134,9 @@ import { toErrorMessage } from "@/api/http";
 const router = useRouter();
 const route = useRoute();
 
+const activeTab = ref((route.query.tab as string) || "all");
 const loading = ref(false);
 const error = ref("");
-const activeTab = ref((route.query.tab as string) || "all");
 
 interface Product {
   id: number;
@@ -158,16 +158,63 @@ interface Order {
   createdAt: string;
 }
 
-const tabs = computed(() => [
+const tabs = [
   { key: "all", label: "全部", badge: 0 },
-  { key: "pending", label: "待付款", badge: orders.value.filter(o => o.status === "pending").length },
-  { key: "shipping", label: "待发货", badge: orders.value.filter(o => o.status === "shipping").length },
-  { key: "receiving", label: "待收货", badge: orders.value.filter(o => o.status === "receiving").length },
-  { key: "review", label: "待评价", badge: orders.value.filter(o => o.status === "review").length },
-  { key: "afterSale", label: "退换/售后", badge: orders.value.filter(o => o.status === "afterSale").length }
-]);
+  { key: "pending", label: "待付款", badge: 0 },
+  { key: "shipping", label: "待发货", badge: 0 },
+  { key: "receiving", label: "待收货", badge: 0 },
+  { key: "review", label: "待评价", badge: 0 },
+  { key: "afterSale", label: "退换/售后", badge: 0 }
+];
 
 const orders = ref<Order[]>([]);
+
+const loadOrders = async () => {
+  loading.value = true;
+  error.value = "";
+  try {
+    const data = await fetchOrders({ page: 1, page_size: 20 });
+    const list = data.list ?? [];
+    orders.value = list.map((item: any) => ({
+      id: item.id,
+      shopName: item.shop?.name || "宠物商城",
+      status: item.status || "pending",
+      statusText: getStatusText(item.status),
+      products: (item.items || []).map((p: any) => ({
+        id: p.id,
+        name: p.product?.name || "商品",
+        spec: p.spec || "",
+        price: p.price || 0,
+        count: p.quantity || 1,
+        image: p.product?.images?.[0] || "https://images.unsplash.com/photo-1625316708582-7c38734be31d?auto=format&fit=crop&w=200&q=80"
+      })),
+      totalCount: item.total_quantity || 0,
+      totalPrice: item.total_price || 0,
+      createdAt: item.created_at || ""
+    }));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    orders.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+const getStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    pending: "待付款",
+    paid: "已付款",
+    shipping: "待发货",
+    shipped: "已发货",
+    receiving: "待收货",
+    received: "已收货",
+    review: "待评价",
+    completed: "已完成",
+    cancelled: "已取消",
+    afterSale: "退换/售后"
+  };
+  return map[status] || status;
+};
 
 const filteredOrders = computed(() => {
   if (activeTab.value === "all") {
@@ -180,59 +227,16 @@ const goBack = () => {
   router.back();
 };
 
-/** 从后端加载订单列表 */
-async function loadOrders() {
-  loading.value = true;
-  error.value = "";
-  try {
-    const params: Record<string, string | number | undefined> = { page: 1, page_size: 50 };
-    if (activeTab.value !== "all") params.status = activeTab.value;
-    const data = await fetchOrders(params);
-    const list = data.list || [];
-    orders.value = list.map((item: any) => ({
-      id: item.id,
-      shopName: item.shopName || "宠物之家自营",
-      status: item.status || "pending",
-      statusText: item.statusText || getStatusText(item.status),
-      products: (item.products || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        spec: p.spec || "默认",
-        price: p.price,
-        count: p.quantity || p.count || 1,
-        image: p.image || p.image_url || "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=200&q=80"
-      })),
-      totalCount: item.totalCount || item.products?.length || 0,
-      totalPrice: item.totalPrice || item.total_amount || 0,
-      createdAt: item.createdAt || item.created_at || ""
-    }));
-  } catch (e) {
-    error.value = toErrorMessage(e);
-    orders.value = [];
-  } finally {
-    loading.value = false;
-  }
-}
-
-function getStatusText(status: string): string {
-  const map: Record<string, string> = {
-    pending: "待付款",
-    shipping: "待发货",
-    receiving: "待收货",
-    review: "待评价",
-    completed: "已完成",
-    afterSale: "退换/售后"
-  };
-  return map[status] || status;
-}
-
 const payOrder = (order: Order) => {
   alert(`去支付订单: ${order.id}`);
 };
 
 const cancelOrder = (order: Order) => {
   if (confirm("确定要取消该订单吗？")) {
-    orders.value = orders.value.filter(o => o.id !== order.id);
+    const index = orders.value.findIndex(o => o.id === order.id);
+    if (index > -1) {
+      orders.value.splice(index, 1);
+    }
   }
 };
 
@@ -258,7 +262,6 @@ const viewAfterSale = (order: Order) => {
 
 onMounted(loadOrders);
 </script>
-
 
 <style scoped lang="scss">
 .orders-hub {

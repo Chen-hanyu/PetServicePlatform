@@ -139,23 +139,23 @@
         <!-- 个人信息卡片 -->
         <div class="sidebar-card user-card">
           <div class="user-profile">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="user-avatar" />
+            <img :src="currentUser.avatar" class="user-avatar" />
             <div class="user-info">
-              <span class="user-name">宠友123456</span>
-              <span class="user-level">Lv.5 萌新达人</span>
+              <span class="user-name">{{ currentUser.nickname }}</span>
+              <span class="user-level">宠物爱好者</span>
             </div>
           </div>
           <div class="user-stats">
             <div class="stat-item">
-              <span class="stat-num">128</span>
+              <span class="stat-num">{{ currentUser.followCount }}</span>
               <span class="stat-label">关注</span>
             </div>
             <div class="stat-item">
-              <span class="stat-num">256</span>
+              <span class="stat-num">{{ currentUser.fansCount }}</span>
               <span class="stat-label">粉丝</span>
             </div>
             <div class="stat-item">
-              <span class="stat-num">1.2k</span>
+              <span class="stat-num">{{ currentUser.likeCount }}</span>
               <span class="stat-label">获赞</span>
             </div>
           </div>
@@ -188,44 +188,6 @@
           </ul>
         </div>
 
-        <!-- 特别关注 -->
-        <div class="sidebar-card">
-          <h4 class="card-title-bar">💜 特别关注</h4>
-          <div class="user-list">
-            <div class="user-item">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" class="user-avatar" />
-              <div class="user-info">
-                <span class="user-name">喵星人</span>
-                <span class="user-desc">分享养猫心得</span>
-              </div>
-              <button class="btn-follow">+ 关注</button>
-            </div>
-            <div class="user-item">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=2" class="user-avatar" />
-              <div class="user-info">
-                <span class="user-name">汪星人</span>
-                <span class="user-desc">狗狗训练师</span>
-              </div>
-              <button class="btn-follow">+ 关注</button>
-            </div>
-            <div class="user-item">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=3" class="user-avatar" />
-              <div class="user-info">
-                <span class="user-name">兔兔酱</span>
-                <span class="user-desc">养兔爱好者</span>
-              </div>
-              <button class="btn-follow">+ 关注</button>
-            </div>
-            <div class="user-item">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=3" class="user-avatar" />
-              <div class="user-info">
-                <span class="user-name">兔兔酱</span>
-                <span class="user-desc">养兔爱好者</span>
-              </div>
-              <button class="btn-follow">+ 关注</button>
-            </div>
-          </div>
-        </div>
       </aside>
     </div>
   </div>
@@ -235,28 +197,29 @@
 import { onMounted, ref, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
-import { fetchPosts } from "@/api/modules/community";
+import { fetchPosts, toggleLike } from "@/api/modules/community";
 import { toErrorMessage } from "@/api/http";
+import { useAuthStore } from "@/store/auth";
 import type { PostSummary } from "@/types/community";
+
+const router = useRouter();
+const auth = useAuthStore();
 
 const loading = ref(false);
 const error = ref("");
 const searchQuery = ref("");
 const searchFocused = ref(false);
 const currentPage = ref(1);
-const posts = ref<PostSummary[]>([]);
-const router = useRouter();
+const posts = ref<PostSummaryVM[]>([]);
 
-const searchSuggestions = ref([
-  "新手养猫注意事项",
-  "狗狗驱虫时间",
-  "猫粮推荐",
-  "宠物疫苗",
-  "自制猫饭",
-  "狗狗洗澡",
-  "猫咪训练",
-  "宠物保险"
-]);
+const currentUser = computed(() => ({
+  nickname: auth.user?.nickname || "未登录用户",
+  avatar: auth.user?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+  followCount: 0,
+  fansCount: 0,
+  likeCount: 0
+}));
+
 const activeCategory = ref("推荐");
 const categories = ["推荐", "晒宠", "问答", "种草", "日常", "知识", "视频", "好物"];
 
@@ -286,32 +249,15 @@ const handleSearchBlur = () => {
   }, 200);
 };
 
-const selectSuggestion = (item: PostSummary) => {
-  openDetail(item.id);
-  searchFocused.value = false;
-};
-
 const handleSearch = () => {
   if (searchQuery.value) {
-    alert(`搜索: ${searchQuery.value}`);
+    currentPage.value = 1;
+    void loadPosts();
     searchFocused.value = false;
   }
 };
 
 const PAGE_SIZE = 12;
-
-const emptyListForTab = (): PostSummary[] => {
-  const list = [] as PostSummary[];
-  let filtered: PostSummary[];
-  if (activeCategory.value === "推荐") {
-    filtered = list;
-  } else {
-    filtered = list.filter((p) => p.category === activeCategory.value);
-    if (filtered.length === 0) filtered = list;
-  }
-  const start = (currentPage.value - 1) * PAGE_SIZE;
-  return filtered.slice(start, start + PAGE_SIZE);
-};
 
 const totalPosts = ref(0);
 const totalPages = computed(() => Math.max(1, Math.ceil(totalPosts.value / PAGE_SIZE)));
@@ -320,7 +266,15 @@ const loadPosts = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const data = await fetchPosts({ tab: activeCategory.value, page: currentPage.value, page_size: PAGE_SIZE });
+    const params: Record<string, string | number | undefined> = {
+      tab: activeCategory.value,
+      page: currentPage.value,
+      page_size: PAGE_SIZE
+    };
+    if (searchQuery.value) {
+      params.keyword = searchQuery.value;
+    }
+    const data = await fetchPosts(params);
     const list = data.list ?? [];
     if (list.length > 0) {
       posts.value = list;
@@ -338,9 +292,16 @@ const loadPosts = async () => {
   }
 };
 
-const togglePostLike = (post: PostSummary) => {
-  post.isLiked = !post.isLiked;
-  post.like_count = (post.like_count || 0) + (post.isLiked ? 1 : -1);
+type PostSummaryVM = PostSummary & { isLiked?: boolean };
+
+const togglePostLike = async (post: PostSummaryVM) => {
+  try {
+    await toggleLike(post.id);
+    post.like_count = (post.like_count || 0) + (post.isLiked ? -1 : 1);
+    post.isLiked = !post.isLiked;
+  } catch {
+    // 静默失败
+  }
 };
 
 const goToPostComments = (postId: number) => {
