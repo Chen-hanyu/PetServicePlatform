@@ -12,7 +12,9 @@ public class ShopOrder {
     private Long userId;
     private String orderNo;
     private BigDecimal totalAmount;
+    private BigDecimal discountAmount;
     private BigDecimal payAmount;
+    private Long userCouponId;
     private String status;
     private String receiverName;
     private String receiverPhone;
@@ -57,8 +59,24 @@ public class ShopOrder {
         return payAmount;
     }
 
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
     public void setPayAmount(BigDecimal payAmount) {
         this.payAmount = payAmount;
+    }
+
+    public Long getUserCouponId() {
+        return userCouponId;
+    }
+
+    public void setUserCouponId(Long userCouponId) {
+        this.userCouponId = userCouponId;
     }
 
     public String getStatus() {

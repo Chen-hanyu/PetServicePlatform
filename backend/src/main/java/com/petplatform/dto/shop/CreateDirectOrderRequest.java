@@ -1,16 +1,17 @@
 package com.petplatform.dto.shop;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
 
-public record CreateOrderRequest(
-        @JsonProperty("item_ids")
-        @NotEmpty(message = "购物车项不能为空")
-        List<Long> itemIds,
+public record CreateDirectOrderRequest(
+        @Valid
+        @NotEmpty(message = "商品不能为空")
+        List<OrderProductRequest> items,
 
         @JsonProperty("address_id")
         Long addressId,
@@ -33,13 +34,4 @@ public record CreateOrderRequest(
 
         String remark
 ) {
-    public CreateOrderRequest(
-            List<Long> itemIds,
-            String receiverName,
-            String receiverPhone,
-            String receiverAddress,
-            String remark
-    ) {
-        this(itemIds, null, null, receiverName, receiverPhone, receiverAddress, remark);
-    }
 }

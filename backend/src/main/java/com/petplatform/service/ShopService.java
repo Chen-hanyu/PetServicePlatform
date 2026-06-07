@@ -7,26 +7,36 @@ import com.petplatform.common.PageResponse;
 import com.petplatform.common.ResultCode;
 import com.petplatform.common.exception.BusinessException;
 import com.petplatform.dto.shop.AddCartItemRequest;
+import com.petplatform.dto.shop.AddressResponse;
 import com.petplatform.dto.shop.CartItemResponse;
 import com.petplatform.dto.shop.CartResponse;
+import com.petplatform.dto.shop.CouponResponse;
+import com.petplatform.dto.shop.CreateDirectOrderRequest;
 import com.petplatform.dto.shop.CreateOrderRequest;
 import com.petplatform.dto.shop.OrderDetailResponse;
 import com.petplatform.dto.shop.OrderItemResponse;
+import com.petplatform.dto.shop.OrderProductRequest;
 import com.petplatform.dto.shop.OrderSummaryResponse;
 import com.petplatform.dto.shop.ProductCategoryResponse;
 import com.petplatform.dto.shop.ProductDetailResponse;
 import com.petplatform.dto.shop.ProductSummaryResponse;
 import com.petplatform.dto.shop.UpdateCartItemRequest;
 import com.petplatform.entity.CartItem;
+import com.petplatform.entity.Coupon;
 import com.petplatform.entity.Product;
 import com.petplatform.entity.ProductCategory;
 import com.petplatform.entity.ShopOrder;
 import com.petplatform.entity.ShopOrderItem;
+import com.petplatform.entity.UserAddress;
+import com.petplatform.entity.UserCoupon;
 import com.petplatform.mapper.CartItemMapper;
+import com.petplatform.mapper.CouponMapper;
 import com.petplatform.mapper.ProductCategoryMapper;
 import com.petplatform.mapper.ProductMapper;
 import com.petplatform.mapper.ShopOrderItemMapper;
 import com.petplatform.mapper.ShopOrderMapper;
+import com.petplatform.mapper.UserAddressMapper;
+import com.petplatform.mapper.UserCouponMapper;
 import com.petplatform.security.SecurityUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -36,6 +46,7 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -54,19 +65,28 @@ public class ShopService {
     private final CartItemMapper cartItemMapper;
     private final ShopOrderMapper shopOrderMapper;
     private final ShopOrderItemMapper shopOrderItemMapper;
+    private final UserAddressMapper userAddressMapper;
+    private final CouponMapper couponMapper;
+    private final UserCouponMapper userCouponMapper;
 
     public ShopService(
             ProductCategoryMapper productCategoryMapper,
             ProductMapper productMapper,
             CartItemMapper cartItemMapper,
             ShopOrderMapper shopOrderMapper,
-            ShopOrderItemMapper shopOrderItemMapper
+            ShopOrderItemMapper shopOrderItemMapper,
+            UserAddressMapper userAddressMapper,
+            CouponMapper couponMapper,
+            UserCouponMapper userCouponMapper
     ) {
         this.productCategoryMapper = productCategoryMapper;
         this.productMapper = productMapper;
         this.cartItemMapper = cartItemMapper;
         this.shopOrderMapper = shopOrderMapper;
         this.shopOrderItemMapper = shopOrderItemMapper;
+        this.userAddressMapper = userAddressMapper;
+        this.couponMapper = couponMapper;
+        this.userCouponMapper = userCouponMapper;
     }
 
     public List<ProductCategoryResponse> getCategories() {
@@ -137,6 +157,40 @@ public class ShopService {
         return new CartResponse(responseItems, totalAmount);
     }
 
+    public List<AddressResponse> getAddresses() {
+        Long userId = SecurityUtils.getCurrentUser().id();
+        return userAddressMapper.selectList(new LambdaQueryWrapper<UserAddress>()
+                        .eq(UserAddress::getUserId, userId)
+                        .eq(UserAddress::getStatus, "ACTIVE")
+                        .orderByDesc(UserAddress::getIsDefault)
+                        .orderByDesc(UserAddress::getUpdatedAt))
+                .stream()
+                .map(AddressResponse::from)
+                .toList();
+    }
+
+    public List<CouponResponse> getAvailableCoupons(BigDecimal amount) {
+        Long userId = SecurityUtils.getCurrentUser().id();
+        BigDecimal orderAmount = amount == null ? BigDecimal.ZERO : amount;
+        LocalDateTime now = LocalDateTime.now();
+        List<UserCoupon> userCoupons = userCouponMapper.selectList(new LambdaQueryWrapper<UserCoupon>()
+                .eq(UserCoupon::getUserId, userId)
+                .eq(UserCoupon::getStatus, "UNUSED")
+                .orderByDesc(UserCoupon::getCreatedAt));
+        Map<Long, Coupon> coupons = loadCoupons(userCoupons.stream().map(UserCoupon::getCouponId).toList());
+        return userCoupons.stream()
+                .map(userCoupon -> {
+                    Coupon coupon = coupons.get(userCoupon.getCouponId());
+                    if (coupon == null) {
+                        return null;
+                    }
+                    String reason = couponUnavailableReason(coupon, orderAmount, now);
+                    return CouponResponse.from(userCoupon, coupon, reason == null, reason);
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
     @Transactional
     public CartResponse addCartItem(AddCartItemRequest request) {
         Long userId = SecurityUtils.getCurrentUser().id();
@@ -198,50 +252,36 @@ public class ShopService {
             throw new BusinessException(ResultCode.INVALID_OPERATION, "仅支持下单已勾选的购物车商品");
         }
 
-        Map<Long, Product> products = loadProducts(cartItems.stream().map(CartItem::getProductId).toList());
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        for (CartItem item : cartItems) {
-            Product product = products.get(item.getProductId());
-            if (product == null || !"ON_SALE".equals(product.getStatus())) {
-                throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "商品不存在或已下架");
-            }
-            ensureStock(product, item.getQuantity());
-            totalAmount = totalAmount.add(product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-        }
+        List<OrderProductRequest> items = cartItems.stream()
+                .map(item -> new OrderProductRequest(item.getProductId(), item.getQuantity()))
+                .toList();
+        return createOrderFromProducts(
+                userId,
+                items,
+                request.addressId(),
+                request.couponId(),
+                request.receiverName(),
+                request.receiverPhone(),
+                request.receiverAddress(),
+                request.remark(),
+                cartItems
+        );
+    }
 
-        ShopOrder order = new ShopOrder();
-        order.setUserId(userId);
-        order.setOrderNo(generateOrderNo());
-        order.setTotalAmount(totalAmount);
-        order.setPayAmount(totalAmount);
-        order.setStatus("PENDING");
-        order.setReceiverName(request.receiverName().trim());
-        order.setReceiverPhone(request.receiverPhone());
-        order.setReceiverAddress(request.receiverAddress().trim());
-        order.setRemark(request.remark());
-        shopOrderMapper.insert(order);
-
-        for (CartItem item : cartItems) {
-            Product product = products.get(item.getProductId());
-            int updatedRows = productMapper.decrementStockSafely(product.getId(), item.getQuantity());
-            if (updatedRows <= 0) {
-                throw new BusinessException(ResultCode.OUT_OF_STOCK);
-            }
-            product.setStock(product.getStock() - item.getQuantity());
-
-            ShopOrderItem orderItem = new ShopOrderItem();
-            orderItem.setOrderId(order.getId());
-            orderItem.setProductId(product.getId());
-            orderItem.setProductName(product.getName());
-            orderItem.setProductImageUrl(product.getImageUrl());
-            orderItem.setUnitPrice(product.getPrice());
-            orderItem.setQuantity(item.getQuantity());
-            orderItem.setSubtotalAmount(product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-            shopOrderItemMapper.insert(orderItem);
-            cartItemMapper.deleteById(item.getId());
-        }
-
-        return OrderSummaryResponse.from(shopOrderMapper.selectById(order.getId()));
+    @Transactional
+    public OrderSummaryResponse createDirectOrder(CreateDirectOrderRequest request) {
+        Long userId = SecurityUtils.getCurrentUser().id();
+        return createOrderFromProducts(
+                userId,
+                request.items(),
+                request.addressId(),
+                request.couponId(),
+                request.receiverName(),
+                request.receiverPhone(),
+                request.receiverAddress(),
+                request.remark(),
+                Collections.emptyList()
+        );
     }
 
     public PageResponse<OrderSummaryResponse> getOrderPage(String status, int page, int pageSize) {
@@ -283,6 +323,93 @@ public class ShopService {
         return OrderDetailResponse.from(order, items);
     }
 
+    private OrderSummaryResponse createOrderFromProducts(
+            Long userId,
+            List<OrderProductRequest> requestedItems,
+            Long addressId,
+            Long couponId,
+            String receiverName,
+            String receiverPhone,
+            String receiverAddress,
+            String remark,
+            List<CartItem> cartItemsToDelete
+    ) {
+        UserAddress address = addressId == null ? null : getAddressOrThrow(userId, addressId);
+        Receiver receiver = address == null
+                ? new Receiver(receiverName.trim(), receiverPhone, receiverAddress.trim())
+                : Receiver.from(address);
+        Map<Long, Integer> quantities = requestedItems.stream()
+                .filter(item -> item.productId() != null && item.quantity() != null)
+                .collect(Collectors.toMap(
+                        OrderProductRequest::productId,
+                        OrderProductRequest::quantity,
+                        Integer::sum
+                ));
+        if (quantities.isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "商品不能为空");
+        }
+
+        Map<Long, Product> products = loadProducts(new ArrayList<>(quantities.keySet()));
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (Map.Entry<Long, Integer> entry : quantities.entrySet()) {
+            Product product = products.get(entry.getKey());
+            if (product == null || !"ON_SALE".equals(product.getStatus())) {
+                throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "商品不存在或已下架");
+            }
+            ensureStock(product, entry.getValue());
+            totalAmount = totalAmount.add(product.getPrice().multiply(BigDecimal.valueOf(entry.getValue())));
+        }
+
+        AppliedCoupon appliedCoupon = applyCouponIfPresent(userId, couponId, totalAmount);
+        ShopOrder order = new ShopOrder();
+        order.setUserId(userId);
+        order.setOrderNo(generateOrderNo());
+        order.setTotalAmount(totalAmount);
+        order.setDiscountAmount(appliedCoupon.discountAmount());
+        order.setPayAmount(totalAmount.subtract(appliedCoupon.discountAmount()));
+        order.setUserCouponId(appliedCoupon.userCouponId());
+        order.setStatus("PENDING");
+        order.setReceiverName(receiver.name());
+        order.setReceiverPhone(receiver.phone());
+        order.setReceiverAddress(receiver.address());
+        order.setRemark(remark);
+        shopOrderMapper.insert(order);
+
+        for (Map.Entry<Long, Integer> entry : quantities.entrySet()) {
+            Product product = products.get(entry.getKey());
+            Integer quantity = entry.getValue();
+            int updatedRows = productMapper.decrementStockSafely(product.getId(), quantity);
+            if (updatedRows <= 0) {
+                throw new BusinessException(ResultCode.OUT_OF_STOCK);
+            }
+            product.setStock(product.getStock() - quantity);
+
+            ShopOrderItem orderItem = new ShopOrderItem();
+            orderItem.setOrderId(order.getId());
+            orderItem.setProductId(product.getId());
+            orderItem.setProductName(product.getName());
+            orderItem.setProductImageUrl(product.getImageUrl());
+            orderItem.setUnitPrice(product.getPrice());
+            orderItem.setQuantity(quantity);
+            orderItem.setSubtotalAmount(product.getPrice().multiply(BigDecimal.valueOf(quantity)));
+            shopOrderItemMapper.insert(orderItem);
+        }
+
+        if (appliedCoupon.userCouponId() != null) {
+            UserCoupon userCoupon = userCouponMapper.selectById(appliedCoupon.userCouponId());
+            userCoupon.setStatus("USED");
+            userCoupon.setUsedOrderId(order.getId());
+            userCoupon.setUsedAt(LocalDateTime.now());
+            userCouponMapper.updateById(userCoupon);
+        }
+
+        for (CartItem item : cartItemsToDelete) {
+            cartItemMapper.deleteById(item.getId());
+        }
+
+        return OrderSummaryResponse.from(shopOrderMapper.selectById(order.getId()));
+    }
+
     private CartItemResponse toCartItemResponse(CartItem item, Product product) {
         if (product == null) {
             throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "购物车商品不存在");
@@ -310,6 +437,15 @@ public class ShopService {
                 .collect(Collectors.toMap(Product::getId, Function.identity()));
     }
 
+    private Map<Long, Coupon> loadCoupons(List<Long> couponIds) {
+        List<Long> distinctIds = couponIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (distinctIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return couponMapper.selectByIds(distinctIds).stream()
+                .collect(Collectors.toMap(Coupon::getId, Function.identity()));
+    }
+
     private Product getAvailableProductOrThrow(Long productId) {
         Product product = productMapper.selectById(productId);
         if (product == null || !"ON_SALE".equals(product.getStatus())) {
@@ -318,7 +454,51 @@ public class ShopService {
         return product;
     }
 
+    private UserAddress getAddressOrThrow(Long userId, Long addressId) {
+        UserAddress address = userAddressMapper.selectById(addressId);
+        if (address == null || !address.getUserId().equals(userId) || !"ACTIVE".equals(address.getStatus())) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "收货地址不存在");
+        }
+        return address;
+    }
+
+    private AppliedCoupon applyCouponIfPresent(Long userId, Long userCouponId, BigDecimal totalAmount) {
+        if (userCouponId == null) {
+            return new AppliedCoupon(null, BigDecimal.ZERO);
+        }
+        UserCoupon userCoupon = userCouponMapper.selectById(userCouponId);
+        if (userCoupon == null || !userCoupon.getUserId().equals(userId) || !"UNUSED".equals(userCoupon.getStatus())) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "优惠券不可用");
+        }
+        Coupon coupon = couponMapper.selectById(userCoupon.getCouponId());
+        String reason = coupon == null ? "优惠券不存在" : couponUnavailableReason(coupon, totalAmount, LocalDateTime.now());
+        if (reason != null) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, reason);
+        }
+        BigDecimal discount = coupon.getDiscountAmount().min(totalAmount);
+        return new AppliedCoupon(userCoupon.getId(), discount);
+    }
+
+    private String couponUnavailableReason(Coupon coupon, BigDecimal amount, LocalDateTime now) {
+        if (!"ACTIVE".equals(coupon.getStatus())) {
+            return "优惠券已停用";
+        }
+        if (coupon.getStartAt() != null && now.isBefore(coupon.getStartAt())) {
+            return "优惠券未开始";
+        }
+        if (coupon.getEndAt() != null && now.isAfter(coupon.getEndAt())) {
+            return "优惠券已过期";
+        }
+        if (coupon.getMinAmount() != null && amount.compareTo(coupon.getMinAmount()) < 0) {
+            return "未达到优惠券使用门槛";
+        }
+        return null;
+    }
+
     private void ensureStock(Product product, int quantity) {
+        if (quantity < 1) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "购买数量必须大于等于1");
+        }
         if (product.getStock() == null || product.getStock() < quantity) {
             throw new BusinessException(ResultCode.OUT_OF_STOCK);
         }
@@ -349,5 +529,22 @@ public class ShopService {
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
         return "PSP" + LocalDateTime.now().format(ORDER_NO_TIME_FORMATTER) + suffix;
     }
-}
 
+    private record Receiver(String name, String phone, String address) {
+        static Receiver from(UserAddress address) {
+            return new Receiver(
+                    address.getReceiverName(),
+                    address.getReceiverPhone(),
+                    String.join(" ",
+                            address.getProvince(),
+                            address.getCity(),
+                            address.getDistrict(),
+                            address.getDetailAddress()
+                    ).replaceAll("\\s+", " ").trim()
+            );
+        }
+    }
+
+    private record AppliedCoupon(Long userCouponId, BigDecimal discountAmount) {
+    }
+}

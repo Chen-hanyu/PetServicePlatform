@@ -3,7 +3,10 @@ package com.petplatform.controller;
 import com.petplatform.common.ApiResponse;
 import com.petplatform.common.PageResponse;
 import com.petplatform.dto.shop.AddCartItemRequest;
+import com.petplatform.dto.shop.AddressResponse;
 import com.petplatform.dto.shop.CartResponse;
+import com.petplatform.dto.shop.CouponResponse;
+import com.petplatform.dto.shop.CreateDirectOrderRequest;
 import com.petplatform.dto.shop.CreateOrderRequest;
 import com.petplatform.dto.shop.OrderDetailResponse;
 import com.petplatform.dto.shop.OrderSummaryResponse;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 @Validated
 @RestController
@@ -67,6 +71,18 @@ public class ShopController {
         return ApiResponse.success(shopService.getCart());
     }
 
+    @GetMapping("/addresses")
+    public ApiResponse<List<AddressResponse>> getAddresses() {
+        return ApiResponse.success(shopService.getAddresses());
+    }
+
+    @GetMapping("/coupons/available")
+    public ApiResponse<List<CouponResponse>> getAvailableCoupons(
+            @RequestParam(required = false) BigDecimal amount
+    ) {
+        return ApiResponse.success(shopService.getAvailableCoupons(amount));
+    }
+
     @PostMapping("/cart/items")
     public ApiResponse<CartResponse> addCartItem(@Valid @RequestBody AddCartItemRequest request) {
         return ApiResponse.success(shopService.addCartItem(request));
@@ -83,6 +99,11 @@ public class ShopController {
     @PostMapping("/orders")
     public ApiResponse<OrderSummaryResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         return ApiResponse.success(shopService.createOrder(request));
+    }
+
+    @PostMapping("/orders/direct")
+    public ApiResponse<OrderSummaryResponse> createDirectOrder(@Valid @RequestBody CreateDirectOrderRequest request) {
+        return ApiResponse.success(shopService.createDirectOrder(request));
     }
 
     @GetMapping("/orders")

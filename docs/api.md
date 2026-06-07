@@ -722,3 +722,38 @@ Banner 请求体：
 - Swagger UI：`http://127.0.0.1:8080/swagger-ui.html`
 - OpenAPI JSON：`http://127.0.0.1:8080/v3/api-docs`
 - OpenAPI YAML：`docs/api.yaml`
+
+## 商城结算补充接口
+
+| 方法 | 路径 | 认证 | 说明 |
+|---|---|---|---|
+| `GET` | `/api/v1/shop/addresses` | 是 | 获取当前用户收货地址列表 |
+| `GET` | `/api/v1/shop/coupons/available` | 是 | 获取当前用户可用于订单金额的优惠券 |
+| `POST` | `/api/v1/shop/orders/direct` | 是 | 按商品明细直接创建订单，支持立即购买和前端本地购物车 |
+
+`GET /api/v1/shop/coupons/available` 查询参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `amount` | decimal | 否 | 当前订单商品总额，用于判断满减门槛 |
+
+`POST /api/v1/shop/orders` 请求体补充字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `address_id` | long | 否 | 收货地址 ID，传入后后端以地址表为准 |
+| `coupon_id` | long | 否 | 用户优惠券 ID，即优惠券列表中的 `user_coupon_id` |
+
+`POST /api/v1/shop/orders/direct` 请求体：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `items` | array<object> | 是 | 商品明细列表 |
+| `items[].product_id` | long | 是 | 商品 ID |
+| `items[].quantity` | int | 是 | 购买数量 |
+| `address_id` | long | 否 | 收货地址 ID，传入后后端以地址表为准 |
+| `coupon_id` | long | 否 | 用户优惠券 ID，即优惠券列表中的 `user_coupon_id` |
+| `receiver_name` | string | 是 | 收货人 |
+| `receiver_phone` | string | 是 | 收货电话 |
+| `receiver_address` | string | 是 | 收货地址 |
+| `remark` | string | 否 | 备注 |

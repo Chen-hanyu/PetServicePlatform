@@ -1,6 +1,15 @@
 ﻿import { webHttp, unwrap } from "@/api/http";
 import type { ApiResponse, PageResult } from "@/types/api";
-import type { CartData, CreateOrderPayload, ProductCategory, ProductDetail, ProductSummary } from "@/types/shop";
+import type {
+  AddressInfo,
+  CartData,
+  CouponInfo,
+  CreateOrderPayload,
+  DirectOrderPayload,
+  ProductCategory,
+  ProductDetail,
+  ProductSummary
+} from "@/types/shop";
 
 export const fetchShopCategories = async () => {
   const { data } = await webHttp.get<ApiResponse<ProductCategory[]>>("/shop/categories");
@@ -22,6 +31,18 @@ export const fetchCart = async () => {
   return unwrap(data);
 };
 
+export const fetchAddresses = async () => {
+  const { data } = await webHttp.get<ApiResponse<AddressInfo[]>>("/shop/addresses");
+  return unwrap(data);
+};
+
+export const fetchAvailableCoupons = async (amount?: number) => {
+  const { data } = await webHttp.get<ApiResponse<CouponInfo[]>>("/shop/coupons/available", {
+    params: { amount }
+  });
+  return unwrap(data);
+};
+
 export const addCartItem = async (productId: number, quantity = 1) => {
   const { data } = await webHttp.post<ApiResponse<CartData>>("/shop/cart/items", {
     product_id: productId,
@@ -32,6 +53,11 @@ export const addCartItem = async (productId: number, quantity = 1) => {
 
 export const createOrder = async (payload: CreateOrderPayload) => {
   const { data } = await webHttp.post<ApiResponse<Record<string, unknown>>>("/shop/orders", payload);
+  return unwrap(data);
+};
+
+export const createDirectOrder = async (payload: DirectOrderPayload) => {
+  const { data } = await webHttp.post<ApiResponse<Record<string, unknown>>>("/shop/orders/direct", payload);
   return unwrap(data);
 };
 

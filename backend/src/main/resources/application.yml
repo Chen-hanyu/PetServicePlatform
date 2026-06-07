@@ -45,6 +45,10 @@ file:
     local-path: ${FILE_STORAGE_LOCAL_PATH:uploads/}
     access-path: ${FILE_STORAGE_ACCESS_PATH:/uploads/}
 
+app:
+  cors:
+    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*,http://[::1]:*,http://10.*:*,http://172.*:*,http://192.168.*:*,https://*.vercel.app,https://pet-service-platform-eta.vercel.app}
+
 ai:
   api-key: ${AI_API_KEY:${DEEPSEEK_API_KEY:}}
   base-url: ${AI_BASE_URL:https://api.deepseek.com}

@@ -104,6 +104,53 @@ CREATE TABLE IF NOT EXISTS community_posts (
     CONSTRAINT fk_community_posts_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS user_addresses (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    receiver_name VARCHAR(50) NOT NULL,
+    receiver_phone VARCHAR(20) NOT NULL,
+    province VARCHAR(50) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    district VARCHAR(50) NOT NULL,
+    detail_address VARCHAR(255) NOT NULL,
+    is_default TINYINT(1) NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_user_addresses_user_default (user_id, is_default),
+    KEY idx_user_addresses_user_status (user_id, status),
+    CONSTRAINT fk_user_addresses_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS coupons (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(20) NOT NULL DEFAULT 'AMOUNT',
+    discount_amount DECIMAL(10, 2) NOT NULL,
+    min_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    start_at DATETIME,
+    end_at DATETIME,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_coupons_status_time (status, start_at, end_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS user_coupons (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    coupon_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'UNUSED',
+    used_order_id BIGINT,
+    used_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_user_coupons_user_status (user_id, status),
+    KEY idx_user_coupons_coupon_id (coupon_id),
+    CONSTRAINT fk_user_coupons_user_id FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_user_coupons_coupon_id FOREIGN KEY (coupon_id) REFERENCES coupons(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS post_comments (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     post_id BIGINT NOT NULL,
@@ -318,7 +365,9 @@ CREATE TABLE IF NOT EXISTS shop_orders (
     user_id BIGINT NOT NULL,
     order_no VARCHAR(64) NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
+    discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     pay_amount DECIMAL(10, 2) NOT NULL,
+    user_coupon_id BIGINT,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     receiver_name VARCHAR(50) NOT NULL,
     receiver_phone VARCHAR(20) NOT NULL,
@@ -328,6 +377,7 @@ CREATE TABLE IF NOT EXISTS shop_orders (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_shop_orders_order_no (order_no),
     KEY idx_shop_orders_user_status_created (user_id, status, created_at),
+    KEY idx_shop_orders_user_coupon_id (user_coupon_id),
     CONSTRAINT fk_shop_orders_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

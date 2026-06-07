@@ -273,3 +273,13 @@ docker compose -f compose.prod.yaml up -d
 - [Vercel 文档](https://vercel.com/docs)
 - [Railway 文档](https://docs.railway.app/)
 - [项目 GitHub 仓库](https://github.com/Chen-hanyu/PetServicePlatform)
+
+## CORS 线上配置补充
+
+后端 Spring Security CORS 现在读取环境变量 `APP_CORS_ALLOWED_ORIGIN_PATTERNS`，多个来源用英文逗号分隔。Railway 部署时建议配置：
+
+```env
+APP_CORS_ALLOWED_ORIGIN_PATTERNS=https://pet-service-platform-eta.vercel.app,https://*.vercel.app,http://localhost:*,http://127.0.0.1:*
+```
+
+如果 Vercel 后续绑定自定义域名，需要把自定义域名追加到该变量中，例如 `https://www.example.com`。
