@@ -10,16 +10,29 @@ public record OrderSummaryResponse(
         Long id,
         @JsonProperty("order_no") String orderNo,
         @JsonProperty("total_amount") BigDecimal totalAmount,
+        @JsonProperty("discount_amount") BigDecimal discountAmount,
         @JsonProperty("pay_amount") BigDecimal payAmount,
         String status,
         @JsonProperty("created_at") LocalDateTime createdAt
 ) {
+
+    public OrderSummaryResponse(
+            Long id,
+            String orderNo,
+            BigDecimal totalAmount,
+            BigDecimal payAmount,
+            String status,
+            LocalDateTime createdAt
+    ) {
+        this(id, orderNo, totalAmount, BigDecimal.ZERO, payAmount, status, createdAt);
+    }
 
     public static OrderSummaryResponse from(ShopOrder order) {
         return new OrderSummaryResponse(
                 order.getId(),
                 order.getOrderNo(),
                 order.getTotalAmount(),
+                order.getDiscountAmount(),
                 order.getPayAmount(),
                 order.getStatus(),
                 order.getCreatedAt()

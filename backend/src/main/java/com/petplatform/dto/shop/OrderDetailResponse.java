@@ -12,6 +12,7 @@ public record OrderDetailResponse(
         @JsonProperty("order_no") String orderNo,
         String status,
         @JsonProperty("total_amount") BigDecimal totalAmount,
+        @JsonProperty("discount_amount") BigDecimal discountAmount,
         @JsonProperty("pay_amount") BigDecimal payAmount,
         @JsonProperty("receiver_name") String receiverName,
         @JsonProperty("receiver_phone") String receiverPhone,
@@ -20,12 +21,28 @@ public record OrderDetailResponse(
         @JsonProperty("created_at") LocalDateTime createdAt
 ) {
 
+    public OrderDetailResponse(
+            Long id,
+            String orderNo,
+            String status,
+            BigDecimal totalAmount,
+            BigDecimal payAmount,
+            String receiverName,
+            String receiverPhone,
+            String receiverAddress,
+            List<OrderItemResponse> items,
+            LocalDateTime createdAt
+    ) {
+        this(id, orderNo, status, totalAmount, BigDecimal.ZERO, payAmount, receiverName, receiverPhone, receiverAddress, items, createdAt);
+    }
+
     public static OrderDetailResponse from(ShopOrder order, List<OrderItemResponse> items) {
         return new OrderDetailResponse(
                 order.getId(),
                 order.getOrderNo(),
                 order.getStatus(),
                 order.getTotalAmount(),
+                order.getDiscountAmount(),
                 order.getPayAmount(),
                 order.getReceiverName(),
                 order.getReceiverPhone(),

@@ -1,7 +1,9 @@
 package com.petplatform.config;
 
 import java.util.List;
+import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +31,9 @@ import com.petplatform.security.RestAuthenticationEntryPoint;
 @EnableMethodSecurity
 @EnableConfigurationProperties({JwtProperties.class, VerifyCodeProperties.class, AiProperties.class})
 public class SecurityConfig {
+
+    @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*,http://[::1]:*,http://10.*:*,http://172.*:*,http://192.168.*:*,https://*.vercel.app,https://pet-service-platform-eta.vercel.app}")
+    private String allowedOriginPatterns;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -61,6 +66,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -92,6 +98,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/services/bookings/**").authenticated()
                         .requestMatchers("/api/v1/shop/cart").authenticated()
                         .requestMatchers("/api/v1/shop/cart/**").authenticated()
+                        .requestMatchers("/api/v1/shop/addresses/**").authenticated()
+                        .requestMatchers("/api/v1/shop/coupons/**").authenticated()
                         .requestMatchers("/api/v1/shop/orders").authenticated()
                         .requestMatchers("/api/v1/shop/orders/**").authenticated()
                         .requestMatchers("/api/v1/messages/**").authenticated()
@@ -111,14 +119,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:*",
-                "http://127.0.0.1:*",
-                "http://[::1]:*",
-                "http://10.*:*",
-                "http://172.*:*",
-                "http://192.168.*:*"
-        ));
+        configuration.setAllowedOriginPatterns(Stream.of(allowedOriginPatterns.split(","))
+                .map(String::trim)
+                .filter(pattern -> !pattern.isEmpty())
+                .toList());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));

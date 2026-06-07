@@ -21,21 +21,22 @@
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
               </svg>
               <h2>收货人信息</h2>
-              <button class="change-btn">选择其他地址</button>
+              <button class="change-btn" @click="cycleAddress">选择其他地址</button>
             </div>
-            <div class="address-card">
+            <div class="address-card" v-if="selectedAddress">
               <div class="address-info">
                 <div class="address-user">
-                  <span class="user-name">小萌主 (柚子)</span>
-                  <span class="default-badge">默认</span>
+                  <span class="user-name">{{ selectedAddress.receiver_name }}</span>
+                  <span v-if="selectedAddress.is_default" class="default-badge">默认</span>
                 </div>
-                <p class="user-phone">138 **** 8888</p>
-                <p class="user-address">上海市 浦东新区 樱花路 1234号 萌物大厦 A座 808室</p>
+                <p class="user-phone">{{ maskPhone(selectedAddress.receiver_phone) }}</p>
+                <p class="user-address">{{ selectedAddress.full_address }}</p>
               </div>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </div>
+            <div v-else class="address-empty">暂无收货地址，请先在数据库示例数据中为当前用户配置地址</div>
           </div>
 
           <!-- Products Section -->
@@ -93,7 +94,7 @@
                 <span>优惠券</span>
               </div>
               <div class="option-right">
-                <span class="coupon-badge">{{ selectedCoupon ? selectedCoupon.name : '2张可用' }}</span>
+                <span class="coupon-badge">{{ selectedCoupon ? selectedCoupon.name : `${availableCouponCount}张可用` }}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
@@ -107,7 +108,7 @@
                 </svg>
                 <div class="option-info">
                   <span>积分抵扣</span>
-                  <p>可用 2000 积分，可抵扣 ¥20.00</p>
+                  <p>积分抵扣接口未开放，当前仅展示入口</p>
                 </div>
               </div>
               <label class="switch">
@@ -164,7 +165,10 @@
               </label>
             </div>
 
-            <button class="btn-submit" @click="submitPay">提交订单</button>
+            <p v-if="errorMessage" class="checkout-error">{{ errorMessage }}</p>
+            <button class="btn-submit" :disabled="submitting || !selectedAddress" @click="submitPay">
+              {{ submitting ? "提交中..." : "提交订单" }}
+            </button>
             <div class="submit-tip">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -201,21 +205,22 @@
           <div class="coupon-modal-body">
             <div
               v-for="c in couponList"
-              :key="c.id"
-              :class="['coupon-card', { selected: selectedCoupon?.id === c.id }]"
+              :key="c.user_coupon_id"
+              :class="['coupon-card', { selected: selectedCoupon?.user_coupon_id === c.user_coupon_id, disabled: !c.available }]"
               @click="selectCoupon(c)"
             >
               <div class="coupon-amount">
                 <span class="coupon-symbol">¥</span>
-                <span class="coupon-value">{{ c.value }}</span>
+                <span class="coupon-value">{{ formatPrice(c.discount_amount) }}</span>
               </div>
               <div class="coupon-info">
                 <p class="coupon-name">{{ c.name }}</p>
-                <p class="coupon-condition">{{ c.condition }}</p>
-                <p class="coupon-expire">有效期至：{{ c.expire }}</p>
+                <p class="coupon-condition">满 ¥{{ formatPrice(c.min_amount) }} 可用</p>
+                <p class="coupon-expire">有效期至：{{ formatDate(c.end_at) }}</p>
+                <p v-if="!c.available" class="coupon-expire">{{ c.reason }}</p>
               </div>
               <div class="coupon-check">
-                <span v-if="selectedCoupon?.id === c.id" class="check-mark">✓</span>
+                <span v-if="selectedCoupon?.user_coupon_id === c.user_coupon_id" class="check-mark">✓</span>
               </div>
             </div>
             <div class="coupon-empty" v-if="couponList.length === 0">
@@ -240,28 +245,32 @@ import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import CommerceDock from "@/components/shop/CommerceDock.vue";
 import { useShopCartStore } from "@/store/shopCart";
-import { fetchProduct } from "@/api/modules/shop";
+import {
+  createDirectOrder,
+  fetchAddresses,
+  fetchAvailableCoupons,
+  fetchProduct
+} from "@/api/modules/shop";
+import { toErrorMessage } from "@/api/http";
+import type { AddressInfo, CouponInfo } from "@/types/shop";
 
 const route = useRoute();
 const router = useRouter();
 const cart = useShopCartStore();
 
 const paid = ref(false);
+const submitting = ref(false);
+const errorMessage = ref("");
 const buyNowProduct = ref<any>(null);
+const addresses = ref<AddressInfo[]>([]);
+const selectedAddress = ref<AddressInfo | null>(null);
 const remark = ref("");
 const usePoints = ref(false);
 const paymentMethod = ref("wechat");
 
-// 优惠券选择
 const showCouponPicker = ref(false);
-const selectedCoupon = ref<{ id: number; name: string; value: number; condition: string; expire: string } | null>(null);
-const couponList = ref([
-  { id: 1, name: "新人专享券", value: 20, condition: "满100元可用", expire: "2026-12-31" },
-  { id: 2, name: "满减券", value: 10, condition: "满50元可用", expire: "2026-12-31" }
-]);
-const selectCoupon = (c: { id: number; name: string; value: number; condition: string; expire: string }) => {
-  selectedCoupon.value = selectedCoupon.value?.id === c.id ? null : c;
-};
+const selectedCoupon = ref<CouponInfo | null>(null);
+const couponList = ref<CouponInfo[]>([]);
 
 const isBuyNow = computed(() => route.query.buyNow === "1");
 const buyNowId = computed(() => Number(route.query.id));
@@ -270,7 +279,12 @@ const buyNowQty = computed(() => {
   return Number.isFinite(q) && q >= 1 ? Math.floor(q) : 1;
 });
 
-const formatPrice = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+const formatPrice = (n?: number) => {
+  const value = Number(n || 0);
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+};
+const formatDate = (value?: string) => (value ? value.slice(0, 10) : "长期有效");
+const maskPhone = (phone: string) => phone.replace(/^(\d{3})\d{4}(\d{4})$/, "$1 **** $2");
 
 const subtotal = computed(() => {
   if (isBuyNow.value && buyNowProduct.value) {
@@ -279,13 +293,20 @@ const subtotal = computed(() => {
   return cart.totalAmount;
 });
 
-const discount = computed(() => {
-  return usePoints.value ? 20 : 0;
-});
+const availableCouponCount = computed(() => couponList.value.filter((coupon) => coupon.available).length);
+const discount = computed(() => selectedCoupon.value?.discount_amount || 0);
+const total = computed(() => Math.max(subtotal.value - discount.value, 0));
 
-const total = computed(() => {
-  return subtotal.value - discount.value;
-});
+const selectCoupon = (coupon: CouponInfo) => {
+  if (!coupon.available) return;
+  selectedCoupon.value = selectedCoupon.value?.user_coupon_id === coupon.user_coupon_id ? null : coupon;
+};
+
+const cycleAddress = () => {
+  if (addresses.value.length <= 1 || !selectedAddress.value) return;
+  const index = addresses.value.findIndex((address) => address.id === selectedAddress.value?.id);
+  selectedAddress.value = addresses.value[(index + 1) % addresses.value.length];
+};
 
 async function loadBuyNow() {
   buyNowProduct.value = null;
@@ -297,8 +318,7 @@ async function loadBuyNow() {
   }
   try {
     const data = await fetchProduct(id);
-    const imgs =
-      data.images && data.images.length > 0 ? data.images : data.image_url ? [data.image_url] : [];
+    const imgs = data.images && data.images.length > 0 ? data.images : data.image_url ? [data.image_url] : [];
     buyNowProduct.value = {
       id: data.id,
       name: data.name,
@@ -312,22 +332,75 @@ async function loadBuyNow() {
   if (!buyNowProduct.value) router.replace("/shop");
 }
 
+async function loadCheckoutData() {
+  errorMessage.value = "";
+  try {
+    const [addressData, coupons] = await Promise.all([
+      fetchAddresses(),
+      fetchAvailableCoupons(subtotal.value)
+    ]);
+    addresses.value = addressData;
+    selectedAddress.value = addressData.find((address) => address.is_default) || addressData[0] || null;
+    couponList.value = coupons;
+    selectedCoupon.value = coupons.find((coupon) => coupon.available) || null;
+  } catch (error) {
+    errorMessage.value = toErrorMessage(error);
+  }
+}
+
 watch(
   () => route.query,
-  () => {
+  async () => {
     paid.value = false;
-    loadBuyNow();
+    await loadBuyNow();
+    await loadCheckoutData();
   },
   { immediate: true }
 );
 
-function submitPay() {
-  if (isBuyNow.value) {
-    paid.value = true;
+watch(subtotal, async () => {
+  if (subtotal.value > 0) {
+    try {
+      const coupons = await fetchAvailableCoupons(subtotal.value);
+      couponList.value = coupons;
+      if (selectedCoupon.value && !coupons.some((coupon) => coupon.user_coupon_id === selectedCoupon.value?.user_coupon_id && coupon.available)) {
+        selectedCoupon.value = coupons.find((coupon) => coupon.available) || null;
+      }
+    } catch (error) {
+      errorMessage.value = toErrorMessage(error);
+    }
+  }
+});
+
+async function submitPay() {
+  if (!selectedAddress.value || submitting.value) return;
+  errorMessage.value = "";
+  const items = isBuyNow.value && buyNowProduct.value
+    ? [{ product_id: buyNowProduct.value.id, quantity: buyNowQty.value }]
+    : cart.items.map((item) => ({ product_id: item.id, quantity: item.quantity }));
+  if (items.length === 0) {
+    router.replace("/shop");
     return;
   }
-  cart.clearCart();
-  paid.value = true;
+
+  submitting.value = true;
+  try {
+    await createDirectOrder({
+      items,
+      address_id: selectedAddress.value.id,
+      coupon_id: selectedCoupon.value?.user_coupon_id,
+      receiver_name: selectedAddress.value.receiver_name,
+      receiver_phone: selectedAddress.value.receiver_phone,
+      receiver_address: selectedAddress.value.full_address,
+      remark: remark.value || undefined
+    });
+    if (!isBuyNow.value) cart.clearCart();
+    paid.value = true;
+  } catch (error) {
+    errorMessage.value = toErrorMessage(error);
+  } finally {
+    submitting.value = false;
+  }
 }
 </script>
 
@@ -454,6 +527,15 @@ function submitPay() {
 
 .address-info {
   flex: 1;
+}
+
+.address-empty {
+  padding: 16px;
+  background: var(--surface-muted);
+  border: 1px dashed var(--border-warm);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .address-user {
@@ -808,6 +890,22 @@ input:checked + .slider:before {
     opacity: 0.9;
     transform: translateY(-2px);
   }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+  }
+}
+
+.checkout-error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(233, 122, 122, 0.35);
+  border-radius: 10px;
+  background: rgba(233, 122, 122, 0.08);
+  color: var(--danger);
+  font-size: 13px;
 }
 
 .submit-tip {
@@ -928,6 +1026,11 @@ input:checked + .slider:before {
   &.selected {
     border-color: var(--primary);
     background: rgba(255, 155, 122, 0.08);
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
   }
 }
 

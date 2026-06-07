@@ -657,3 +657,51 @@ erDiagram
 10. `service_bookings`
 
 如需进一步收敛 MVP，可先弱化 `messages`、`merchant_reviews`、`recommendations` 等扩展表。
+
+## 商城结算补充表
+
+### `user_addresses`
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | bigint | 主键 |
+| `user_id` | bigint | 所属用户 |
+| `receiver_name` | varchar(50) | 收货人 |
+| `receiver_phone` | varchar(20) | 收货电话 |
+| `province` | varchar(50) | 省份 |
+| `city` | varchar(50) | 城市 |
+| `district` | varchar(50) | 区县 |
+| `detail_address` | varchar(255) | 详细地址 |
+| `is_default` | tinyint | 是否默认地址 |
+| `status` | varchar(20) | 状态：`ACTIVE` / `DISABLED` |
+
+### `coupons`
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | bigint | 主键 |
+| `name` | varchar(100) | 优惠券名称 |
+| `type` | varchar(20) | 优惠类型，MVP 使用 `AMOUNT` |
+| `discount_amount` | decimal(10,2) | 优惠金额 |
+| `min_amount` | decimal(10,2) | 使用门槛 |
+| `start_at` | datetime | 生效时间 |
+| `end_at` | datetime | 失效时间 |
+| `status` | varchar(20) | 状态：`ACTIVE` / `DISABLED` |
+
+### `user_coupons`
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | bigint | 主键，也是前端下单传入的 `coupon_id` |
+| `user_id` | bigint | 所属用户 |
+| `coupon_id` | bigint | 优惠券 ID |
+| `status` | varchar(20) | 状态：`UNUSED` / `USED` / `EXPIRED` |
+| `used_order_id` | bigint | 使用订单 ID |
+| `used_at` | datetime | 使用时间 |
+
+### `shop_orders` 字段补充
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `discount_amount` | decimal(10,2) | 订单优惠金额 |
+| `user_coupon_id` | bigint | 使用的用户优惠券 ID |
