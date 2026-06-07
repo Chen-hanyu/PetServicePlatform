@@ -25,7 +25,15 @@
     </div>
 
     <div class="applications-container">
-      <div v-if="filteredApplications.length === 0" class="empty-state">
+      <div v-if="loading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">加载中...</p>
+      </div>
+      <div v-else-if="error" class="error-state">
+        <p class="error-text">{{ error }}</p>
+        <button class="retry-btn" @click="loadApplications">重试</button>
+      </div>
+      <div v-else-if="filteredApplications.length === 0" class="empty-state">
         <div class="empty-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -90,12 +98,16 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { fetchMyApplications } from "@/api/modules/adoption";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 
 const activeTab = ref("all");
+const loading = ref(false);
+const error = ref("");
 
 interface Application {
   id: number;
@@ -112,48 +124,58 @@ interface Application {
   feedback?: string;
 }
 
-const tabs = reactive([
+const tabs = [
   { key: "all", label: "全部", badge: 0 },
-  { key: "pending", label: "待审核", badge: 1 },
-  { key: "approved", label: "已通过", badge: 1 },
+  { key: "pending", label: "待审核", badge: 0 },
+  { key: "approved", label: "已通过", badge: 0 },
   { key: "rejected", label: "已拒绝", badge: 0 }
-]);
+];
 
-const applications = reactive<Application[]>([
-  {
-    id: 1,
-    petName: "小白",
-    petBreed: "萨摩耶",
-    petAge: "2岁",
-    petGender: "男",
-    petStatus: "待领养",
-    petImage: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&q=80",
-    status: "pending",
-    statusText: "待审核",
-    appliedAt: "2024-01-15 10:30",
-    reason: "非常喜欢萨摩耶，希望能够给它一个温暖的家。我有充足的的时间和空间照顾它。"
-  },
-  {
-    id: 2,
-    petName: "小橘",
-    petBreed: "中华田园猫",
-    petAge: "1岁",
-    petGender: "女",
-    petStatus: "待领养",
-    petImage: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80",
-    status: "approved",
-    statusText: "已通过",
-    appliedAt: "2024-01-10 14:20",
-    reason: "家里已经有一只猫了，想给它找个伴。",
-    feedback: "恭喜您通过审核！请于本周六上午10点携带身份证到我机构办理领养手续。"
+const applications = ref<Application[]>([]);
+
+const loadApplications = async () => {
+  loading.value = true;
+  error.value = "";
+  try {
+    const data = await fetchMyApplications({ page: 1, page_size: 20 });
+    const list = data.list ?? [];
+    applications.value = list.map((item: any) => ({
+      id: item.id,
+      petName: item.pet?.name || "未知宠物",
+      petBreed: item.pet?.breed || "",
+      petAge: item.pet?.age ? `${item.pet.age}岁` : "",
+      petGender: item.pet?.gender || "",
+      petStatus: item.pet?.status || "待领养",
+      petImage: item.pet?.images?.[0] || "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&q=80",
+      status: item.status || "pending",
+      statusText: getStatusText(item.status),
+      appliedAt: item.created_at || "",
+      reason: item.reason || "",
+      feedback: item.feedback || ""
+    }));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    applications.value = [];
+  } finally {
+    loading.value = false;
   }
-]);
+};
+
+const getStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    pending: "待审核",
+    approved: "已通过",
+    rejected: "已拒绝",
+    cancelled: "已撤销"
+  };
+  return map[status] || status;
+};
 
 const filteredApplications = computed(() => {
   if (activeTab.value === "all") {
-    return applications;
+    return applications.value;
   }
-  return applications.filter(app => app.status === activeTab.value);
+  return applications.value.filter(app => app.status === activeTab.value);
 });
 
 const goBack = () => {
@@ -166,9 +188,9 @@ const goToAdoption = () => {
 
 const cancelApplication = (app: Application) => {
   if (confirm("确定要撤销该申请吗？")) {
-    const index = applications.findIndex(a => a.id === app.id);
+    const index = applications.value.findIndex(a => a.id === app.id);
     if (index > -1) {
-      applications.splice(index, 1);
+      applications.value.splice(index, 1);
     }
   }
 };
@@ -180,6 +202,8 @@ const viewDetails = (app: Application) => {
 const reApply = (app: Application) => {
   alert(`重新申请: ${app.id}`);
 };
+
+onMounted(loadApplications);
 </script>
 
 <style scoped lang="scss">
@@ -293,6 +317,65 @@ const reApply = (app: Application) => {
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 32px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 16px;
+    border: 3px solid var(--surface-muted);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-text {
+    font-size: 16px;
+    color: var(--muted);
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+
+  .error-text {
+    font-size: 16px;
+    color: #E97A7A;
+    margin: 0 0 24px;
+  }
+
+  .retry-btn {
+    padding: 12px 24px;
+    border: 1px solid var(--primary);
+    background: none;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+  }
 }
 
 .empty-state {

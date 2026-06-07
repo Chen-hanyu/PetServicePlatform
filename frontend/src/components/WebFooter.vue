@@ -135,9 +135,7 @@
             <p>&copy; 2026 宠物之家 PetHome. 用爱守护每一个小生命</p>
           </div>
           <div class="footer-links">
-            <a href="#">京ICP备XXXXXXXX号</a>
-            <span class="divider">|</span>
-            <a href="#">京ICP备XXXXXXXX号-1</a>
+            <!-- ICP备案信息已移除 -->
           </div>
         </div>
       </div>

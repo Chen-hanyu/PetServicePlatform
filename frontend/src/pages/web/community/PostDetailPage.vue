@@ -94,9 +94,6 @@
               <span class="publish-time">{{ formatTime(post.published_at) }} · {{ postViews }}次浏览</span>
             </div>
           </div>
-          <button class="follow-btn" :class="{ followed: isFollowing }" @click="toggleFollow">
-            {{ isFollowing ? '已关注' : '+ 关注' }}
-          </button>
         </div>
 
         <!-- 正文内容 -->
@@ -236,7 +233,7 @@
           <span class="placeholder-text">说点什么...</span>
         </div>
         <div class="action-icons">
-          <button class="icon-btn" :class="{ active: isLiked }" @click="toggleLike">
+          <button class="icon-btn" :class="{ active: isLiked }" @click="handleToggleLike">
             <svg viewBox="0 0 24 24" :fill="isLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
               <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
             </svg>
@@ -339,11 +336,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { fetchPostComments, fetchPostDetail, fetchPosts } from "@/api/modules/community";
+import { fetchPostComments, fetchPostDetail, fetchPosts, toggleLike, createComment } from "@/api/modules/community";
 import type { PostComment, PostDetail, PostSummary } from "@/types/community";
 
 type CommentVm = PostComment & {
-  user?: PostComment["author"];
+  user: NonNullable<PostComment["author"]>;
   like_count: number;
   isLiked: boolean;
   isAuthor: boolean;
@@ -356,7 +353,6 @@ const loading = ref(true);
 const post = ref<PostDetail | null>(null);
 const isLiked = ref(false);
 const isCollected = ref(false);
-const isFollowing = ref(false);
 const likeCount = ref(0);
 const commentCount = ref(0);
 const postViews = ref(0);
@@ -367,53 +363,7 @@ const sharePopupVisible = ref(false);
 const commentInputRef = ref<HTMLTextAreaElement | null>(null);
 const commentsRef = ref<HTMLElement | null>(null);
 
-const comments = ref<CommentVm[]>([
-  {
-    id: 1,
-    user: { nickname: "铲屎官小李", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=10" },
-    content: "写得真好！对我帮助很大，谢谢分享！",
-    created_at: "2024-03-20 16:30",
-    like_count: 128,
-    isLiked: false,
-    isAuthor: false
-  },
-  {
-    id: 2,
-    user: { nickname: "宠物爱好者", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=11" },
-    content: "我家狗狗也是这样，特别有同感！",
-    created_at: "2024-03-20 15:20",
-    like_count: 56,
-    isLiked: true,
-    isAuthor: false
-  },
-  {
-    id: 3,
-    user: { nickname: "养宠新手", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=12" },
-    content: "收藏了，准备试试看效果如何",
-    created_at: "2024-03-20 14:00",
-    like_count: 23,
-    isLiked: false,
-    isAuthor: true
-  },
-  {
-    id: 4,
-    user: { nickname: "猫奴日记", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=13" },
-    content: "终于找到正确的饲养方法了！",
-    created_at: "2024-03-19 10:30",
-    like_count: 45,
-    isLiked: false,
-    isAuthor: false
-  },
-  {
-    id: 5,
-    user: { nickname: "萌宠控", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=14" },
-    content: "这个方法真的很有用，推荐给大家！",
-    created_at: "2024-03-19 08:15",
-    like_count: 89,
-    isLiked: false,
-    isAuthor: false
-  }
-]);
+const comments = ref<CommentVm[]>([]);
 
 const recommendPosts = ref<PostSummary[]>([]);
 
@@ -467,17 +417,19 @@ const goToPost = (id: number) => {
   router.push(`/community/post/${id}`);
 };
 
-const toggleLike = () => {
-  isLiked.value = !isLiked.value;
-  likeCount.value += isLiked.value ? 1 : -1;
+const handleToggleLike = async () => {
+  if (!post.value) return;
+  try {
+    await toggleLike(post.value.id);
+    isLiked.value = !isLiked.value;
+    likeCount.value += isLiked.value ? 1 : -1;
+  } catch {
+    // 静默失败
+  }
 };
 
 const toggleCollect = () => {
   isCollected.value = !isCollected.value;
-};
-
-const toggleFollow = () => {
-  isFollowing.value = !isFollowing.value;
 };
 
 const toggleCommentLike = (comment: any) => {
@@ -501,21 +453,25 @@ const closeCommentPopup = () => {
   commentText.value = "";
 };
 
-const submitComment = () => {
-  if (!commentText.value.trim()) return;
+const submitComment = async () => {
+  if (!commentText.value.trim() || !post.value) return;
   
-  comments.value.unshift({
-    id: Date.now(),
-    user: { nickname: "当前用户", avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" },
-    content: commentText.value,
-    created_at: new Date().toLocaleString("zh-CN"),
-    like_count: 0,
-    isLiked: false,
-    isAuthor: false
-  });
-  
-  commentCount.value = comments.value.length;
-  closeCommentPopup();
+  try {
+    await createComment(post.value.id, commentText.value);
+    // 重新加载评论
+    const commentPage = await fetchPostComments(post.value.id);
+    comments.value = (commentPage.list || []).map((c: PostComment) => ({
+      ...c,
+      user: c.author || { id: 0, nickname: "匿名用户", avatar_url: "" },
+      like_count: 0,
+      isLiked: false,
+      isAuthor: c.author?.id === post.value?.author?.id
+    }));
+    commentCount.value = comments.value.length;
+    closeCommentPopup();
+  } catch {
+    // 静默失败
+  }
 };
 
 const handleShare = () => {
@@ -536,7 +492,7 @@ onMounted(() => {
       const commentPage = await fetchPostComments(postId);
       comments.value = (commentPage.list || []).map((c: PostComment) => ({
         ...c,
-        user: c.author,
+        user: c.author || { id: 0, nickname: "匿名用户", avatar_url: "" },
         like_count: 0,
         isLiked: false,
         isAuthor: c.author?.id === foundPost?.author?.id
@@ -546,9 +502,11 @@ onMounted(() => {
     }
     if (foundPost) {
       post.value = foundPost;
+      isLiked.value = foundPost.is_liked ?? false;
+      isCollected.value = foundPost.is_favorited ?? false;
       likeCount.value = foundPost.like_count || 0;
       commentCount.value = comments.value.length;
-      postViews.value = Math.floor(Math.random() * 5000) + 1000;
+      postViews.value = (foundPost as any).view_count || 0;
     } else {
       post.value = null;
       likeCount.value = 0;
@@ -825,27 +783,6 @@ onMounted(() => {
       }
     }
 
-    .follow-btn {
-      padding: 8px 20px;
-      background: linear-gradient(135deg, #ff9b7a 0%, #ff6b6b 100%);
-      color: #fff;
-      border: none;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-      }
-
-      &.followed {
-        background: var(--surface);
-        color: var(--muted);
-      }
-    }
   }
 
   .post-body {
@@ -1389,10 +1326,6 @@ onMounted(() => {
       flex-direction: column;
       align-items: flex-start;
       gap: 12px;
-
-      .follow-btn {
-        width: 100%;
-      }
     }
   }
 

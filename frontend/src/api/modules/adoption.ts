@@ -27,3 +27,11 @@ export const fetchMyApplications = async (params: Record<string, string | number
   const { data } = await webHttp.get<ApiResponse<PageResult<any>>>("/adoption/applications", { params });
   return unwrap(data);
 };
+
+/** 撤销领养申请 */
+export const cancelApplication = async (applicationId: number) => {
+  const { data } = await webHttp.post<ApiResponse<void>>(`/adoption/applications/${applicationId}/cancel`);
+  return unwrap(data);
+};
+
+

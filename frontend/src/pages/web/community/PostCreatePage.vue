@@ -20,7 +20,7 @@
       <!-- 用户信息卡片 -->
       <div class="user-card">
         <div class="user-avatar-wrapper">
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="user-avatar" />
+          <img :src="auth.user?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'" class="user-avatar" />
           <div class="user-level-badge">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -29,10 +29,11 @@
           </div>
         </div>
         <div class="user-info">
-          <span class="user-name">宠友123456</span>
-          <span class="user-desc">分享养宠日常，记录美好生活</span>
+          <span class="user-name">{{ auth.user?.nickname || '宠友123456' }}</span>
+          <span class="user-desc">{{ auth.user?.bio || '分享养宠日常，记录美好生活' }}</span>
         </div>
       </div>
+
 
       <!-- 分类选择器 -->
       <div class="category-selector">
@@ -242,10 +243,12 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "@/store/auth";
 import { createPost } from "@/api/modules/community";
 import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
+const auth = useAuthStore();
 
 const categories = [
   { value: 'daily', label: '日常', color: '#ff9b7a' },
@@ -284,6 +287,7 @@ const canPublish = computed(() => {
 const goBack = () => {
   router.back();
 };
+
 
 const autoResizeTitle = () => {
   if (titleTextareaRef.value) {
@@ -354,15 +358,20 @@ const handlePublish = async () => {
   if (!canPublish.value) return;
   
   try {
-    await createPost({
+    const result = await createPost({
       title: form.title,
       content: form.content,
       category: selectedCategory.value,
       images: form.images
     });
     showToast("发布成功！", "success");
+    const newPostId = (result as any)?.id;
     setTimeout(() => {
-      router.push("/community");
+      if (newPostId) {
+        router.push(`/community/post/${newPostId}`);
+      } else {
+        router.push("/community");
+      }
     }, 1500);
   } catch (e) {
     showToast(toErrorMessage(e), "error");

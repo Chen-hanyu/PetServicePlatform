@@ -143,10 +143,12 @@
                 <li v-for="m in booking.mainServices" :key="m.id" class="booking-item">
                   <span class="item-name">{{ m.name }}</span>
                   <span class="item-price">¥{{ formatPrice(m.price) }}</span>
+                  <button type="button" class="item-remove" @click="booking.toggleMainService(m)" title="移除">×</button>
                 </li>
                 <li v-for="a in booking.addons" :key="a.id" class="booking-item">
                   <span class="item-name">{{ a.name }}</span>
                   <span class="item-price">{{ a.price === 0 ? "免费" : `¥${formatPrice(a.price)}` }}</span>
+                  <button type="button" class="item-remove" @click="booking.toggleAddon(a)" title="移除">×</button>
                 </li>
               </ul>
               <p v-if="booking.bookingDate && booking.timeSlot" class="booking-schedule">

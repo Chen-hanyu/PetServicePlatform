@@ -32,6 +32,42 @@
       </div>
     </section>
 
+    <!-- Pet Cards -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-indicator"></span>
+          萌宠展示
+        </h2>
+        <div class="pet-filter-tabs">
+          <button
+            v-for="t in petFilterTypes"
+            :key="t.value"
+            :class="['pet-filter-tab', { active: activePetFilter === t.value }]"
+            @click="activePetFilter = t.value"
+          >
+            {{ t.label }}
+          </button>
+        </div>
+      </div>
+      <div class="pet-card-grid">
+        <div
+          v-for="pet in filteredPetCards"
+          :key="pet.title"
+          class="pet-card-item"
+          @click="router.push('/adoption')"
+        >
+          <div class="pet-card-image">
+            <img :src="pet.image_url" :alt="pet.title" />
+          </div>
+          <div class="pet-card-body">
+            <h4>{{ pet.title }}</h4>
+            <p>{{ pet.subtitle }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Recommended Posts -->
     <section class="section">
       <div class="section-header">
@@ -149,10 +185,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { fetchHomeData } from "@/api/modules/home";
-import type { HomeBanner, HomeQuickEntry, HomeTip } from "@/types/home";
+import { toggleLike } from "@/api/modules/community";
+import type { HomeBanner, HomeQuickEntry, HomeTip, PetCard } from "@/types/home";
 import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
@@ -164,10 +201,29 @@ const tips = ref<HomeTip[]>([]);
 const recommendedPosts = ref<any[]>([]);
 const recommendedServices = ref<any[]>([]);
 const recommendedProducts = ref<any[]>([]);
+const petCards = ref<PetCard[]>([]);
 
-const togglePostLike = (post: any) => {
-  post.isLiked = !post.isLiked;
-  post.likes += post.isLiked ? 1 : -1;
+// 宠物类型筛选
+const activePetFilter = ref("all");
+const petFilterTypes = [
+  { label: "全部", value: "all" },
+  { label: "猫咪", value: "cat" },
+  { label: "狗狗", value: "dog" },
+  { label: "其他", value: "other" }
+];
+const filteredPetCards = computed(() => {
+  if (activePetFilter.value === "all") return petCards.value;
+  return petCards.value.filter(p => p.title?.includes(activePetFilter.value === "cat" ? "猫" : activePetFilter.value === "dog" ? "狗" : ""));
+});
+
+const togglePostLike = async (post: any) => {
+  try {
+    await toggleLike(post.id);
+    post.isLiked = !post.isLiked;
+    post.like_count += post.isLiked ? 1 : -1;
+  } catch {
+    // ignore
+  }
 };
 
 const goToPostComments = (postId: number) => {
@@ -185,6 +241,7 @@ onMounted(async () => {
     recommendedPosts.value = data.recommended_posts || [];
     recommendedServices.value = data.recommended_services || [];
     recommendedProducts.value = data.recommended_products || [];
+    petCards.value = data.pet_cards || [];
   } catch (e) {
     error.value = toErrorMessage(e);
     entries.value = [];
@@ -193,6 +250,7 @@ onMounted(async () => {
     recommendedPosts.value = [];
     recommendedServices.value = [];
     recommendedProducts.value = [];
+    petCards.value = [];
   } finally {
     loading.value = false;
   }
@@ -379,6 +437,88 @@ onMounted(async () => {
   &.adoption { background: rgba(255, 214, 107, 0.15); }
   &.services { background: rgba(255, 155, 122, 0.15); }
   &.shop { background: rgba(255, 155, 122, 0.15); }
+}
+
+// 宠物卡片区域
+.pet-filter-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.pet-filter-tab {
+  padding: 6px 16px;
+  border: 1px solid var(--border-warm);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  &.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+}
+
+.pet-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.pet-card-item {
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgba(34, 60, 52, 0.06);
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
+  }
+}
+
+.pet-card-image {
+  height: 160px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+}
+
+.pet-card-item:hover .pet-card-image img {
+  transform: scale(1.05);
+}
+
+.pet-card-body {
+  padding: 12px 16px;
+
+  h4 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-heading);
+  }
+
+  p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
 }
 
 .post-grid {
@@ -672,6 +812,10 @@ onMounted(async () => {
     grid-template-columns: repeat(2, 1fr);
   }
   
+  .pet-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .post-grid {
     grid-template-columns: repeat(2, 1fr);
   }
