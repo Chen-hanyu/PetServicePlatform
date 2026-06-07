@@ -1,4 +1,4 @@
-﻿SET NAMES utf8mb4;
+SET NAMES utf8mb4;
 
 -- Seed data is loaded into the database selected by SPRING_DATASOURCE_URL.
 
