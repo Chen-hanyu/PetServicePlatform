@@ -365,9 +365,7 @@ CREATE TABLE IF NOT EXISTS shop_orders (
     user_id BIGINT NOT NULL,
     order_no VARCHAR(64) NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
-    discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     pay_amount DECIMAL(10, 2) NOT NULL,
-    user_coupon_id BIGINT,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     receiver_name VARCHAR(50) NOT NULL,
     receiver_phone VARCHAR(20) NOT NULL,
@@ -377,9 +375,54 @@ CREATE TABLE IF NOT EXISTS shop_orders (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_shop_orders_order_no (order_no),
     KEY idx_shop_orders_user_status_created (user_id, status, created_at),
-    KEY idx_shop_orders_user_coupon_id (user_coupon_id),
     CONSTRAINT fk_shop_orders_user_id FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Idempotent migration for databases created before checkout coupon fields were added.
+SET @shop_orders_discount_amount_sql := (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE shop_orders ADD COLUMN discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER total_amount',
+        'SELECT 1'
+    )
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'shop_orders'
+      AND column_name = 'discount_amount'
+);
+PREPARE shop_orders_discount_amount_stmt FROM @shop_orders_discount_amount_sql;
+EXECUTE shop_orders_discount_amount_stmt;
+DEALLOCATE PREPARE shop_orders_discount_amount_stmt;
+
+SET @shop_orders_user_coupon_id_sql := (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE shop_orders ADD COLUMN user_coupon_id BIGINT NULL AFTER pay_amount',
+        'SELECT 1'
+    )
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'shop_orders'
+      AND column_name = 'user_coupon_id'
+);
+PREPARE shop_orders_user_coupon_id_stmt FROM @shop_orders_user_coupon_id_sql;
+EXECUTE shop_orders_user_coupon_id_stmt;
+DEALLOCATE PREPARE shop_orders_user_coupon_id_stmt;
+
+SET @shop_orders_user_coupon_index_sql := (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE shop_orders ADD INDEX idx_shop_orders_user_coupon_id (user_coupon_id)',
+        'SELECT 1'
+    )
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'shop_orders'
+      AND index_name = 'idx_shop_orders_user_coupon_id'
+);
+PREPARE shop_orders_user_coupon_index_stmt FROM @shop_orders_user_coupon_index_sql;
+EXECUTE shop_orders_user_coupon_index_stmt;
+DEALLOCATE PREPARE shop_orders_user_coupon_index_stmt;
 
 CREATE TABLE IF NOT EXISTS shop_order_items (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
