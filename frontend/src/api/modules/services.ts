@@ -2,6 +2,8 @@
 import type { ApiResponse, PageResult } from "@/types/api";
 import type { CreateBookingPayload, MerchantDetail, MerchantSummary, ServiceCategory } from "@/types/service";
 
+type EntityId = string | number;
+
 export const fetchServiceCategories = async () => {
   const { data } = await webHttp.get<ApiResponse<ServiceCategory[]>>("/services/categories");
   return unwrap(data);
@@ -12,7 +14,7 @@ export const fetchMerchants = async (params: Record<string, string | number | un
   return unwrap(data);
 };
 
-export const fetchMerchantDetail = async (merchantId: number) => {
+export const fetchMerchantDetail = async (merchantId: EntityId) => {
   const { data } = await webHttp.get<ApiResponse<MerchantDetail>>(`/services/merchants/${merchantId}`);
   return unwrap(data);
 };
@@ -29,7 +31,7 @@ export const fetchMyBookings = async (params: Record<string, string | number | u
 };
 
 /** 取消预约 */
-export const cancelMyBooking = async (bookingId: number) => {
+export const cancelMyBooking = async (bookingId: EntityId) => {
   const { data } = await webHttp.post<ApiResponse<any>>(`/services/bookings/${bookingId}/cancel`);
   return unwrap(data);
 };

@@ -229,15 +229,22 @@ public class AdminOpsController {
         return ApiResponse.success(adminOpsService.updateTag(tagId, request));
     }
 
+    @DeleteMapping("/tags/{tagId}")
+    public ApiResponse<Void> deleteTag(@PathVariable Long tagId) {
+        adminOpsService.deleteTag(tagId);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/recommendations")
     public ApiResponse<PageResponse<AdminRecommendationResponse>> getRecommendations(
             @RequestParam(name = "slot_code", required = false) String slotCode,
             @RequestParam(name = "biz_type", required = false) String bizType,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(name = "page_size", defaultValue = "10") @Min(1) @Max(50) int pageSize
     ) {
-        return ApiResponse.success(adminOpsService.getRecommendationPage(slotCode, bizType, status, page, pageSize));
+        return ApiResponse.success(adminOpsService.getRecommendationPage(slotCode, bizType, status, keyword, page, pageSize));
     }
 
     @PostMapping("/recommendations")
@@ -253,5 +260,11 @@ public class AdminOpsController {
             @Valid @RequestBody SaveRecommendationRequest request
     ) {
         return ApiResponse.success(adminOpsService.updateRecommendation(recommendationId, request));
+    }
+
+    @DeleteMapping("/recommendations/{recommendationId}")
+    public ApiResponse<Void> deleteRecommendation(@PathVariable Long recommendationId) {
+        adminOpsService.deleteRecommendation(recommendationId);
+        return ApiResponse.success();
     }
 }

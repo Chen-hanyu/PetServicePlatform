@@ -131,7 +131,7 @@ class AdminOpsServiceTest {
         assertThat(adminOpsService.getTagPage("community", "active", "care", 1, 10).list())
                 .extracting("name")
                 .containsExactly("care");
-        assertThat(adminOpsService.getRecommendationPage("HOME_PRODUCT", "product", "active", 1, 10).list())
+        assertThat(adminOpsService.getRecommendationPage("HOME_PRODUCT", "product", "active", null, 1, 10).list())
                 .extracting("bizType")
                 .containsExactly("product");
     }

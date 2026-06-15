@@ -51,6 +51,17 @@ public class CommunityController {
         return ApiResponse.success(communityService.getPostPage(tab, category, tag, page, pageSize));
     }
 
+    @GetMapping("/posts/mine")
+    public ApiResponse<PageResponse<PostSummaryResponse>> getMyPosts(
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码必须大于等于1") int page,
+            @RequestParam(name = "page_size", defaultValue = "10")
+            @Min(value = 1, message = "每页数量必须大于等于1")
+            @Max(value = 50, message = "每页数量不能超过50") int pageSize
+    ) {
+        return ApiResponse.success(communityService.getMyPostPage(status, page, pageSize));
+    }
+
     @GetMapping("/posts/{postId}")
     public ApiResponse<PostDetailResponse> getPostDetail(@PathVariable Long postId) {
         return ApiResponse.success(communityService.getPostDetail(postId));
@@ -59,6 +70,12 @@ public class CommunityController {
     @PostMapping("/posts")
     public ApiResponse<CreatePostResponse> createPost(@Valid @RequestBody CreatePostRequest request) {
         return ApiResponse.success(communityService.createPost(request));
+    }
+
+    @DeleteMapping("/posts/{postId}")
+    public ApiResponse<Void> deletePost(@PathVariable Long postId) {
+        communityService.deleteOwnPost(postId);
+        return ApiResponse.success();
     }
 
     @GetMapping("/posts/{postId}/comments")

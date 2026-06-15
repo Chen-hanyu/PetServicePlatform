@@ -37,7 +37,7 @@
               <span class="pending-label">{{ item.label }}</span>
               <span class="pending-count">{{ item.count }}</span>
             </div>
-            <button class="pending-action">去处理</button>
+            <button class="pending-action" @click="router.push(item.path)">去处理</button>
           </div>
           <div v-if="pendingItems.length === 0" class="pending-empty">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -133,11 +133,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { fetchAdminDashboard } from "@/api/modules/admin";
 import { toErrorMessage } from "@/api/http";
 import type { DashboardOverview } from "@/types/admin";
 
 const overview = ref<DashboardOverview | null>(null);
+const router = useRouter();
 
 const stats = ref([
   { label: "用户总数", value: "0", desc: "平台注册用户", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>', bg: "#E8F5F1", trend: "up" },
@@ -150,6 +152,15 @@ const pendingItems = ref<{ label: string; count: number; color: string; path: st
 
 const orderBars = ref<{ label: string; value: number; height: number }[]>([]);
 const bookingBars = ref<{ label: string; value: number; height: number }[]>([]);
+
+const toBars = (points: { label: string; count: number }[] = []) => {
+  const max = Math.max(...points.map((point) => point.count), 1);
+  return points.map((point) => ({
+    label: point.label,
+    value: point.count,
+    height: point.count === 0 ? 8 : Math.round((point.count / max) * 80 + 10)
+  }));
+};
 
 const quickActions = [
   { label: "用户管理", path: "/admin/users", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>', bg: "#E8F5F1" },
@@ -174,20 +185,11 @@ onMounted(async () => {
     const pending: typeof pendingItems.value = [];
     if (o.pending_post_count > 0) pending.push({ label: "待审核帖子", count: o.pending_post_count, color: "#FFD66B", path: "/admin/content" });
     if (o.pending_adoption_count > 0) pending.push({ label: "待审核领养申请", count: o.pending_adoption_count, color: "#E97A7A", path: "/admin/adoption" });
+    if (o.pending_booking_count > 0) pending.push({ label: "待确认服务预约", count: o.pending_booking_count, color: "#7ECFBC", path: "/admin/services" });
     pendingItems.value = pending;
 
-    // 生成模拟趋势数据（7天）
-    const days = ["周一","周二","周三","周四","周五","周六","周日"];
-    const maxOrder = Math.max(o.order_total, 1);
-    const maxBooking = Math.max(o.booking_total, 1);
-    orderBars.value = days.map((d, i) => {
-      const val = Math.round(o.order_total * (0.08 + Math.random() * 0.15));
-      return { label: d, value: val, height: Math.round((val / maxOrder) * 80 + 10) };
-    });
-    bookingBars.value = days.map((d, i) => {
-      const val = Math.round(o.booking_total * (0.08 + Math.random() * 0.15));
-      return { label: d, value: val, height: Math.round((val / maxBooking) * 80 + 10) };
-    });
+    orderBars.value = toBars(o.order_trend);
+    bookingBars.value = toBars(o.booking_trend);
   } catch (e) {
     console.error("加载仪表盘数据失败:", toErrorMessage(e));
   }

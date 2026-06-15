@@ -15,7 +15,7 @@
       </div>
       <div class="filter-bar">
         <input v-model="petKeyword" placeholder="宠物名称" class="input input-sm" />
-        <select v-model="petType" class="input input-sm"><option value="">全部类型</option><option value="猫">猫</option><option value="狗">狗</option></select>
+        <select v-model="petType" class="input input-sm"><option value="">全部类型</option><option value="CAT">猫</option><option value="DOG">狗</option></select>
         <select v-model="petStatus" class="input input-sm"><option value="">全部状态</option><option value="ONLINE">上架</option><option value="OFFLINE">下架</option><option value="ADOPTED">已领养</option></select>
         <button class="btn btn-secondary" @click="loadPets">查询</button>
       </div>
@@ -81,7 +81,7 @@
           <form @submit.prevent="savePet">
             <div class="form-grid cols-2">
               <div class="form-group"><label>名称</label><input v-model="petForm.name" required class="input" /></div>
-              <div class="form-group"><label>类型</label><select v-model="petForm.type" class="input"><option>猫</option><option>狗</option></select></div>
+              <div class="form-group"><label>类型</label><select v-model="petForm.type" class="input"><option value="CAT">猫</option><option value="DOG">狗</option></select></div>
               <div class="form-group"><label>品种</label><input v-model="petForm.breed" class="input" /></div>
               <div class="form-group"><label>性别</label><select v-model="petForm.gender" class="input"><option>MALE</option><option>FEMALE</option></select></div>
               <div class="form-group"><label>年龄描述</label><input v-model="petForm.age_desc" class="input" /></div>
@@ -159,10 +159,10 @@ const petStatusVariant = (s: string) => ({ ONLINE: 'success', OFFLINE: 'warning'
 // 宠物弹窗
 const petModalVisible = ref(false);
 const editingPet = ref<any>(null);
-const petForm = reactive({ name: '', type: '猫', breed: '', gender: 'MALE', age_desc: '', city: '', health_status: '', personality: '', adoption_requirements: '', story: '', cover_url: '', status: 'ONLINE' });
+const petForm = reactive({ name: '', type: 'CAT', breed: '', gender: 'MALE', age_desc: '', city: '', health_status: '', personality: '', adoption_requirements: '', story: '', cover_url: '', status: 'ONLINE' });
 const openPetModal = (pet?: any) => {
   if (pet) { editingPet.value = pet; Object.assign(petForm, pet); }
-  else { editingPet.value = null; Object.assign(petForm, { name: '', type: '猫', breed: '', gender: 'MALE', age_desc: '', city: '', health_status: '', personality: '', adoption_requirements: '', story: '', cover_url: '', status: 'ONLINE' }); }
+  else { editingPet.value = null; Object.assign(petForm, { name: '', type: 'CAT', breed: '', gender: 'MALE', age_desc: '', city: '', health_status: '', personality: '', adoption_requirements: '', story: '', cover_url: '', status: 'ONLINE' }); }
   petModalVisible.value = true;
 };
 const closePetModal = () => { petModalVisible.value = false; editingPet.value = null; };
@@ -177,7 +177,7 @@ const togglePetStatus = async (pet: any) => {
   const newStatus = pet.status === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
   try { await updateAdminAdoptionPet(pet.id, { ...pet, status: newStatus }); await loadPets(); } catch (e) { petError.value = toErrorMessage(e); }
 };
-const deletePet = async (id: number) => {
+const deletePet = async (id: string | number) => {
   if (confirm('确定删除该宠物吗？')) { try { await deleteAdminAdoptionPet(id); await loadPets(); } catch (e) { petError.value = toErrorMessage(e); } }
 };
 
@@ -188,13 +188,22 @@ const appError = ref('');
 const appStatus = ref('');
 const loadApplications = async () => {
   appLoading.value = true;
-  try { const res = await fetchAdminAdoptionApplications({ status: appStatus.value || undefined, page: 1, page_size: 50 }); applications.value = res.list || []; } catch (e) { appError.value = toErrorMessage(e); } finally { appLoading.value = false; }
+  try {
+    const res = await fetchAdminAdoptionApplications({ status: appStatus.value || undefined, page: 1, page_size: 50 });
+    applications.value = (res.list || []).map((item: any) => ({
+      ...item,
+      pet_name: item.pet?.name || item.pet_name || "-",
+      user_nickname: item.user?.nickname || item.user_nickname || "-",
+      experience_desc: item.experience_desc || "",
+      living_condition_desc: item.living_condition_desc || ""
+    }));
+  } catch (e) { appError.value = toErrorMessage(e); } finally { appLoading.value = false; }
 };
 const appStatusVariant = (s: string) => ({ PENDING: 'warning', APPROVED: 'success', REJECTED: 'danger' }[s] || 'neutral');
 const appDetailVisible = ref(false);
 const currentApp = ref<any>(null);
 const viewApplicationDetail = (app: any) => { currentApp.value = app; appDetailVisible.value = true; };
-const reviewApplication = async (id: number, status: string) => {
+const reviewApplication = async (id: string | number, status: string) => {
   try { await reviewAdminAdoptionApplication(id, status, `管理员${status === 'APPROVED' ? '通过' : '驳回'}`); await loadApplications(); } catch (e) { appError.value = toErrorMessage(e); }
 };
 

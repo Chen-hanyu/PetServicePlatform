@@ -74,6 +74,27 @@
       </DataState>
     </div>
 
+    <!-- 客服咨询 -->
+    <div v-if="activeTab === 'support'" class="data-card">
+      <div class="data-header">
+        <h3 class="data-title">客服咨询</h3>
+        <button class="btn btn-secondary" @click="loadSupportMessages">刷新</button>
+      </div>
+      <DataState :loading="supportLoading" :error="supportError" :empty="supportMessages.length === 0">
+        <table class="table">
+          <thead><tr><th>标题</th><th>咨询内容</th><th>状态</th><th>时间</th></tr></thead>
+          <tbody>
+            <tr v-for="m in supportMessages" :key="m.id">
+              <td><span class="post-title">{{ m.title }}</span></td>
+              <td><span class="comment-text">{{ m.content }}</span></td>
+              <td><StatusBadge :variant="m.is_read ? 'success' : 'warning'">{{ m.is_read ? '已读' : '待处理' }}</StatusBadge></td>
+              <td><span class="time-text">{{ m.created_at }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </DataState>
+    </div>
+
     <!-- Banner 管理 -->
     <div v-if="activeTab === 'banners'" class="data-card">
       <div class="data-header">
@@ -233,6 +254,7 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import {
   fetchAdminPosts, reviewAdminPost,
   fetchAdminComments, deleteAdminComment,
+  fetchAdminSupportMessages,
   fetchAdminBanners, createAdminBanner, updateAdminBanner, deleteAdminBanner,
   fetchAdminTags, createAdminTag, updateAdminTag, deleteAdminTag,
   fetchAdminRecommendations, createAdminRecommendation, updateAdminRecommendation, deleteAdminRecommendation,
@@ -242,6 +264,7 @@ import { toErrorMessage } from '@/api/http';
 const tabs = [
   { key: 'posts', label: '帖子审核', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' },
   { key: 'comments', label: '评论管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' },
+  { key: 'support', label: '客服咨询', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10a6 6 0 10-12 0v4a3 3 0 003 3h1"/><path d="M18 10v4a3 3 0 01-3 3h-1"/><path d="M13 19h-2"/></svg>' },
   { key: 'banners', label: 'Banner管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>' },
   { key: 'tags', label: '标签管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>' },
   { key: 'recommendations', label: '推荐位管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
@@ -284,6 +307,18 @@ const deleteComment = async (id: number) => {
   if (confirm('删除评论不可恢复')) {
     try { await deleteAdminComment(id); await loadComments(); } catch (e) { commentError.value = toErrorMessage(e); }
   }
+};
+
+// 客服咨询
+const supportMessages = ref<any[]>([]);
+const supportLoading = ref(false);
+const supportError = ref('');
+const loadSupportMessages = async () => {
+  supportLoading.value = true;
+  try {
+    const res = await fetchAdminSupportMessages({ page: 1, page_size: 50 });
+    supportMessages.value = res.list || [];
+  } catch (e) { supportError.value = toErrorMessage(e); } finally { supportLoading.value = false; }
 };
 
 // Banner 管理
@@ -385,6 +420,7 @@ const deleteRecommendation = async (id: number) => {
 // 初始化加载
 loadPosts();
 loadComments();
+loadSupportMessages();
 loadBanners();
 loadTags();
 loadRecommendations();

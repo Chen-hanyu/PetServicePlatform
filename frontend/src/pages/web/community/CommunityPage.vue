@@ -148,16 +148,20 @@
           <div class="user-stats">
             <div class="stat-item">
               <span class="stat-num">{{ currentUser.followCount }}</span>
-              <span class="stat-label">关注</span>
+              <span class="stat-label">动态</span>
             </div>
             <div class="stat-item">
               <span class="stat-num">{{ currentUser.fansCount }}</span>
-              <span class="stat-label">粉丝</span>
+              <span class="stat-label">收藏</span>
             </div>
             <div class="stat-item">
               <span class="stat-num">{{ currentUser.likeCount }}</span>
               <span class="stat-label">获赞</span>
             </div>
+          </div>
+          <div class="user-actions">
+            <RouterLink to="/profile/posts" class="user-action-link">我的动态</RouterLink>
+            <RouterLink to="/profile" class="user-action-link secondary">个人主页</RouterLink>
           </div>
         </div>
 
@@ -165,25 +169,14 @@
         <div class="sidebar-card">
           <h4 class="card-title-bar">🔥 热门话题</h4>
           <ul class="topic-list">
-            <li class="topic-item">
-              <span class="rank">1</span>
-              <span class="topic-name">#新手养猫攻略</span>
-            </li>
-            <li class="topic-item">
-              <span class="rank">2</span>
-              <span class="topic-name">#狗狗行为训练</span>
-            </li>
-            <li class="topic-item">
-              <span class="rank">3</span>
-              <span class="topic-name">#自制宠物零食</span>
-            </li>
-            <li class="topic-item">
-              <span class="rank">4</span>
-              <span class="topic-name">#春季驱虫</span>
-            </li>
-            <li class="topic-item">
-              <span class="rank">5</span>
-              <span class="topic-name">#宠物摄影大赛</span>
+            <li
+              v-for="(topic, index) in hotTopics"
+              :key="topic"
+              :class="['topic-item', { active: activeTag === topic }]"
+              @click="applyTopic(topic)"
+            >
+              <span class="rank">{{ index + 1 }}</span>
+              <span class="topic-name">#{{ topic }}</span>
             </li>
           </ul>
         </div>
@@ -198,9 +191,10 @@ import { onMounted, ref, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchPosts, toggleLike } from "@/api/modules/community";
+import { fetchOverview } from "@/api/modules/profile";
 import { toErrorMessage } from "@/api/http";
 import { useAuthStore } from "@/store/auth";
-import type { PostSummary } from "@/types/community";
+import type { EntityId, PostSummary } from "@/types/community";
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -211,28 +205,34 @@ const searchQuery = ref("");
 const searchFocused = ref(false);
 const currentPage = ref(1);
 const posts = ref<PostSummaryVM[]>([]);
+const activeTag = ref("");
+const userStats = ref({
+  postCount: 0,
+  favoriteCount: 0,
+  likeCount: 0,
+  unreadMessageCount: 0
+});
 
 const currentUser = computed(() => ({
   nickname: auth.user?.nickname || "未登录用户",
   avatar: auth.user?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-  followCount: 0,
-  fansCount: 0,
-  likeCount: 0
+  followCount: userStats.value.postCount,
+  fansCount: userStats.value.favoriteCount,
+  likeCount: userStats.value.likeCount
 }));
 
 const categoryMap: Record<string, string> = {
   "推荐": "",
-  "晒宠": "pet",
-  "问答": "qa",
-  "种草": "share",
+  "问答": "help",
+  "训练": "training",
+  "救助": "rescue",
   "日常": "daily",
-  "知识": "knowledge",
-  "视频": "video",
-  "好物": "goods"
+  "知识": "knowledge"
 };
 
 const activeCategory = ref("推荐");
 const categories = Object.keys(categoryMap);
+const hotTopics = ["新手养宠", "疫苗", "洗护", "饮食", "训练", "领养回访", "健康记录"];
 
 const searchKeywords = [
   "新手养猫", "猫粮推荐", "猫咪训练", "猫咪疫苗", "猫咪洗澡", "自制猫饭",
@@ -252,6 +252,13 @@ const completions = computed(() => getCompletion(searchQuery.value));
 const applyCompletion = (kw: string) => {
   searchQuery.value = kw;
   searchFocused.value = false;
+};
+
+const applyTopic = (topic: string) => {
+  activeTag.value = activeTag.value === topic ? "" : topic;
+  searchQuery.value = "";
+  currentPage.value = 1;
+  void loadPosts();
 };
 
 const handleSearchBlur = () => {
@@ -277,9 +284,11 @@ const loadPosts = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const categoryValue = categoryMap[activeCategory.value] || activeCategory.value;
+    const categoryValue = categoryMap[activeCategory.value];
     const params: Record<string, string | number | undefined> = {
-      tab: categoryValue,
+      tab: activeCategory.value === "推荐" ? "recommended" : "latest",
+      category: categoryValue || undefined,
+      tag: activeTag.value || undefined,
       page: currentPage.value,
       page_size: PAGE_SIZE
     };
@@ -311,16 +320,31 @@ const togglePostLike = async (post: PostSummaryVM) => {
     await toggleLike(post.id);
     post.like_count = (post.like_count || 0) + (post.isLiked ? -1 : 1);
     post.isLiked = !post.isLiked;
-  } catch {
-    // 静默失败
+  } catch (e) {
+    error.value = toErrorMessage(e);
   }
 };
 
-const goToPostComments = (postId: number) => {
+const loadUserStats = async () => {
+  if (!auth.token) return;
+  try {
+    const overview = await fetchOverview();
+    userStats.value = {
+      postCount: overview.post_count || 0,
+      favoriteCount: overview.favorite_count || 0,
+      likeCount: overview.like_count || 0,
+      unreadMessageCount: overview.unread_message_count || 0
+    };
+  } catch {
+    userStats.value = { postCount: 0, favoriteCount: 0, likeCount: 0, unreadMessageCount: 0 };
+  }
+};
+
+const goToPostComments = (postId: EntityId) => {
   router.push(`/community/post/${postId}#comments`);
 };
 
-const openDetail = (postId: number) => {
+const openDetail = (postId: EntityId) => {
   router.push(`/community/post/${postId}`);
 };
 
@@ -328,9 +352,13 @@ const goToCreate = () => {
   router.push("/community/create");
 };
 
-onMounted(loadPosts);
+onMounted(() => {
+  void loadPosts();
+  void loadUserStats();
+});
 watch(activeCategory, () => {
   currentPage.value = 1;
+  activeTag.value = "";
 });
 watch([activeCategory, currentPage], () => {
   void loadPosts();
@@ -824,6 +852,29 @@ watch([activeCategory, currentPage], () => {
       }
     }
   }
+
+  .user-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+
+    .user-action-link {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 800;
+
+      &.secondary {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+    }
+  }
 }
 
 .card-title-bar {
@@ -857,6 +908,11 @@ watch([activeCategory, currentPage], () => {
 
   &:hover .topic-name {
     color: var(--primary);
+  }
+
+  &.active .topic-name {
+    color: var(--primary);
+    font-weight: 800;
   }
 
   .rank {

@@ -55,8 +55,8 @@
           <tbody>
             <tr v-for="o in orders" :key="o.id">
               <td><span class="id-tag">#{{ o.id }}</span></td>
-              <td><span class="product-name">{{ o.product_name }}</span></td>
-              <td>{{ o.quantity }}</td>
+              <td><span class="product-name">{{ formatOrderProducts(o) }}</span></td>
+              <td>{{ formatOrderQuantity(o) }}</td>
               <td><span class="price-text">¥{{ o.total_amount }}</span></td>
               <td><StatusBadge :variant="orderStatusVariant(o.status)">{{ o.status }}</StatusBadge></td>
               <td class="col-ops ops-group">
@@ -161,7 +161,19 @@ const loadOrders = async () => {
   orderLoading.value = true;
   try { const res = await fetchAdminOrders({ status: orderStatus.value || undefined, page: 1, page_size: 50 }); orders.value = res.list || []; } catch (e) { orderError.value = toErrorMessage(e); } finally { orderLoading.value = false; }
 };
-const orderStatusVariant = (s: string) => ({ PENDING: 'warning', PAID: 'info', SHIPPED: 'primary', DELIVERED: 'success', CANCELLED: 'danger' }[s] || 'neutral');
+const formatOrderProducts = (order: any) => {
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    return order.items.map((item: any) => item.product_name || item.productName || item.name).filter(Boolean).join('、') || '-';
+  }
+  return order.product_name || order.productName || '-';
+};
+const formatOrderQuantity = (order: any) => {
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    return order.items.reduce((sum: number, item: any) => sum + Number(item.quantity || 0), 0);
+  }
+  return order.quantity ?? '-';
+};
+const orderStatusVariant = (s: string) => ({ PENDING: 'warning', PAID: 'info', SHIPPED: 'info', DELIVERED: 'success', COMPLETED: 'success', CANCELLED: 'danger' }[s] || 'neutral');
 const updateOrderStatus = async (id: number, status: string) => {
   try { await updateAdminOrder(id, { status }); await loadOrders(); } catch (e) { orderError.value = toErrorMessage(e); }
 };

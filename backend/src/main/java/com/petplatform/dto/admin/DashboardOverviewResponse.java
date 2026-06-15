@@ -11,6 +11,7 @@ public record DashboardOverviewResponse(
         @JsonProperty("booking_total") long bookingTotal,
         @JsonProperty("pending_post_count") long pendingPostCount,
         @JsonProperty("pending_adoption_count") long pendingAdoptionCount,
+        @JsonProperty("pending_booking_count") long pendingBookingCount,
         @JsonProperty("order_trend") List<TrendPoint> orderTrend,
         @JsonProperty("booking_trend") List<TrendPoint> bookingTrend
 ) {

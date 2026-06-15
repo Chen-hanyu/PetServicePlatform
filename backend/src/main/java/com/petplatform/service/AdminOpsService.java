@@ -441,10 +441,20 @@ public class AdminOpsService {
         return AdminTagResponse.from(tagMapper.selectById(tagId));
     }
 
+    @Transactional
+    public void deleteTag(Long tagId) {
+        Tag tag = tagMapper.selectById(tagId);
+        if (tag == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "标签不存在");
+        }
+        tagMapper.deleteById(tagId);
+    }
+
     public PageResponse<AdminRecommendationResponse> getRecommendationPage(
             String slotCode,
             String bizType,
             String status,
+            String keyword,
             int page,
             int pageSize
     ) {
@@ -455,6 +465,10 @@ public class AdminOpsService {
                         .eq(StringUtils.hasText(slotCode), Recommendation::getSlotCode, normalizeUpper(slotCode))
                         .eq(StringUtils.hasText(bizType), Recommendation::getBizType, normalizeLower(bizType))
                         .eq(StringUtils.hasText(status), Recommendation::getStatus, normalizeUpper(status))
+                        .and(StringUtils.hasText(keyword), wrapper -> wrapper
+                                .like(Recommendation::getSlotCode, keyword)
+                                .or()
+                                .like(Recommendation::getBizType, keyword))
                         .orderByAsc(Recommendation::getSort)
                         .orderByDesc(Recommendation::getId)
         );
@@ -490,6 +504,15 @@ public class AdminOpsService {
         applyRecommendationChanges(recommendation, request, normalizedBizType, normalizedSlotCode, normalizedStatus);
         recommendationMapper.updateById(recommendation);
         return AdminRecommendationResponse.from(recommendationMapper.selectById(recommendationId));
+    }
+
+    @Transactional
+    public void deleteRecommendation(Long recommendationId) {
+        Recommendation recommendation = recommendationMapper.selectById(recommendationId);
+        if (recommendation == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "推荐位配置不存在");
+        }
+        recommendationMapper.deleteById(recommendationId);
     }
 
     private void applyAdoptionPetChanges(AdoptionPet pet, SaveAdoptionPetRequest request) {

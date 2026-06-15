@@ -10,7 +10,9 @@ import com.petplatform.dto.admin.AdminOrderResponse;
 import com.petplatform.dto.admin.UpdateOrderRequest;
 import com.petplatform.dto.admin.UpdateOrderResponse;
 import com.petplatform.entity.ShopOrder;
+import com.petplatform.entity.ShopOrderItem;
 import com.petplatform.entity.User;
+import com.petplatform.mapper.ShopOrderItemMapper;
 import com.petplatform.mapper.ShopOrderMapper;
 import com.petplatform.mapper.UserMapper;
 import org.springframework.stereotype.Service;
@@ -28,10 +30,12 @@ import java.util.stream.Collectors;
 public class AdminOrderService {
 
     private final ShopOrderMapper shopOrderMapper;
+    private final ShopOrderItemMapper shopOrderItemMapper;
     private final UserMapper userMapper;
 
-    public AdminOrderService(ShopOrderMapper shopOrderMapper, UserMapper userMapper) {
+    public AdminOrderService(ShopOrderMapper shopOrderMapper, ShopOrderItemMapper shopOrderItemMapper, UserMapper userMapper) {
         this.shopOrderMapper = shopOrderMapper;
+        this.shopOrderItemMapper = shopOrderItemMapper;
         this.userMapper = userMapper;
     }
 
@@ -46,13 +50,36 @@ public class AdminOrderService {
                 .orderByDesc(ShopOrder::getCreatedAt);
         IPage<ShopOrder> orderPage = shopOrderMapper.selectPage(pager, queryWrapper);
         Map<Long, User> users = loadUsers(orderPage.getRecords().stream().map(ShopOrder::getUserId).toList());
+        Map<Long, List<ShopOrderItem>> orderItems = loadOrderItems(orderPage.getRecords().stream().map(ShopOrder::getId).toList());
         List<AdminOrderResponse> list = orderPage.getRecords().stream()
                 .map(order -> {
                     User user = users.get(order.getUserId());
+                    List<AdminOrderResponse.OrderItemLite> items = orderItems.getOrDefault(order.getId(), Collections.emptyList()).stream()
+                            .map(item -> new AdminOrderResponse.OrderItemLite(
+                                    item.getProductId(),
+                                    item.getProductName(),
+                                    item.getProductImageUrl(),
+                                    item.getQuantity(),
+                                    item.getSubtotalAmount()
+                            ))
+                            .toList();
+                    String productName = items.isEmpty()
+                            ? ""
+                            : items.stream()
+                            .map(AdminOrderResponse.OrderItemLite::productName)
+                            .filter(StringUtils::hasText)
+                            .collect(Collectors.joining("、"));
+                    Integer quantity = items.stream()
+                            .map(AdminOrderResponse.OrderItemLite::quantity)
+                            .filter(Objects::nonNull)
+                            .reduce(0, Integer::sum);
                     return new AdminOrderResponse(
                             order.getId(),
                             order.getOrderNo(),
-                            new AdminOrderResponse.UserProfileLite(user.getId(), user.getNickname(), user.getPhone()),
+                            user == null ? null : new AdminOrderResponse.UserProfileLite(user.getId(), user.getNickname(), user.getPhone()),
+                            items,
+                            productName,
+                            quantity,
                             order.getTotalAmount(),
                             order.getPayAmount(),
                             order.getStatus(),
@@ -91,6 +118,18 @@ public class AdminOrderService {
         }
         return userMapper.selectByIds(distinctIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
+    }
+
+    private Map<Long, List<ShopOrderItem>> loadOrderItems(List<Long> orderIds) {
+        List<Long> distinctIds = orderIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (distinctIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return shopOrderItemMapper.selectList(new LambdaQueryWrapper<ShopOrderItem>()
+                        .in(ShopOrderItem::getOrderId, distinctIds)
+                        .orderByAsc(ShopOrderItem::getId))
+                .stream()
+                .collect(Collectors.groupingBy(ShopOrderItem::getOrderId));
     }
 }
 

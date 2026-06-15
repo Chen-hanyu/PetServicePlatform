@@ -139,6 +139,20 @@ public class AdoptionService {
         return new PageResponse<>(list, applicationPage.getTotal(), page, pageSize);
     }
 
+    @Transactional
+    public void cancelApplication(Long applicationId) {
+        Long userId = SecurityUtils.getCurrentUser().id();
+        AdoptionApplication application = adoptionApplicationMapper.selectById(applicationId);
+        if (application == null || !application.getUserId().equals(userId)) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "领养申请不存在");
+        }
+        if (!"PENDING".equals(application.getStatus())) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "当前申请状态不支持撤销");
+        }
+        application.setStatus("CANCELLED");
+        adoptionApplicationMapper.updateById(application);
+    }
+
     private Map<Long, AdoptionPet> loadPets(List<Long> petIds) {
         List<Long> distinctIds = petIds.stream().filter(Objects::nonNull).distinct().toList();
         if (distinctIds.isEmpty()) {

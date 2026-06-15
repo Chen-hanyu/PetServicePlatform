@@ -100,7 +100,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { fetchMyApplications } from "@/api/modules/adoption";
+import { cancelApplication as cancelApplicationApi, fetchMyApplications } from "@/api/modules/adoption";
 import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
@@ -110,7 +110,7 @@ const loading = ref(false);
 const error = ref("");
 
 interface Application {
-  id: number;
+  id: string | number;
   petName: string;
   petBreed: string;
   petAge: string;
@@ -128,10 +128,33 @@ const tabs = [
   { key: "all", label: "全部", badge: 0 },
   { key: "pending", label: "待审核", badge: 0 },
   { key: "approved", label: "已通过", badge: 0 },
-  { key: "rejected", label: "已拒绝", badge: 0 }
+  { key: "rejected", label: "已拒绝", badge: 0 },
+  { key: "cancelled", label: "已撤销", badge: 0 }
 ];
 
 const applications = ref<Application[]>([]);
+
+const statusMap: Record<string, { key: string; text: string }> = {
+  PENDING: { key: "pending", text: "待审核" },
+  APPROVED: { key: "approved", text: "已通过" },
+  REJECTED: { key: "rejected", text: "已拒绝" },
+  CANCELLED: { key: "cancelled", text: "已撤销" }
+};
+
+const normalizeStatus = (status?: string) => statusMap[String(status || "").toUpperCase()] || { key: "pending", text: "待审核" };
+
+const formatDateTime = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
 
 const loadApplications = async () => {
   loading.value = true;
@@ -139,20 +162,23 @@ const loadApplications = async () => {
   try {
     const data = await fetchMyApplications({ page: 1, page_size: 20 });
     const list = data.list ?? [];
-    applications.value = list.map((item: any) => ({
-      id: item.id,
-      petName: item.pet?.name || "未知宠物",
-      petBreed: item.pet?.breed || "",
-      petAge: item.pet?.age ? `${item.pet.age}岁` : "",
-      petGender: item.pet?.gender || "",
-      petStatus: item.pet?.status || "待领养",
-      petImage: item.pet?.images?.[0] || "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&q=80",
-      status: item.status || "pending",
-      statusText: getStatusText(item.status),
-      appliedAt: item.created_at || "",
-      reason: item.reason || "",
-      feedback: item.feedback || ""
-    }));
+    applications.value = list.map((item: any) => {
+      const normalized = normalizeStatus(item.status);
+      return {
+        id: item.id,
+        petName: item.pet?.name || "未知宠物",
+        petBreed: item.pet?.breed || "",
+        petAge: item.pet?.age_desc || "",
+        petGender: item.pet?.gender || "",
+        petStatus: item.pet?.status || "待领养",
+        petImage: item.pet?.cover_url || "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&q=80",
+        status: normalized.key,
+        statusText: normalized.text,
+        appliedAt: formatDateTime(item.created_at),
+        reason: item.experience_desc || "已提交领养申请",
+        feedback: item.review_remark || ""
+      };
+    });
   } catch (e) {
     error.value = toErrorMessage(e);
     applications.value = [];
@@ -162,13 +188,7 @@ const loadApplications = async () => {
 };
 
 const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    pending: "待审核",
-    approved: "已通过",
-    rejected: "已拒绝",
-    cancelled: "已撤销"
-  };
-  return map[status] || status;
+  return normalizeStatus(status).text;
 };
 
 const filteredApplications = computed(() => {
@@ -186,11 +206,13 @@ const goToAdoption = () => {
   router.push("/adoption");
 };
 
-const cancelApplication = (app: Application) => {
+const cancelApplication = async (app: Application) => {
   if (confirm("确定要撤销该申请吗？")) {
-    const index = applications.value.findIndex(a => a.id === app.id);
-    if (index > -1) {
-      applications.value.splice(index, 1);
+    try {
+      await cancelApplicationApi(app.id);
+      await loadApplications();
+    } catch (e) {
+      error.value = toErrorMessage(e);
     }
   }
 };
@@ -504,6 +526,11 @@ onMounted(loadApplications);
       &.status-rejected {
         background: rgba(233, 122, 122, 0.15);
         color: #E97A7A;
+      }
+
+      &.status-cancelled {
+        background: rgba(148, 163, 184, 0.16);
+        color: #64748b;
       }
     }
   }

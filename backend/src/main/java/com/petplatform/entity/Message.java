@@ -15,7 +15,7 @@ public class Message {
     private String content;
 
     @TableField("is_read")
-    private Boolean read;
+    private Boolean readFlag;
 
     private LocalDateTime createdAt;
 
@@ -60,11 +60,11 @@ public class Message {
     }
 
     public Boolean getRead() {
-        return read;
+        return readFlag;
     }
 
     public void setRead(Boolean read) {
-        this.read = read;
+        this.readFlag = read;
     }
 
     public LocalDateTime getCreatedAt() {

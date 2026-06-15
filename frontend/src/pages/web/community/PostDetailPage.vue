@@ -26,6 +26,11 @@
       <div class="loading-shimmer"></div>
     </div>
 
+    <div v-else-if="error && !post" class="error-container">
+      <p>{{ error }}</p>
+      <button @click="goBack">返回</button>
+    </div>
+
     <!-- 主内容 -->
     <main v-else-if="post" class="detail-content">
       <!-- 封面图 -->
@@ -108,24 +113,24 @@
 
         <!-- 互动数据 -->
         <div class="interaction-stats">
-          <div class="stat-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button class="stat-item" :class="{ active: isLiked }" type="button" @click="handleToggleLike">
+            <svg viewBox="0 0 24 24" :fill="isLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
               <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
             </svg>
             <span>{{ likeCount }}</span>
-          </div>
-          <div class="stat-item">
+          </button>
+          <button class="stat-item" type="button" @click="scrollToComments">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
             </svg>
             <span>{{ commentCount }}</span>
-          </div>
-          <div class="stat-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          </button>
+          <button class="stat-item" :class="{ active: isCollected }" type="button" @click="toggleCollect">
+            <svg viewBox="0 0 24 24" :fill="isCollected ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
               <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
             </svg>
             <span>{{ post.favorite_count || 0 }}</span>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -257,6 +262,7 @@
 
     <!-- 评论输入弹窗 -->
     <Teleport to="body">
+      <div v-if="commentPopupVisible" class="popup-overlay" @click="closeCommentPopup"></div>
       <transition name="slide-up">
         <div v-if="commentPopupVisible" class="comment-popup">
           <div class="popup-header">
@@ -275,7 +281,6 @@
           </div>
         </div>
       </transition>
-      <div v-if="commentPopupVisible" class="popup-overlay" @click="closeCommentPopup"></div>
     </Teleport>
 
     <!-- 分享弹窗 -->
@@ -336,8 +341,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { fetchPostComments, fetchPostDetail, fetchPosts, toggleLike, createComment } from "@/api/modules/community";
-import type { PostComment, PostDetail, PostSummary } from "@/types/community";
+import { createComment, fetchPostComments, fetchPostDetail, fetchPosts, toggleFavorite, toggleLike } from "@/api/modules/community";
+import { toErrorMessage } from "@/api/http";
+import type { EntityId, PostComment, PostDetail, PostSummary } from "@/types/community";
 
 type CommentVm = PostComment & {
   user: NonNullable<PostComment["author"]>;
@@ -350,6 +356,7 @@ const route = useRoute();
 const router = useRouter();
 
 const loading = ref(true);
+const error = ref("");
 const post = ref<PostDetail | null>(null);
 const isLiked = ref(false);
 const isCollected = ref(false);
@@ -413,7 +420,7 @@ const goBack = () => {
   router.back();
 };
 
-const goToPost = (id: number) => {
+const goToPost = (id: EntityId) => {
   router.push(`/community/post/${id}`);
 };
 
@@ -423,13 +430,21 @@ const handleToggleLike = async () => {
     await toggleLike(post.value.id);
     isLiked.value = !isLiked.value;
     likeCount.value += isLiked.value ? 1 : -1;
-  } catch {
-    // 静默失败
+  } catch (e) {
+    error.value = toErrorMessage(e);
   }
 };
 
-const toggleCollect = () => {
-  isCollected.value = !isCollected.value;
+const toggleCollect = async () => {
+  if (!post.value) return;
+  try {
+    const result = await toggleFavorite(post.value.id);
+    const favorited = Boolean((result as any)?.favorited ?? !isCollected.value);
+    isCollected.value = favorited;
+    post.value.favorite_count = Math.max(0, (post.value.favorite_count || 0) + (favorited ? 1 : -1));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+  }
 };
 
 const toggleCommentLike = (comment: any) => {
@@ -469,8 +484,8 @@ const submitComment = async () => {
     }));
     commentCount.value = comments.value.length;
     closeCommentPopup();
-  } catch {
-    // 静默失败
+  } catch (e) {
+    error.value = toErrorMessage(e);
   }
 };
 
@@ -485,7 +500,7 @@ const shareTo = (platform: string) => {
 
 onMounted(() => {
   setTimeout(async () => {
-    const postId = Number(route.params.id);
+    const postId = String(route.params.id);
     let foundPost: PostDetail | null = null;
     try {
       foundPost = await fetchPostDetail(postId);
@@ -497,7 +512,8 @@ onMounted(() => {
         isLiked: false,
         isAuthor: c.author?.id === foundPost?.author?.id
       }));
-    } catch {
+    } catch (e) {
+      error.value = toErrorMessage(e);
       comments.value = [];
     }
     if (foundPost) {
@@ -625,6 +641,28 @@ onMounted(() => {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
+  }
+}
+
+.error-container {
+  padding: 120px 24px 40px;
+  text-align: center;
+  color: var(--muted);
+
+  p {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
   }
 }
 
@@ -823,14 +861,24 @@ onMounted(() => {
     padding: 16px 0;
     border-top: 1px solid var(--border-warm);
 
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--muted);
-      font-size: 14px;
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0;
+        transition: color 0.2s ease;
 
-      svg {
+        &.active,
+        &:hover {
+          color: var(--primary);
+        }
+
+        svg {
         width: 18px;
         height: 18px;
       }

@@ -88,7 +88,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { fetchPosts } from "@/api/modules/community";
+import { deletePost as deletePostApi, fetchMyPosts } from "@/api/modules/community";
 import { toErrorMessage } from "@/api/http";
 import type { PostSummary } from "@/types/community";
 
@@ -102,7 +102,7 @@ const loadPosts = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const data = await fetchPosts({ page: 1, page_size: 20 });
+    const data = await fetchMyPosts({ page: 1, page_size: 20 });
     posts.value = data.list ?? [];
   } catch (e) {
     error.value = toErrorMessage(e);
@@ -140,10 +140,14 @@ const goToPost = (postId: number) => {
 
 const deletePost = async (post: PostSummary) => {
   if (confirm("确定要删除这条动态吗？")) {
-    // 调用删除 API（如果后端提供）
-    const index = posts.value.findIndex(p => p.id === post.id);
-    if (index > -1) {
-      posts.value.splice(index, 1);
+    try {
+      await deletePostApi(post.id);
+      const index = posts.value.findIndex(p => p.id === post.id);
+      if (index > -1) {
+        posts.value.splice(index, 1);
+      }
+    } catch (e) {
+      error.value = toErrorMessage(e);
     }
   }
 };

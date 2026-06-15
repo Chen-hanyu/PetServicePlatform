@@ -36,7 +36,7 @@
         class="chat-input"
         @keydown.enter.prevent="sendMessage"
       />
-      <button type="button" class="chat-send" @click="sendMessage" :disabled="!inputText.trim()">
+      <button type="button" class="chat-send" @click="sendMessage" :disabled="!inputText.trim() || sending">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
@@ -47,10 +47,14 @@
 
 <script setup lang="ts">
 import { ref, nextTick, watch } from "vue";
+import { submitSupportMessage } from "@/api/modules/messages";
+import { toErrorMessage } from "@/api/http";
 
 const open = ref(false);
 const inputText = ref("");
 const messagesRef = ref<HTMLElement | null>(null);
+const source = ref("在线客服");
+const sending = ref(false);
 
 interface Message {
   type: "user" | "system";
@@ -67,21 +71,30 @@ const scrollToBottom = () => {
   });
 };
 
-const sendMessage = () => {
+const sendMessage = async () => {
   const text = inputText.value.trim();
-  if (!text) return;
+  if (!text || sending.value) return;
 
   messages.value.push({ type: "user", text });
   inputText.value = "";
   scrollToBottom();
+  sending.value = true;
 
-  setTimeout(() => {
+  try {
+    await submitSupportMessage({ content: text, source: source.value });
     messages.value.push({
       type: "system",
-      text: "感谢您的提问！客服正在处理中，请稍候..."
+      text: "已提交给后台客服，处理结果会同步到「我的-消息通知」。"
     });
+  } catch (error) {
+    messages.value.push({
+      type: "system",
+      text: `提交失败：${toErrorMessage(error)}`
+    });
+  } finally {
+    sending.value = false;
     scrollToBottom();
-  }, 800);
+  }
 };
 
 watch(open, (v) => {
@@ -90,11 +103,17 @@ watch(open, (v) => {
   }
 });
 
-const toggle = () => {
+const toggle = (nextSource?: string) => {
+  if (nextSource) source.value = nextSource;
   open.value = !open.value;
 };
 
-defineExpose({ toggle, open });
+const openWithSource = (nextSource = "在线客服") => {
+  source.value = nextSource;
+  open.value = true;
+};
+
+defineExpose({ toggle, open: openWithSource });
 </script>
 
 <style scoped lang="scss">

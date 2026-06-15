@@ -18,20 +18,20 @@
             <h2 class="user-name">{{ userInfo.nickname }}</h2>
             <p class="user-bio">{{ userInfo.bio }}</p>
             <div class="user-stats">
-              <div class="stat-item">
+              <RouterLink to="/profile/posts" class="stat-item">
                 <p class="stat-num">{{ stats.dynamic_count }}</p>
                 <p class="stat-label">动态</p>
-              </div>
+              </RouterLink>
               <div class="stat-divider"></div>
-              <div class="stat-item">
+              <RouterLink to="/profile/posts" class="stat-item">
                 <p class="stat-num">{{ stats.like_count }}</p>
                 <p class="stat-label">获赞</p>
-              </div>
+              </RouterLink>
               <div class="stat-divider"></div>
-              <div class="stat-item">
-                <p class="stat-num">{{ stats.follow_count }}</p>
-                <p class="stat-label">关注</p>
-              </div>
+              <RouterLink to="/profile/messages" class="stat-item">
+                <p class="stat-num">{{ stats.message_count }}</p>
+                <p class="stat-label">消息</p>
+              </RouterLink>
             </div>
           </section>
 
@@ -94,6 +94,18 @@
                 </RouterLink>
               </li>
               <li>
+                <RouterLink to="/profile/bookings" class="nav-item">
+                  <span class="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/>
+                      <path d="M16 2v4M8 2v4M3 10h18"/>
+                    </svg>
+                  </span>
+                  <span class="nav-text">我的预约</span>
+                  <span v-if="stats.booking_count" class="nav-badge">{{ stats.booking_count }}</span>
+                </RouterLink>
+              </li>
+              <li>
                 <RouterLink to="/profile/messages" class="nav-item">
                   <span class="nav-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -101,7 +113,7 @@
                     </svg>
                   </span>
                   <span class="nav-text">消息通知</span>
-                  <span class="nav-badge">3</span>
+                  <span v-if="stats.message_count" class="nav-badge">{{ stats.message_count }}</span>
                 </RouterLink>
               </li>
             </ul>
@@ -125,7 +137,12 @@
               </RouterLink>
             </div>
             <div class="pets-scroll">
-              <article v-for="pet in pets" :key="pet.id" class="pet-card">
+              <article
+                v-for="pet in pets"
+                :key="pet.id"
+                :class="['pet-card', { active: selectedTimelinePetId === pet.id }]"
+                @click="openPetDetail(pet)"
+              >
                 <img :src="pet.avatar || defaultPetAvatar" :alt="pet.name" class="pet-avatar" />
                 <div class="pet-info">
                   <h4 class="pet-name">{{ pet.name }}</h4>
@@ -168,8 +185,8 @@
               <div class="timeline-header">
                 <h3 class="section-title-sm">成长时间轴</h3>
                 <div class="timeline-controls">
-                  <select class="timeline-select">
-                    <option v-for="pet in pets" :key="pet.id">{{ pet.name }}</option>
+                  <select v-model="selectedTimelinePetId" class="timeline-select">
+                    <option v-for="pet in pets" :key="pet.id" :value="pet.id">{{ pet.name }}</option>
                   </select>
                   <button class="icon-btn-sm">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -185,7 +202,7 @@
                 </div>
                 <div class="timeline-text">
                   <p class="timeline-title"><span class="pet-name-sm">{{ timelinePet.name }}</span> - 宠物成长档案</p>
-                  <p class="timeline-desc">{{ timelinePet.description || '完善生日、体重和疫苗记录后，可以在这里查看更完整的成长时间线。' }}</p>
+                  <p class="timeline-desc">{{ timelineSummary }}</p>
                   <div class="timeline-link">
                     <span>查看时间轴详情</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -207,21 +224,13 @@
                   <path d="M 40 50 Q 120 10, 200 50 T 360 50" stroke="url(#sCurveGradient)" stroke-width="8" fill="none" stroke-linecap="round"/>
                 </svg>
                 <div v-if="timelinePet" class="milestones">
-                  <div class="milestone top">
-                    <div class="milestone-icon">🐣</div>
-                    <div class="milestone-label">出生</div>
-                  </div>
-                  <div class="milestone bottom">
-                    <div class="milestone-icon">🏠</div>
-                    <div class="milestone-label">回家</div>
-                  </div>
-                  <div class="milestone top">
-                    <div class="milestone-icon accent">🎂</div>
-                    <div class="milestone-label accent">{{ timelinePet.ageText }}</div>
-                  </div>
-                  <div class="milestone bottom">
-                    <div class="milestone-icon muted">🦴</div>
-                    <div class="milestone-label muted">2岁</div>
+                  <div
+                    v-for="(event, index) in timelineMilestones"
+                    :key="`${event.type}-${event.occurred_at}-${index}`"
+                    :class="['milestone', index % 2 === 0 ? 'top' : 'bottom']"
+                  >
+                    <div :class="['milestone-icon', eventClass(event.type)]">{{ eventIcon(event.type) }}</div>
+                    <div :class="['milestone-label', eventClass(event.type)]">{{ event.title }}</div>
                   </div>
                 </div>
               </div>
@@ -277,17 +286,35 @@
       </div>
     </main>
 
+    <Teleport to="body">
+      <div v-if="selectedPet" class="modal-overlay" @click.self="selectedPet = null">
+        <div class="pet-detail-modal">
+          <button class="modal-close" @click="selectedPet = null">×</button>
+          <img :src="selectedPet.avatar || defaultPetAvatar" :alt="selectedPet.name" class="detail-pet-avatar" />
+          <h3>{{ selectedPet.name }}</h3>
+          <p>{{ selectedPet.breed || selectedPet.type }} · {{ selectedPet.ageText }} · {{ selectedPet.genderText }}</p>
+          <div class="pet-detail-grid">
+            <span>生日</span><strong>{{ selectedPet.birthday || "未记录" }}</strong>
+            <span>体重</span><strong>{{ selectedPet.weight ? `${selectedPet.weight} kg` : "未记录" }}</strong>
+            <span>说明</span><strong>{{ selectedPet.description || "暂无说明" }}</strong>
+          </div>
+          <RouterLink to="/profile/pets" class="modal-primary">进入宠物档案</RouterLink>
+        </div>
+      </div>
+    </Teleport>
+
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
-import { fetchMyPets } from "@/api/modules/pet";
+import { fetchMyPets, fetchPetTimeline } from "@/api/modules/pet";
 import { fetchOverview } from "@/api/modules/profile";
 import { fetchMyFavorites } from "@/api/modules/community";
-import type { PetProfile } from "@/types/pet";
+import { fetchOrders } from "@/api/modules/shop";
+import type { EntityId, PetProfile, PetTimelineEvent } from "@/types/pet";
 import type { PostSummary } from "@/types/community";
 
 const router = useRouter();
@@ -304,7 +331,7 @@ type DashboardPet = PetProfile & {
 };
 
 type FavoritePost = {
-  id: number;
+  id: EntityId;
   title: string;
   cover_url?: string;
   image?: string;
@@ -329,14 +356,29 @@ const userInfo = reactive({
 const stats = reactive({
   dynamic_count: 0,
   like_count: 0,
-  follow_count: 0,
+  message_count: 0,
   pet_count: 0,
   order_count: 0,
   booking_count: 0
 });
 
 const pets = ref<DashboardPet[]>([]);
-const timelinePet = computed(() => pets.value[0] || null);
+const selectedTimelinePetId = ref<EntityId | "">("");
+const selectedPet = ref<DashboardPet | null>(null);
+const timelineEvents = ref<PetTimelineEvent[]>([]);
+const timelinePet = computed(() => pets.value.find((pet) => pet.id === selectedTimelinePetId.value) || pets.value[0] || null);
+const timelineSummary = computed(() => {
+  const latest = timelineEvents.value[timelineEvents.value.length - 1];
+  return latest ? `${latest.title}：${latest.description}` : (timelinePet.value?.description || "完善生日、体重和疫苗记录后，可以在这里查看更完整的成长时间线。");
+});
+const timelineMilestones = computed(() => {
+  if (timelineEvents.value.length > 0) return timelineEvents.value.slice(-4);
+  if (!timelinePet.value) return [];
+  return [
+    { type: "BIRTHDAY", title: "生日", description: timelinePet.value.birthday || "未记录", occurred_at: timelinePet.value.birthday || "" },
+    { type: "PROFILE", title: timelinePet.value.ageText, description: timelinePet.value.description || "", occurred_at: "" }
+  ];
+});
 
 const favoritePosts = ref<FavoritePost[]>([]);
 const recentActivities = ref<RecentActivity[]>([]);
@@ -345,7 +387,7 @@ const orderTypes = reactive([
   {
     key: "pending",
     label: "待付款",
-    badge: 1,
+    badge: 0,
     svg: '<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>'
   },
   {
@@ -359,24 +401,49 @@ const orderTypes = reactive([
     label: "待收货",
     badge: 0,
     svg: '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
-  },
-  {
-    key: "review",
-    label: "待评价",
-    badge: 0,
-    svg: '<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>'
-  },
-  {
-    key: "afterSale",
-    label: "退换/售后",
-    badge: 0,
-    svg: '<path d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"/>'
   }
 ]);
 
 const editAvatar = () => {
   alert("头像上传功能开发中...");
 };
+
+const openPetDetail = (pet: DashboardPet) => {
+  selectedTimelinePetId.value = pet.id;
+  selectedPet.value = pet;
+};
+
+const eventIcon = (type?: string) => {
+  const map: Record<string, string> = {
+    VACCINE: "💉",
+    WEIGHT: "⚖",
+    ALBUM: "📷",
+    BIRTHDAY: "🎂",
+    PROFILE: "🐾"
+  };
+  return map[String(type || "").toUpperCase()] || "🐾";
+};
+
+const eventClass = (type?: string) => {
+  const key = String(type || "").toUpperCase();
+  if (key === "VACCINE") return "accent";
+  if (key === "WEIGHT") return "primary";
+  if (key === "ALBUM") return "muted";
+  return "";
+};
+
+async function loadTimeline() {
+  if (!selectedTimelinePetId.value) {
+    timelineEvents.value = [];
+    return;
+  }
+  try {
+    const data = await fetchPetTimeline(selectedTimelinePetId.value);
+    timelineEvents.value = data.events || [];
+  } catch {
+    timelineEvents.value = [];
+  }
+}
 
 const goToAddPet = () => {
   router.push("/profile/pets?action=add");
@@ -416,21 +483,37 @@ function toDashboardPet(pet: PetProfile): DashboardPet {
 }
 
 async function loadProfile() {
-  const [overview, petList, favResult] = await Promise.all([
+  const [overview, petList, favResult, orderResult] = await Promise.all([
     fetchOverview(),
     fetchMyPets(),
-    fetchMyFavorites({ page: 1, page_size: 4 }).catch(() => ({ list: [] }))
+    fetchMyFavorites({ page: 1, page_size: 4 }).catch(() => ({ list: [] })),
+    fetchOrders({ page: 1, page_size: 50 }).catch(() => ({ list: [] }))
   ]);
   userInfo.nickname = overview.user.nickname || auth.user?.nickname || "未命名用户";
   userInfo.bio = overview.user.bio || "还没有填写个人简介";
   userInfo.avatar = overview.user.avatar_url || defaultAvatar;
   stats.dynamic_count = overview.post_count;
-  stats.like_count = overview.favorite_count;
-  stats.follow_count = overview.unread_message_count;
+  stats.like_count = overview.like_count;
+  stats.message_count = overview.unread_message_count;
   stats.pet_count = overview.pet_count;
   stats.order_count = overview.order_count;
   stats.booking_count = overview.booking_count;
   pets.value = petList.map(toDashboardPet);
+  if (!selectedTimelinePetId.value && pets.value.length > 0) {
+    selectedTimelinePetId.value = pets.value[0].id;
+  }
+  await loadTimeline();
+
+  const orderStatusCounts = (orderResult.list || []).reduce((counts: Record<string, number>, order: any) => {
+    const status = String(order.status || "").toUpperCase();
+    if (status === "PENDING") counts.pending += 1;
+    if (status === "PAID") counts.shipping += 1;
+    if (status === "SHIPPED") counts.receiving += 1;
+    return counts;
+  }, { pending: 0, shipping: 0, receiving: 0 });
+  orderTypes.forEach((orderType) => {
+    orderType.badge = orderStatusCounts[orderType.key] || 0;
+  });
 
   // 加载收藏列表（卡片展示前4条）
   favoritePosts.value = (favResult.list || []).map((item: PostSummary) => ({
@@ -483,6 +566,10 @@ async function loadProfile() {
 onMounted(() => {
   void loadProfile();
 });
+
+watch(selectedTimelinePetId, () => {
+  void loadTimeline();
+});
 </script>
 
 <style scoped lang="scss">
@@ -495,9 +582,10 @@ onMounted(() => {
 
 // 主内容区
 .main-content {
-  max-width: 1280px;
+  width: min(1180px, calc(100vw - 48px));
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 32px 40px;
+  padding: 32px 0;
   flex: 1;
 }
 
@@ -586,6 +674,16 @@ onMounted(() => {
 
     .stat-item {
       text-align: center;
+      color: inherit;
+      text-decoration: none;
+      border-radius: 10px;
+      padding: 2px 6px;
+      transition: background 0.2s ease, color 0.2s ease;
+
+      &:hover {
+        background: var(--surface-muted);
+        color: var(--primary);
+      }
 
       .stat-num {
         font-size: 18px;
@@ -850,6 +948,11 @@ onMounted(() => {
     box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
   }
 
+  &.active {
+    border-color: var(--primary);
+    background: var(--surface-tint);
+  }
+
   .pet-avatar {
     width: 64px;
     height: 64px;
@@ -923,6 +1026,93 @@ onMounted(() => {
       box-shadow: none;
     }
   }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--overlay-scrim);
+}
+
+.pet-detail-modal {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 28px 24px 24px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 18px 45px rgba(34, 60, 52, 0.18);
+  text-align: center;
+
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: var(--surface-muted);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 20px;
+  }
+
+  .detail-pet-avatar {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface-muted);
+    border: 4px solid var(--surface-muted);
+  }
+
+  h3 {
+    margin: 14px 0 6px;
+    font-size: 22px;
+    color: var(--text-heading);
+  }
+
+  p {
+    margin: 0 0 18px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+}
+
+.pet-detail-grid {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 10px 12px;
+  margin-bottom: 20px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--surface-tint);
+  text-align: left;
+  font-size: 14px;
+
+  span {
+    color: var(--muted);
+  }
+
+  strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+}
+
+.modal-primary {
+  display: block;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
 }
 
 // 内容网格

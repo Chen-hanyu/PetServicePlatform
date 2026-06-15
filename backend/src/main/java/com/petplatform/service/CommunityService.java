@@ -125,10 +125,14 @@ public class CommunityService {
     }
 
     public PostDetailResponse getPostDetail(Long postId) {
-        CommunityPost post = getApprovedPostOrThrow(postId);
+        CurrentUser currentUser = SecurityUtils.getOptionalCurrentUser().orElse(null);
+        CommunityPost post = communityPostMapper.selectById(postId);
+        boolean canViewOwnPost = currentUser != null && post != null && post.getUserId().equals(currentUser.id());
+        if (post == null || (!"APPROVED".equals(post.getStatus()) && !canViewOwnPost)) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "帖子不存在");
+        }
         User author = loadUsers(List.of(post.getUserId())).get(post.getUserId());
         List<String> tags = loadTagNamesByPostIds(List.of(postId)).getOrDefault(postId, List.of());
-        CurrentUser currentUser = SecurityUtils.getOptionalCurrentUser().orElse(null);
 
         boolean isLiked = currentUser != null && postLikeMapper.selectCount(new LambdaQueryWrapper<PostLike>()
                 .eq(PostLike::getPostId, postId)
@@ -152,6 +156,25 @@ public class CommunityService {
                 isFavorited,
                 post.getPublishedAt()
         );
+    }
+
+    public PageResponse<PostSummaryResponse> getMyPostPage(String status, int page, int pageSize) {
+        CurrentUser currentUser = SecurityUtils.getCurrentUser();
+        Page<CommunityPost> pager = new Page<>(page, pageSize);
+        LambdaQueryWrapper<CommunityPost> queryWrapper = new LambdaQueryWrapper<CommunityPost>()
+                .eq(CommunityPost::getUserId, currentUser.id())
+                .ne(CommunityPost::getStatus, "DELETED")
+                .eq(StringUtils.hasText(status), CommunityPost::getStatus, status)
+                .orderByDesc(CommunityPost::getCreatedAt);
+
+        IPage<CommunityPost> postPage = communityPostMapper.selectPage(pager, queryWrapper);
+        List<CommunityPost> posts = postPage.getRecords();
+        Map<Long, User> authors = loadUsers(posts.stream().map(CommunityPost::getUserId).toList());
+        Map<Long, List<String>> tagsByPostId = loadTagNamesByPostIds(posts.stream().map(CommunityPost::getId).toList());
+        List<PostSummaryResponse> list = posts.stream()
+                .map(post -> toPostSummary(post, authors.get(post.getUserId()), tagsByPostId.getOrDefault(post.getId(), List.of())))
+                .toList();
+        return new PageResponse<>(list, postPage.getTotal(), page, pageSize);
     }
 
     @Transactional
@@ -190,6 +213,18 @@ public class CommunityService {
         }
 
         return new CreatePostResponse(post.getId(), post.getStatus());
+    }
+
+    @Transactional
+    public void deleteOwnPost(Long postId) {
+        CurrentUser currentUser = SecurityUtils.getCurrentUser();
+        CommunityPost post = communityPostMapper.selectById(postId);
+        if (post == null || !post.getUserId().equals(currentUser.id()) || "DELETED".equals(post.getStatus())) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "帖子不存在");
+        }
+        post.setStatus("DELETED");
+        post.setPublishedAt(null);
+        communityPostMapper.updateById(post);
     }
 
     public PageResponse<PostCommentResponse> getCommentPage(Long postId, int page, int pageSize) {

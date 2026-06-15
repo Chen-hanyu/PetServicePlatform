@@ -1,5 +1,7 @@
-﻿export interface AdoptionPetSummary {
-  id: number;
+export type EntityId = string | number;
+
+export interface AdoptionPetSummary {
+  id: EntityId;
   name: string;
   type: string;
   breed: string;
@@ -23,7 +25,7 @@ export interface AdoptionProcess {
 }
 
 export interface AdoptionApplicationPayload {
-  pet_id: number;
+  pet_id: EntityId;
   contact_phone: string;
   experience_desc: string;
   living_condition_desc: string;

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <rect width="400" height="200" rx="16" fill="#E3F2FD"/>
+  <g transform="translate(80,100)">
+    <circle cx="0" cy="-5" r="20" fill="#42A5F5"/>
+    <circle cx="0" cy="-5" r="12" fill="white"/>
+    <text x="0" y="0" text-anchor="middle" font-size="14" font-weight="bold" fill="#42A5F5">爪</text>
+</g>
+  <text x="160" y="95" font-size="20" font-weight="bold" fill="#3E2723">爪爪训练营</text>
+  <text x="160" y="120" font-size="13" fill="#8D6E63">⭐ 4.8 · 宠物服务</text>
+</svg>

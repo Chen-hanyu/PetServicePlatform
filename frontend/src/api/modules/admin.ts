@@ -60,6 +60,11 @@ export const deleteAdminComment = async (commentId: number) => {
   return unwrap(data);
 };
 
+export const fetchAdminSupportMessages = async (params: Record<string, string | number | undefined>) => {
+  const { data } = await adminHttp.get<ApiResponse<PageResult<any>>>("/support/messages", { params });
+  return unwrap(data);
+};
+
 export const fetchAdminBanners = async () => {
   const { data } = await adminHttp.get<ApiResponse<any[]>>("/banners");
   return unwrap(data);
@@ -123,6 +128,8 @@ export const deleteAdminRecommendation = async (recommendationId: number) => {
 };
 
 // -----------------------------
+type EntityId = string | number;
+
 // Adoption（领养宠物/申请审核）
 // -----------------------------
 
@@ -136,13 +143,13 @@ export const createAdminAdoptionPet = async (payload: Record<string, unknown>) =
   return unwrap(data);
 };
 
-export const updateAdminAdoptionPet = async (petId: number, payload: Record<string, unknown>) => {
+export const updateAdminAdoptionPet = async (petId: EntityId, payload: Record<string, unknown>) => {
   const { data } = await adminHttp.put<ApiResponse<any>>(`/adoption/pets/${petId}`, payload);
   return unwrap(data);
 };
 
 // docs 中未明确声明 delete，这里按常规 REST pattern 预留
-export const deleteAdminAdoptionPet = async (petId: number) => {
+export const deleteAdminAdoptionPet = async (petId: EntityId) => {
   const { data } = await adminHttp.delete<ApiResponse<null>>(`/adoption/pets/${petId}`);
   return unwrap(data);
 };
@@ -152,7 +159,7 @@ export const fetchAdminAdoptionApplications = async (params: Record<string, stri
   return unwrap(data);
 };
 
-export const reviewAdminAdoptionApplication = async (applicationId: number, status: string, remark = "") => {
+export const reviewAdminAdoptionApplication = async (applicationId: EntityId, status: string, remark = "") => {
   const { data } = await adminHttp.put<ApiResponse<any>>(`/adoption/applications/${applicationId}/review`, {
     status,
     review_remark: remark

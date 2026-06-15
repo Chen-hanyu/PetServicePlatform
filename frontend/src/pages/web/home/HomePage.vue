@@ -22,10 +22,7 @@
       <div class="entry-grid">
         <RouterLink v-for="entry in entries" :key="entry.code" :to="entry.path" class="entry-card">
           <div class="entry-icon" :class="entry.code">
-            <img v-if="entry.code === 'community'" src="https://img.icons8.com/ios-filled/50/7ECFBC/chat.png" alt="Community" />
-            <img v-else-if="entry.code === 'adoption'" src="https://img.icons8.com/ios-filled/50/FFD66B/dog.png" alt="Adoption" />
-            <img v-else-if="entry.code === 'services'" src="https://img.icons8.com/ios-filled/50/7ECFBC/wrench.png" alt="Services" />
-            <img v-else-if="entry.code === 'shop'" src="https://img.icons8.com/ios-filled/50/7ECFBC/shopping-bag.png" alt="Shop" />
+            <span v-html="entryIcons[entry.code] || entryIcons.default"></span>
           </div>
           <strong>{{ entry.title }}</strong>
         </RouterLink>
@@ -139,7 +136,7 @@
           class="service-card"
         >
           <div class="service-image">
-            <img :src="service.cover_url || '/static/images/merchant-grooming.svg'" :alt="service.name" />
+            <img :src="getServiceCover(service)" :alt="service.name" />
             <div class="service-rating">
               <span class="star">⭐</span> {{ service.score || service.rating }}
             </div>
@@ -202,6 +199,26 @@ const recommendedPosts = ref<any[]>([]);
 const recommendedServices = ref<any[]>([]);
 const recommendedProducts = ref<any[]>([]);
 const petCards = ref<PetCard[]>([]);
+const entryIcons: Record<string, string> = {
+  community: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z"/><path d="M8 9h8M8 13h5"/></svg>',
+  adoption: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 12.5C2.8 10.8 2.5 8 4.2 6.3c1.6-1.7 4.2-1.4 5.8.2L12 8.5l2-2c1.6-1.6 4.2-1.9 5.8-.2 1.7 1.7 1.4 4.5-.3 6.2L12 20z"/><path d="M8 5.5c0-1.4 1.1-2.5 2.5-2.5M16 5.5c0-1.4-1.1-2.5-2.5-2.5"/></svg>',
+  services: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 00-5.6 5.6L3 18v3h3l6.1-6.1a4 4 0 005.6-5.6l-2.1 2.1-3-3z"/></svg>',
+  shop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7h12l1 14H5z"/><path d="M9 7a3 3 0 016 0"/></svg>',
+  default: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>'
+};
+
+const merchantCovers: Record<string, string> = {
+  "1": "/static/images/merchant-boarding.png",
+  "2": "/static/images/merchant-training.png",
+  "3": "/static/images/merchant-clinic.png",
+  "4": "/static/images/merchant-grooming.png",
+  "5": "/static/images/merchant-home-care.png"
+};
+
+const getServiceCover = (service: any) => {
+  const id = String(service?.id ?? "");
+  return merchantCovers[id] || service?.cover_url || "/static/images/merchant-grooming.png";
+};
 
 // 宠物类型筛选
 const activePetFilter = ref("all");
@@ -316,7 +333,7 @@ onMounted(async () => {
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(255, 155, 122, 0.3);
   
-  &:hover {
+    &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(255, 155, 122, 0.4);
   }
@@ -408,13 +425,10 @@ onMounted(async () => {
     transform: translateY(-6px);
     box-shadow: 0 12px 30px rgba(34, 60, 52, 0.12);
     
-    .entry-icon {
-      background: var(--primary);
-      
-      img {
-        filter: brightness(0) invert(1);
+      .entry-icon {
+        background: var(--primary);
+        color: #fff;
       }
-    }
   }
 }
 
@@ -425,13 +439,14 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 155, 122, 0.15);
-  transition: all 0.3s ease;
-  
-  img {
-    width: 32px;
-    height: 32px;
-  }
+    background: rgba(255, 155, 122, 0.15);
+    color: var(--primary);
+    transition: all 0.3s ease;
+
+    :deep(svg) {
+      width: 32px;
+      height: 32px;
+    }
   
   &.community { background: rgba(255, 155, 122, 0.15); }
   &.adoption { background: rgba(255, 214, 107, 0.15); }

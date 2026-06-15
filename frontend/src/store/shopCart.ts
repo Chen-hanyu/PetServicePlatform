@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
 export interface ShopCartLine {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   quantity: number;
@@ -16,7 +16,7 @@ export const useShopCartStore = defineStore("shopCart", () => {
   const totalAmount = computed(() => items.value.reduce((s, i) => s + i.price * i.quantity, 0));
 
   const add = (
-    product: { id: number; name: string; price: number; image_url?: string; image?: string },
+    product: { id: string | number; name: string; price: number; image_url?: string; image?: string },
     quantity = 1,
     onAdded?: (image: string) => void
   ) => {
@@ -30,19 +30,19 @@ export const useShopCartStore = defineStore("shopCart", () => {
     }
   };
 
-  const increaseQty = (id: number) => {
+  const increaseQty = (id: string | number) => {
     const line = items.value.find((x) => x.id === id);
     if (line) line.quantity++;
   };
 
-  const decreaseQty = (id: number) => {
+  const decreaseQty = (id: string | number) => {
     const line = items.value.find((x) => x.id === id);
     if (!line) return;
     if (line.quantity > 1) line.quantity--;
     else removeItem(id);
   };
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: string | number) => {
     items.value = items.value.filter((x) => x.id !== id);
   };
 

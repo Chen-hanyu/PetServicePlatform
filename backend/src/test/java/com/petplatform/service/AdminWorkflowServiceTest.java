@@ -30,6 +30,7 @@ import com.petplatform.mapper.PetMapper;
 import com.petplatform.mapper.PostCommentMapper;
 import com.petplatform.mapper.PostTagMapper;
 import com.petplatform.mapper.ServiceBookingMapper;
+import com.petplatform.mapper.ShopOrderItemMapper;
 import com.petplatform.mapper.ShopOrderMapper;
 import com.petplatform.mapper.TagMapper;
 import com.petplatform.mapper.UserMapper;
@@ -71,6 +72,8 @@ class AdminWorkflowServiceTest {
     private CommunityPostMapper communityPostMapper;
     @Mock
     private ShopOrderMapper shopOrderMapper;
+    @Mock
+    private ShopOrderItemMapper shopOrderItemMapper;
     @Mock
     private PostTagMapper postTagMapper;
     @Mock
@@ -153,10 +156,11 @@ class AdminWorkflowServiceTest {
     @Test
     @DisplayName("管理端订单列表应组装用户信息，订单状态更新应拒绝非法流转")
     void shouldListAndUpdateOrders() {
-        AdminOrderService service = new AdminOrderService(shopOrderMapper, userMapper);
+        AdminOrderService service = new AdminOrderService(shopOrderMapper, shopOrderItemMapper, userMapper);
         ShopOrder order = order(20L, "PAID");
         when(shopOrderMapper.selectPage(any(), any())).thenReturn(pageOf(order));
         when(userMapper.selectByIds(List.of(2L))).thenReturn(List.of(user(2L)));
+        when(shopOrderItemMapper.selectList(any())).thenReturn(List.of());
 
         var page = service.getOrderPage("PAID", "NO", 1, 10);
 

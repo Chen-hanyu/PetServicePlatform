@@ -137,13 +137,17 @@ Authorization: Bearer <token>
 | `GET` | `/api/v1/profile/me` | 是 | 获取当前用户信息 |
 | `GET` | `/api/v1/profile/overview` | 是 | 获取个人中心概览 |
 
+个人中心概览包含 `pet_count`、`post_count`、`like_count`、`favorite_count`、`order_count`、`booking_count`、`adoption_application_count`、`unread_message_count`。其中 `like_count` 为当前用户已发布帖子获得的点赞数汇总。
+
 ### 3.4 社区
 
 | 方法 | 路径 | 认证 | 说明 |
 |---|---|---|---|
 | `GET` | `/api/v1/community/posts` | 否 | 获取帖子列表 |
+| `GET` | `/api/v1/community/posts/mine` | 是 | 获取我的动态列表 |
 | `GET` | `/api/v1/community/posts/{postId}` | 否 | 获取帖子详情 |
 | `POST` | `/api/v1/community/posts` | 是 | 发布帖子 |
+| `DELETE` | `/api/v1/community/posts/{postId}` | 是 | 删除我的动态 |
 | `GET` | `/api/v1/community/posts/{postId}/comments` | 否 | 获取评论列表 |
 | `POST` | `/api/v1/community/posts/{postId}/comments` | 是 | 发表评论 |
 | `POST` | `/api/v1/community/posts/{postId}/like` | 是 | 点赞或取消点赞 |
@@ -184,6 +188,7 @@ Authorization: Bearer <token>
 | `GET` | `/api/v1/adoption/process` | 否 | 获取领养流程说明 |
 | `POST` | `/api/v1/adoption/applications` | 是 | 提交领养申请 |
 | `GET` | `/api/v1/adoption/applications` | 是 | 获取我的领养申请列表 |
+| `POST` | `/api/v1/adoption/applications/{applicationId}/cancel` | 是 | 撤销待审核领养申请 |
 
 待领养宠物列表查询参数：
 
@@ -273,6 +278,9 @@ Authorization: Bearer <token>
 | `POST` | `/api/v1/shop/orders` | 是 | 创建订单 |
 | `GET` | `/api/v1/shop/orders` | 是 | 获取我的订单列表 |
 | `GET` | `/api/v1/shop/orders/{orderId}` | 是 | 获取订单详情 |
+| `POST` | `/api/v1/shop/orders/{orderId}/pay` | 是 | 演示支付订单，状态由 `PENDING` 变为 `PAID` |
+| `POST` | `/api/v1/shop/orders/{orderId}/cancel` | 是 | 取消待付款订单，并恢复库存与优惠券 |
+| `POST` | `/api/v1/shop/orders/{orderId}/confirm` | 是 | 确认收货，状态由 `SHIPPED` 变为 `COMPLETED` |
 
 商品列表查询参数：
 
@@ -323,6 +331,16 @@ Authorization: Bearer <token>
 |---|---|---|---|
 | `GET` | `/api/v1/messages` | 是 | 获取消息列表 |
 | `POST` | `/api/v1/messages/{messageId}/read` | 是 | 标记消息已读 |
+| `POST` | `/api/v1/messages/read-all` | 是 | 全部消息标记已读 |
+| `POST` | `/api/v1/messages/support` | 是 | 提交在线客服/领养咨询 |
+| `DELETE` | `/api/v1/messages/{messageId}` | 是 | 删除消息 |
+
+客服咨询请求体：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `content` | string | 是 | 咨询内容 |
+| `source` | string | 否 | 来源，如在线客服、领养咨询 |
 
 ### 3.9 宠物档案
 
@@ -400,6 +418,8 @@ Authorization: Bearer <token>
 | `GET` | `/api/v1/admin/dashboard` | 是 | 获取仪表盘概览 |
 
 管理员登录请求体与用户登录一致；管理员验证码接口同样为可选增强能力。
+
+仪表盘响应中的 `order_trend`、`booking_trend` 为最近 7 天真实聚合数据，元素格式为 `{ label, count }`；`pending_booking_count` 为待确认服务预约数量。
 
 ### 4.2 用户管理
 
@@ -602,6 +622,7 @@ Authorization: Bearer <token>
 |---|---|---|---|
 | `GET` | `/api/v1/admin/shop/orders` | 是 | 获取订单列表 |
 | `PUT` | `/api/v1/admin/shop/orders/{orderId}` | 是 | 更新订单状态 |
+| `GET` | `/api/v1/admin/support/messages` | 是 | 查看用户提交的客服咨询 |
 | `GET` | `/api/v1/admin/shop/categories` | 是 | 获取商品分类 |
 | `GET` | `/api/v1/admin/shop/products` | 是 | 获取商品列表 |
 | `POST` | `/api/v1/admin/shop/products` | 是 | 创建商品 |
@@ -664,9 +685,13 @@ Authorization: Bearer <token>
 | `GET` | `/api/v1/admin/tags` | 是 | 获取标签列表 |
 | `POST` | `/api/v1/admin/tags` | 是 | 创建标签 |
 | `PUT` | `/api/v1/admin/tags/{tagId}` | 是 | 更新标签 |
+| `DELETE` | `/api/v1/admin/tags/{tagId}` | 是 | 删除标签 |
 | `GET` | `/api/v1/admin/recommendations` | 是 | 获取推荐位列表 |
 | `POST` | `/api/v1/admin/recommendations` | 是 | 创建推荐位 |
 | `PUT` | `/api/v1/admin/recommendations/{recommendationId}` | 是 | 更新推荐位 |
+| `DELETE` | `/api/v1/admin/recommendations/{recommendationId}` | 是 | 删除推荐位 |
+
+推荐位列表支持 `slot_code`、`biz_type`、`status`、`keyword` 查询参数，`keyword` 会匹配推荐位编码与业务类型。
 
 Banner 请求体：
 
@@ -728,8 +753,22 @@ Banner 请求体：
 | 方法 | 路径 | 认证 | 说明 |
 |---|---|---|---|
 | `GET` | `/api/v1/shop/addresses` | 是 | 获取当前用户收货地址列表 |
+| `POST` | `/api/v1/shop/addresses` | 是 | 新增当前用户收货地址 |
+| `PUT` | `/api/v1/shop/addresses/{addressId}` | 是 | 更新当前用户收货地址 |
 | `GET` | `/api/v1/shop/coupons/available` | 是 | 获取当前用户可用于订单金额的优惠券 |
 | `POST` | `/api/v1/shop/orders/direct` | 是 | 按商品明细直接创建订单，支持立即购买和前端本地购物车 |
+
+`POST /api/v1/shop/addresses`、`PUT /api/v1/shop/addresses/{addressId}` 请求体：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `receiver_name` | string | 是 | 收货人 |
+| `receiver_phone` | string | 是 | 收货电话 |
+| `province` | string | 是 | 省份 |
+| `city` | string | 是 | 城市 |
+| `district` | string | 是 | 区县 |
+| `detail_address` | string | 是 | 详细地址 |
+| `is_default` | boolean | 否 | 是否设为默认地址 |
 
 `GET /api/v1/shop/coupons/available` 查询参数：
 

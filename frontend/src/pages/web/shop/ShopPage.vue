@@ -63,7 +63,7 @@
         <h2 class="pane-title">分类</h2>
         <ul class="category-list">
           <li>
-            <button type="button" :class="['cat-link', { active: selectedCategory === null }]" @click="selectedCategory = null">
+            <button type="button" :class="['cat-link', { active: selectedCategory === null }]" @click="selectCategory(null)">
               全部商品
             </button>
           </li>
@@ -71,7 +71,7 @@
             <button
               type="button"
               :class="['cat-link', { active: selectedCategory === cat.id }]"
-              @click="selectedCategory = cat.id"
+              @click="selectCategory(cat.id)"
             >
               <span class="cat-ico">{{ categoryIcons[cat.name] || "📦" }}</span>
               {{ cat.name }}
@@ -128,7 +128,7 @@
       <div class="list-panel card">
         <div class="category-rail">
           <div class="rail-scroll">
-            <button type="button" :class="['rail-item', { active: selectedCategory === null }]" @click="selectedCategory = null">
+            <button type="button" :class="['rail-item', { active: selectedCategory === null }]" @click="selectCategory(null)">
               <span class="rail-ico">🏠</span>
               全部
             </button>
@@ -137,7 +137,7 @@
               :key="'r-' + cat.id"
               type="button"
               :class="['rail-item', { active: selectedCategory === cat.id }]"
-              @click="selectedCategory = cat.id"
+              @click="selectCategory(cat.id)"
             >
               <span class="rail-ico">{{ categoryIcons[cat.name] || "📦" }}</span>
               {{ cat.name }}
@@ -232,9 +232,11 @@ import { toErrorMessage } from "@/api/http";
 
 const loading = ref(false);
 const error = ref("");
-const categories = ref<{ id: number; name: string }[]>([]);
+type CategoryId = string | number;
+
+const categories = ref<{ id: CategoryId; name: string }[]>([]);
 const products = ref<any[]>([]);
-const selectedCategory = ref<number | null>(null);
+const selectedCategory = ref<CategoryId | null>(null);
 const keyword = ref("");
 const searchScope = ref("item");
 const sortBy = ref<"default" | "sales" | "price" | "new">("default");
@@ -329,7 +331,9 @@ const highlightTitle = (name: string) => {
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const productCategoryId = (p: any): number | null => {
+const normalizeId = (value: CategoryId | null | undefined) => value == null ? "" : String(value);
+
+const productCategoryId = (p: any): CategoryId | null => {
   if (p.category_id != null) return p.category_id;
   const c = categories.value.find((x) => x.name === p.category);
   return c?.id ?? null;
@@ -338,7 +342,7 @@ const productCategoryId = (p: any): number | null => {
 const filteredProducts = computed(() => {
   let result = [...products.value];
   if (selectedCategory.value != null) {
-    result = result.filter((p) => productCategoryId(p) === selectedCategory.value);
+    result = result.filter((p) => normalizeId(productCategoryId(p)) === normalizeId(selectedCategory.value));
   }
   const kw = keyword.value.trim().toLowerCase();
   if (kw) {
@@ -354,7 +358,7 @@ const filteredProducts = computed(() => {
   } else if (sortBy.value === "price") {
     result.sort((a, b) => (priceOrder.value === "asc" ? a.price - b.price : b.price - a.price));
   } else if (sortBy.value === "new") {
-    result.sort((a, b) => b.id - a.id);
+    result.sort((a, b) => Number(b.id) - Number(a.id));
   } else {
     result.sort((a, b) => (b.sales ?? 0) - (a.sales ?? 0));
   }
@@ -374,7 +378,12 @@ const loadProducts = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const data = await fetchProducts({ page: 1, page_size: 20 });
+    const data = await fetchProducts({
+      keyword: keyword.value.trim() || undefined,
+      category: selectedCategory.value ?? undefined,
+      page: 1,
+      page_size: 50
+    });
     products.value = data.list || [];
   } catch (e) {
     error.value = toErrorMessage(e);
@@ -384,9 +393,15 @@ const loadProducts = async () => {
   }
 };
 
-const onPromoClick = (catId: number) => {
+const onPromoClick = (catId: CategoryId) => {
   selectedCategory.value = catId;
+  void loadProducts();
   document.getElementById("shop-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const selectCategory = (catId: CategoryId | null) => {
+  selectedCategory.value = catId;
+  void loadProducts();
 };
 
 onMounted(async () => {

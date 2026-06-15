@@ -70,6 +70,44 @@
       </DataState>
     </div>
 
+    <!-- 预约处理 -->
+    <div v-if="activeTab === 'bookings'" class="data-card">
+      <div class="data-header">
+        <h3 class="data-title">预约处理</h3>
+        <div class="data-actions">
+          <select v-model="bookingStatus" class="input input-sm" @change="loadBookings">
+            <option value="">全部状态</option>
+            <option value="PENDING">待确认</option>
+            <option value="CONFIRMED">已确认</option>
+            <option value="COMPLETED">已完成</option>
+            <option value="CANCELLED">已取消</option>
+          </select>
+          <button class="btn btn-secondary" @click="loadBookings">刷新</button>
+        </div>
+      </div>
+      <DataState :loading="bookingLoading" :error="bookingError" :empty="bookings.length === 0">
+        <table class="table">
+          <thead><tr><th>ID</th><th>用户</th><th>商家</th><th>服务</th><th>预约时间</th><th>联系电话</th><th>状态</th><th class="col-ops">操作</th></tr></thead>
+          <tbody>
+            <tr v-for="b in bookings" :key="b.id">
+              <td><span class="id-tag">#{{ b.id }}</span></td>
+              <td>{{ b.user?.nickname || '-' }}</td>
+              <td>{{ b.merchant?.name || '-' }}</td>
+              <td>{{ b.service_name }}</td>
+              <td>{{ formatDateTime(b.booking_time) }}</td>
+              <td><span class="phone-text">{{ b.contact_phone || '-' }}</span></td>
+              <td><StatusBadge :variant="bookingStatusVariant(b.status)">{{ b.status }}</StatusBadge></td>
+              <td class="col-ops ops-group">
+                <button v-if="b.status === 'PENDING'" class="btn btn-xs btn-success" @click="changeBookingStatus(b.id, 'CONFIRMED')">确认</button>
+                <button v-if="b.status === 'CONFIRMED'" class="btn btn-xs btn-success" @click="changeBookingStatus(b.id, 'COMPLETED')">完成</button>
+                <button v-if="['PENDING', 'CONFIRMED'].includes(b.status)" class="btn btn-xs btn-warning" @click="changeBookingStatus(b.id, 'CANCELLED')">取消</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </DataState>
+    </div>
+
     <!-- 服务弹窗 -->
     <Teleport to="body">
       <div v-if="serviceModalVisible" class="modal-overlay" @click.self="closeServiceModal">
@@ -131,12 +169,14 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import {
   fetchAdminServiceItems, createAdminServiceItem, updateAdminServiceItem, deleteAdminServiceItem,
   fetchAdminMerchants, createAdminMerchant, updateAdminMerchant, deleteAdminMerchant,
+  fetchAdminBookings, updateAdminBooking,
 } from '@/api/modules/admin';
 import { toErrorMessage } from '@/api/http';
 
 const tabs = [
   { key: 'services', label: '服务管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' },
   { key: 'merchants', label: '商家管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
+  { key: 'bookings', label: '预约处理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/></svg>' },
 ];
 const activeTab = ref('services');
 
@@ -206,8 +246,43 @@ const deleteMerchant = async (id: number) => {
   if (confirm('确定删除该商家吗？')) { try { await deleteAdminMerchant(id); await loadMerchants(); } catch (e) { merchantError.value = toErrorMessage(e); } }
 };
 
+const bookings = ref<any[]>([]);
+const bookingLoading = ref(false);
+const bookingError = ref('');
+const bookingStatus = ref('');
+const loadBookings = async () => {
+  bookingLoading.value = true;
+  try {
+    const res = await fetchAdminBookings({ status: bookingStatus.value || undefined, page: 1, page_size: 50 });
+    bookings.value = res.list || [];
+  } catch (e) {
+    bookingError.value = toErrorMessage(e);
+  } finally {
+    bookingLoading.value = false;
+  }
+};
+const changeBookingStatus = async (id: number, status: string) => {
+  try {
+    await updateAdminBooking(id, { status });
+    await loadBookings();
+  } catch (e) {
+    bookingError.value = toErrorMessage(e);
+  }
+};
+const bookingStatusVariant = (status: string) => {
+  if (status === 'COMPLETED') return 'success';
+  if (status === 'CANCELLED') return 'danger';
+  if (status === 'CONFIRMED') return 'info';
+  return 'warning';
+};
+const formatDateTime = (value?: string) => {
+  if (!value) return '-';
+  return value.replace('T', ' ').slice(0, 16);
+};
+
 loadServices();
 loadMerchants();
+loadBookings();
 </script>
 
 <style scoped lang="scss">

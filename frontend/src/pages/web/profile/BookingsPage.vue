@@ -55,7 +55,7 @@
               <button v-if="booking.status === 'pending'" class="action-btn cancel" @click="cancelBooking(booking.id)">
                 取消预约
               </button>
-              <button v-if="booking.status === 'confirmed'" class="action-btn contact" @click="contactMerchant(booking)">
+              <button v-if="booking.status === 'confirmed' && booking.contact_phone" class="action-btn contact" @click="contactMerchant(booking)">
                 联系商家
               </button>
               <button class="action-btn detail" @click="openBookingDetail(booking)">
@@ -127,6 +127,37 @@ const detailBooking = ref<any>(null);
 
 const bookings = ref<any[]>([]);
 
+const statusMap: Record<string, { key: string; text: string }> = {
+  PENDING: { key: "pending", text: "待确认" },
+  CONFIRMED: { key: "confirmed", text: "已确认" },
+  COMPLETED: { key: "completed", text: "已完成" },
+  CANCELLED: { key: "cancelled", text: "已取消" }
+};
+
+const normalizeStatus = (status?: string) => statusMap[String(status || "").toUpperCase()] || { key: "pending", text: "待确认" };
+
+const inferServiceType = (serviceName?: string) => {
+  const text = serviceName || "";
+  if (text.includes("美容") || text.includes("修剪")) return "美容";
+  if (text.includes("医院") || text.includes("体检") || text.includes("急诊")) return "医疗";
+  if (text.includes("洗")) return "洗澡";
+  if (text.includes("训练") || text.includes("行为")) return "训练";
+  if (text.includes("寄养") || text.includes("酒店")) return "寄养";
+  return "default";
+};
+
+const formatDateTime = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
 const filterTabs = computed(() => [
   { label: "全部", value: "all", count: bookings.value.length },
   { label: "待确认", value: "pending", count: bookings.value.filter(b => b.status === "pending").length },
@@ -155,10 +186,25 @@ const loadBookings = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const params: Record<string, string | number | undefined> = { page: 1, page_size: 50 };
-    if (filterStatus.value !== "all") params.status = filterStatus.value;
-    const res = await fetchMyBookings(params);
-    bookings.value = res.list || [];
+    const res = await fetchMyBookings({ page: 1, page_size: 50 });
+    bookings.value = (res.list || []).map((item: any) => {
+      const normalized = normalizeStatus(item.status);
+      const merchant = item.merchant || {};
+      const address = [merchant.district, merchant.address].filter(Boolean).join(" ");
+      return {
+        id: item.id,
+        type: inferServiceType(item.service_name),
+        service_name: item.service_name || "宠物服务",
+        merchant_name: merchant.name || "服务商家",
+        status: normalized.key,
+        status_text: normalized.text,
+        booking_time: formatDateTime(item.booking_time),
+        address: address || "地址待确认",
+        price: item.price,
+        contact_phone: item.contact_phone,
+        remark: item.remark
+      };
+    });
   } catch (e) {
     error.value = toErrorMessage(e);
     bookings.value = [];
@@ -172,7 +218,7 @@ const openBookingDetail = (booking: any) => {
 };
 
 /** 取消预约 */
-const cancelBooking = async (id: number) => {
+const cancelBooking = async (id: string | number) => {
   if (confirm("确定要取消该预约吗？")) {
     try {
       await cancelMyBooking(id);
@@ -184,7 +230,7 @@ const cancelBooking = async (id: number) => {
 };
 
 const contactMerchant = (booking: any) => {
-  alert(`请联系 ${booking.merchant_name}：400-888-9999`);
+  alert(`请联系 ${booking.merchant_name}：${booking.contact_phone}`);
 };
 
 onMounted(loadBookings);

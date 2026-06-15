@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250">
+  <rect width="400" height="250" rx="12" fill="#F3E5F5"/>
+  <g transform="translate(200,100)">
+    <path d="M0 10 Q-20 -10 -30 0 Q-40 10 -20 25 L0 40 L20 25 Q40 10 30 0 Q20 -10 0 10Z" fill="#EF5350"/>
+</g>
+  <text x="200" y="180" text-anchor="middle" font-size="14" font-weight="bold" fill="#5D4037">救助适应过程</text>
+</svg>

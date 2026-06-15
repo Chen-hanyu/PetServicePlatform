@@ -113,6 +113,7 @@ class AdminOpsCoverageWebMvcTest {
                 4L,
                 2L,
                 1L,
+                3L,
                 List.of(new DashboardOverviewResponse.TrendPoint("03-20", 6L)),
                 List.of(new DashboardOverviewResponse.TrendPoint("03-20", 4L))
         ));
@@ -424,7 +425,7 @@ class AdminOpsCoverageWebMvcTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("admin recommendations should return page result")
     void adminRecommendationsShouldReturnPageResult() throws Exception {
-        when(adminOpsService.getRecommendationPage("HOME_POST", "POST", "ACTIVE", 1, 10)).thenReturn(new PageResponse<>(
+        when(adminOpsService.getRecommendationPage("HOME_POST", "POST", "ACTIVE", null, 1, 10)).thenReturn(new PageResponse<>(
                 List.of(new AdminRecommendationResponse(1L, "POST", 3L, "HOME_POST", "ACTIVE", 1, 1L)),
                 1,
                 1,

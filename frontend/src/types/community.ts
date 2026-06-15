@@ -1,12 +1,14 @@
-﻿export interface UserLite {
-  id: number;
+export type EntityId = string | number;
+
+export interface UserLite {
+  id: EntityId;
   nickname: string;
   avatar_url?: string;
   phone?: string;
 }
 
 export interface PostSummary {
-  id: number;
+  id: EntityId;
   title: string;
   category: string;
   cover_url?: string;
@@ -21,7 +23,7 @@ export interface PostSummary {
 }
 
 export interface PostComment {
-  id: number;
+  id: EntityId;
   content: string;
   author?: UserLite;
   created_at?: string;
@@ -39,5 +41,5 @@ export interface CreatePostPayload {
   content: string;
   category: string;
   images?: string[];
-  tag_ids?: number[];
+  tag_ids?: EntityId[];
 }
