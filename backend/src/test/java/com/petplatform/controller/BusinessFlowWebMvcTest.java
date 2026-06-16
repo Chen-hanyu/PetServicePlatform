@@ -105,9 +105,9 @@ class BusinessFlowWebMvcTest {
                 1,
                 10
         );
-        when(communityService.getPostPage(null, null, null, 1, 10)).thenReturn(pageResponse);
+        when(communityService.getPostPage(null, null, null, "疫苗", 1, 10)).thenReturn(pageResponse);
 
-        mockMvc.perform(get("/api/v1/community/posts"))
+        mockMvc.perform(get("/api/v1/community/posts").param("keyword", "疫苗"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.list[0].title").value("春日养宠日记"))

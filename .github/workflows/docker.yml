@@ -33,7 +33,7 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./backend
           file: backend/Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: ghcr.io/${{ env.OWNER_LC }}/pet-service-platform-backend:latest

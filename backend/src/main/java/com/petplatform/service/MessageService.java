@@ -22,9 +22,13 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class MessageService {
+
+    private static final Pattern PHONE_PATTERN = Pattern.compile("1[3-9]\\d{9}");
 
     private final MessageMapper messageMapper;
     private final UserMapper userMapper;
@@ -62,6 +66,43 @@ public class MessageService {
                 .map(MessageResponse::from)
                 .toList();
         return new PageResponse<>(list, messagePage.getTotal(), page, pageSize);
+    }
+
+    @Transactional
+    public MessageResponse handleSupportMessage(Long messageId, String replyContent) {
+        Message message = messageMapper.selectById(messageId);
+        if (message == null || !"SUPPORT".equals(message.getType())) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "客服消息不存在");
+        }
+        if (!Boolean.TRUE.equals(message.getReadFlag())) {
+            message.setReadFlag(true);
+            messageMapper.updateById(message);
+        }
+        if (StringUtils.hasText(replyContent)) {
+            createSupportReply(message.getContent(), replyContent.trim());
+        }
+        return MessageResponse.from(message);
+    }
+
+    private void createSupportReply(String supportContent, String replyContent) {
+        Matcher matcher = PHONE_PATTERN.matcher(supportContent == null ? "" : supportContent);
+        if (!matcher.find()) {
+            return;
+        }
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
+                .eq(User::getPhone, matcher.group())
+                .last("LIMIT 1"));
+        if (user == null) {
+            return;
+        }
+        Message replyMessage = new Message();
+        replyMessage.setUserId(user.getId());
+        replyMessage.setType("SUPPORT_REPLY");
+        replyMessage.setTitle("客服回复");
+        replyMessage.setContent(replyContent);
+        replyMessage.setReadFlag(false);
+        replyMessage.setCreatedAt(LocalDateTime.now());
+        messageMapper.insert(replyMessage);
     }
 
     @Transactional

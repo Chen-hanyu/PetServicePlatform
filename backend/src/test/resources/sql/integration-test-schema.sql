@@ -90,7 +90,7 @@ CREATE TABLE adoption_pets (
     adoption_requirements VARCHAR(255),
     story VARCHAR(255),
     status VARCHAR(20) NOT NULL,
-    cover_url VARCHAR(255),
+    cover_url VARCHAR(1000),
     created_at DATETIME,
     updated_at DATETIME
 );
@@ -222,7 +222,7 @@ CREATE TABLE products (
     category_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
     subtitle VARCHAR(255),
-    image_url VARCHAR(255),
+    image_url VARCHAR(1000),
     price DECIMAL(10,2) NOT NULL,
     stock INT NOT NULL,
     pet_type VARCHAR(20),
@@ -264,7 +264,7 @@ CREATE TABLE shop_order_items (
     order_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     product_name VARCHAR(100) NOT NULL,
-    product_image_url VARCHAR(255),
+    product_image_url VARCHAR(1000),
     unit_price DECIMAL(10,2) NOT NULL,
     quantity INT NOT NULL,
     subtotal_amount DECIMAL(10,2) NOT NULL

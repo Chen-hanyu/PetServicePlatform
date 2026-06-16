@@ -5,27 +5,37 @@
         <span class="chat-icon">💬</span>
         <span>在线客服</span>
       </div>
-      <button type="button" class="chat-close" aria-label="关闭" @click="open = false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6L6 18M6 6l12 12"/>
-        </svg>
-      </button>
+      <div class="chat-actions">
+        <button type="button" class="chat-icon-btn" aria-label="刷新对话" @click="loadSupportReplies">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 11-2.64-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
+        </button>
+        <button type="button" class="chat-icon-btn" aria-label="关闭" @click="open = false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
     </div>
     <div class="chat-status">
       <span class="status-dot"></span>
-      <span>在线 · 随时响应</span>
+      <span>在线 · 回复会同步到消息通知</span>
     </div>
     <div class="chat-messages" ref="messagesRef">
       <div
         v-for="(msg, index) in messages"
-        :key="index"
+        :key="msg.serverId || `${msg.type}-${index}`"
         :class="['message', msg.type]"
       >
+        <div v-if="msg.title" class="message-title">{{ msg.title }}</div>
         <div class="message-content">{{ msg.text }}</div>
+        <div v-if="msg.time" class="message-time">{{ msg.time }}</div>
       </div>
       <div v-if="messages.length === 0" class="chat-empty">
-        <p>👋 你好！有什么可以帮到你的？</p>
-        <p>可以询问关于宠物护理、服务预约、商品推荐等问题</p>
+        <p>你好，有什么可以帮到你？</p>
+        <p>客服回复会同时显示在这里和“我的-消息通知”。</p>
       </div>
     </div>
     <div class="chat-input-area">
@@ -38,7 +48,7 @@
       />
       <button type="button" class="chat-send" @click="sendMessage" :disabled="!inputText.trim() || sending">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
         </svg>
       </button>
     </div>
@@ -46,8 +56,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, watch } from "vue";
-import { submitSupportMessage } from "@/api/modules/messages";
+import { nextTick, ref, watch } from "vue";
+import { fetchMessages, submitSupportMessage } from "@/api/modules/messages";
 import { toErrorMessage } from "@/api/http";
 
 const open = ref(false);
@@ -55,13 +65,17 @@ const inputText = ref("");
 const messagesRef = ref<HTMLElement | null>(null);
 const source = ref("在线客服");
 const sending = ref(false);
+const loadingReplies = ref(false);
 
-interface Message {
+interface ChatMessage {
   type: "user" | "system";
   text: string;
+  title?: string;
+  time?: string;
+  serverId?: string | number;
 }
 
-const messages = ref<Message[]>([]);
+const messages = ref<ChatMessage[]>([]);
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -69,6 +83,40 @@ const scrollToBottom = () => {
       messagesRef.value.scrollTop = messagesRef.value.scrollHeight;
     }
   });
+};
+
+const formatChatTime = (value?: string) => {
+  if (!value) return "";
+  return value.replace("T", " ").slice(5, 16);
+};
+
+const loadSupportReplies = async () => {
+  if (loadingReplies.value) return;
+  loadingReplies.value = true;
+  try {
+    const data = await fetchMessages({ page: 1, page_size: 50 });
+    const replies: ChatMessage[] = (data.list || [])
+      .filter((item: any) => String(item.type || "").toUpperCase() === "SUPPORT_REPLY")
+      .reverse()
+      .map((item: any) => ({
+        type: "system",
+        title: item.title || "客服回复",
+        text: item.content,
+        time: formatChatTime(item.created_at),
+        serverId: item.id
+      }));
+    const localMessages = messages.value.filter((msg) => !msg.serverId);
+    messages.value = [...replies, ...localMessages];
+  } catch (error) {
+    messages.value.push({
+      type: "system",
+      title: "同步失败",
+      text: toErrorMessage(error)
+    });
+  } finally {
+    loadingReplies.value = false;
+    scrollToBottom();
+  }
 };
 
 const sendMessage = async () => {
@@ -84,12 +132,14 @@ const sendMessage = async () => {
     await submitSupportMessage({ content: text, source: source.value });
     messages.value.push({
       type: "system",
-      text: "已提交给后台客服，处理结果会同步到「我的-消息通知」。"
+      title: "已提交",
+      text: "已提交给后台客服，客服回复会同步显示在当前对话和消息通知中。"
     });
   } catch (error) {
     messages.value.push({
       type: "system",
-      text: `提交失败：${toErrorMessage(error)}`
+      title: "提交失败",
+      text: toErrorMessage(error)
     });
   } finally {
     sending.value = false;
@@ -97,9 +147,10 @@ const sendMessage = async () => {
   }
 };
 
-watch(open, (v) => {
-  if (v) {
+watch(open, (visible) => {
+  if (visible) {
     messages.value = [];
+    void loadSupportReplies();
   }
 });
 
@@ -132,7 +183,7 @@ defineExpose({ toggle, open: openWithSource });
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
   transform: translateX(100%);
   transition: transform 0.3s ease;
-  
+
   &.open {
     transform: translateX(0);
   }
@@ -148,10 +199,14 @@ defineExpose({ toggle, open: openWithSource });
   color: var(--hero-text);
 }
 
-.chat-title {
+.chat-title,
+.chat-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.chat-title {
   font-size: 16px;
   font-weight: 600;
 }
@@ -160,7 +215,7 @@ defineExpose({ toggle, open: openWithSource });
   font-size: 20px;
 }
 
-.chat-close {
+.chat-icon-btn {
   background: none;
   border: none;
   padding: 4px;
@@ -230,7 +285,7 @@ defineExpose({ toggle, open: openWithSource });
 .message {
   display: flex;
   flex-direction: column;
-  max-width: 80%;
+  max-width: 82%;
 
   &.user {
     align-self: flex-end;
@@ -253,10 +308,23 @@ defineExpose({ toggle, open: openWithSource });
   }
 }
 
+.message-title {
+  margin: 0 0 4px 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .message-content {
   padding: 10px 14px;
   font-size: 14px;
   line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.message-time {
+  margin: 4px 4px 0;
+  color: var(--muted-soft);
+  font-size: 11px;
 }
 
 .chat-input-area {

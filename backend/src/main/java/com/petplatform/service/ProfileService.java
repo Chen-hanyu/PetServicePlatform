@@ -77,7 +77,7 @@ public class ProfileService {
                 adoptionApplicationMapper.selectCount(new LambdaQueryWrapper<AdoptionApplication>().eq(AdoptionApplication::getUserId, userId)),
                 messageMapper.selectCount(new LambdaQueryWrapper<Message>()
                         .eq(Message::getUserId, userId)
-                        .eq(Message::getRead, false))
+                        .eq(Message::getReadFlag, false))
         );
     }
 }

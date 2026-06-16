@@ -316,6 +316,7 @@ import { fetchMyFavorites } from "@/api/modules/community";
 import { fetchOrders } from "@/api/modules/shop";
 import type { EntityId, PetProfile, PetTimelineEvent } from "@/types/pet";
 import type { PostSummary } from "@/types/community";
+import type { ProfileOverview } from "@/types/auth";
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -382,6 +383,22 @@ const timelineMilestones = computed(() => {
 
 const favoritePosts = ref<FavoritePost[]>([]);
 const recentActivities = ref<RecentActivity[]>([]);
+
+const fallbackOverview = (): ProfileOverview => ({
+  user: auth.user || {
+    id: 0,
+    role: "USER",
+    nickname: "未命名用户"
+  },
+  pet_count: pets.value.length,
+  post_count: 0,
+  like_count: 0,
+  favorite_count: 0,
+  order_count: 0,
+  booking_count: 0,
+  adoption_application_count: 0,
+  unread_message_count: 0
+});
 
 const orderTypes = reactive([
   {
@@ -484,8 +501,8 @@ function toDashboardPet(pet: PetProfile): DashboardPet {
 
 async function loadProfile() {
   const [overview, petList, favResult, orderResult] = await Promise.all([
-    fetchOverview(),
-    fetchMyPets(),
+    fetchOverview().catch(() => fallbackOverview()),
+    fetchMyPets().catch(() => []),
     fetchMyFavorites({ page: 1, page_size: 4 }).catch(() => ({ list: [] })),
     fetchOrders({ page: 1, page_size: 50 }).catch(() => ({ list: [] }))
   ]);

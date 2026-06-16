@@ -97,7 +97,7 @@ class CommunityServiceTest {
         when(postTagMapper.selectList(any())).thenReturn(List.of(postTag(1L, 7L)));
         when(tagMapper.selectByIds(any())).thenReturn(List.of(tag(7L, "care", "ACTIVE")));
 
-        List<PostSummaryResponse> list = communityService.getPostPage("recommended", "CARE", null, 1, 10).list();
+        List<PostSummaryResponse> list = communityService.getPostPage("recommended", "CARE", null, null, 1, 10).list();
 
         assertThat(list).hasSize(1);
         assertThat(list.get(0).author().nickname()).isEqualTo("Alice");
@@ -106,11 +106,36 @@ class CommunityServiceTest {
     }
 
     @Test
+    @DisplayName("should search community posts by keyword")
+    void shouldSearchPostPageByKeyword() {
+        CommunityPost post = approvedPost(1L);
+        post.setUserId(20L);
+        post.setTitle("Vaccine Record");
+        post.setCategory("CARE");
+        post.setContent("kitten vaccine schedule");
+        Page<CommunityPost> page = new Page<>(1, 10);
+        page.setRecords(List.of(post));
+        page.setTotal(1);
+        Tag tag = tag(7L, "vaccine", "ACTIVE");
+        when(tagMapper.selectList(any())).thenReturn(List.of(tag));
+        when(postTagMapper.selectList(any())).thenReturn(List.of(postTag(1L, 7L)));
+        when(communityPostMapper.selectPage(any(), any())).thenReturn(page);
+        when(userMapper.selectByIds(any())).thenReturn(List.of(user(20L)));
+        when(tagMapper.selectByIds(any())).thenReturn(List.of(tag));
+
+        List<PostSummaryResponse> list = communityService.getPostPage(null, null, null, "vaccine", 1, 10).list();
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).title()).isEqualTo("Vaccine Record");
+        verify(tagMapper).selectList(any());
+    }
+
+    @Test
     @DisplayName("按不存在标签筛选帖子时应返回空分页")
     void shouldReturnEmptyPostPageWhenTagNotFound() {
         when(tagMapper.selectOne(any())).thenReturn(null);
 
-        assertThat(communityService.getPostPage(null, null, "missing", 1, 10).list()).isEmpty();
+        assertThat(communityService.getPostPage(null, null, "missing", null, 1, 10).list()).isEmpty();
     }
 
     @Test
@@ -123,7 +148,7 @@ class CommunityServiceTest {
         when(tagMapper.selectOne(any())).thenReturn(tag);
         when(postTagMapper.selectList(any())).thenReturn(List.of());
 
-        assertThat(communityService.getPostPage(null, null, "care", 1, 10).list()).isEmpty();
+        assertThat(communityService.getPostPage(null, null, "care", null, 1, 10).list()).isEmpty();
     }
 
     @Test

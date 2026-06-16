@@ -160,22 +160,66 @@ const petStatusVariant = (s: string) => ({ ONLINE: 'success', OFFLINE: 'warning'
 const petModalVisible = ref(false);
 const editingPet = ref<any>(null);
 const petForm = reactive({ name: '', type: 'CAT', breed: '', gender: 'MALE', age_desc: '', city: '', health_status: '', personality: '', adoption_requirements: '', story: '', cover_url: '', status: 'ONLINE' });
+const normalizeImageUrl = (value: string) => {
+  const raw = value.trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    const imageUrl = url.searchParams.get('objurl') || url.searchParams.get('imgurl');
+    return imageUrl ? decodeURIComponent(imageUrl) : raw;
+  } catch {
+    return raw;
+  }
+};
 const openPetModal = (pet?: any) => {
   if (pet) { editingPet.value = pet; Object.assign(petForm, pet); }
   else { editingPet.value = null; Object.assign(petForm, { name: '', type: 'CAT', breed: '', gender: 'MALE', age_desc: '', city: '', health_status: '', personality: '', adoption_requirements: '', story: '', cover_url: '', status: 'ONLINE' }); }
   petModalVisible.value = true;
 };
 const closePetModal = () => { petModalVisible.value = false; editingPet.value = null; };
+const buildPetPayload = () => {
+  const coverUrl = normalizeImageUrl(petForm.cover_url);
+  if (coverUrl.length > 1000) throw new Error('图片 URL 过长，请使用直接图片地址或上传后的图片地址');
+  return {
+    name: petForm.name.trim(),
+    type: petForm.type,
+    breed: petForm.breed.trim(),
+    gender: petForm.gender,
+    age_desc: petForm.age_desc.trim(),
+    city: petForm.city.trim(),
+    health_status: petForm.health_status.trim(),
+    personality: petForm.personality.trim(),
+    adoption_requirements: petForm.adoption_requirements.trim(),
+    story: petForm.story.trim(),
+    cover_url: coverUrl,
+    status: petForm.status
+  };
+};
 const savePet = async () => {
   try {
-    if (editingPet.value) await updateAdminAdoptionPet(editingPet.value.id, petForm);
-    else await createAdminAdoptionPet(petForm);
+    const payload = buildPetPayload();
+    if (editingPet.value) await updateAdminAdoptionPet(editingPet.value.id, payload);
+    else await createAdminAdoptionPet(payload);
     await loadPets(); closePetModal();
   } catch (e) { petError.value = toErrorMessage(e); }
 };
 const togglePetStatus = async (pet: any) => {
   const newStatus = pet.status === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
-  try { await updateAdminAdoptionPet(pet.id, { ...pet, status: newStatus }); await loadPets(); } catch (e) { petError.value = toErrorMessage(e); }
+  const payload = {
+    name: pet.name,
+    type: pet.type,
+    breed: pet.breed || '',
+    gender: pet.gender || 'MALE',
+    age_desc: pet.age_desc || pet.ageDesc || '',
+    city: pet.city || '',
+    health_status: pet.health_status || pet.healthStatus || '',
+    personality: pet.personality || '',
+    adoption_requirements: pet.adoption_requirements || pet.adoptionRequirements || '',
+    story: pet.story || '',
+    cover_url: pet.cover_url || pet.coverUrl || '',
+    status: newStatus
+  };
+  try { await updateAdminAdoptionPet(pet.id, payload); await loadPets(); } catch (e) { petError.value = toErrorMessage(e); }
 };
 const deletePet = async (id: string | number) => {
   if (confirm('确定删除该宠物吗？')) { try { await deleteAdminAdoptionPet(id); await loadPets(); } catch (e) { petError.value = toErrorMessage(e); } }

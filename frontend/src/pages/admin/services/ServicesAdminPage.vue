@@ -15,7 +15,10 @@
       </div>
       <div class="filter-bar">
         <input v-model="serviceKeyword" placeholder="服务名称" class="input input-sm" />
-        <select v-model="serviceCategory" class="input input-sm"><option value="">全部分类</option><option>洗澡</option><option>美容</option><option>寄养</option><option>医疗</option><option>训练</option></select>
+        <select v-model="serviceCategory" class="input input-sm">
+          <option value="">全部分类</option>
+          <option v-for="category in serviceCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
+        </select>
         <button class="btn btn-secondary" @click="loadServices">查询</button>
       </div>
       <DataState :loading="serviceLoading" :error="serviceError" :empty="services.length === 0">
@@ -25,13 +28,13 @@
             <tr v-for="s in services" :key="s.id">
               <td><span class="id-tag">#{{ s.id }}</span></td>
               <td><span class="service-name">{{ s.name }}</span></td>
-              <td><span class="tag tag-light">{{ s.category }}</span></td>
+              <td><span class="tag tag-light">{{ serviceCategoryName(s.category_id) }}</span></td>
               <td><span class="price-text">¥{{ s.price }}</span></td>
-              <td>{{ s.merchant_name || '-' }}</td>
-              <td><StatusBadge :variant="s.status === 'ONLINE' ? 'success' : 'warning'">{{ s.status }}</StatusBadge></td>
+              <td>{{ serviceMerchantName(s.merchant_id) }}</td>
+              <td><StatusBadge :variant="s.status === 'ACTIVE' ? 'success' : 'warning'">{{ serviceStatusLabel(s.status) }}</StatusBadge></td>
               <td class="col-ops ops-group">
                 <button class="btn btn-xs" @click="openServiceModal(s)">编辑</button>
-                <button class="btn btn-xs" :class="s.status === 'ONLINE' ? 'btn-warning' : 'btn-success'" @click="toggleServiceStatus(s)">{{ s.status === 'ONLINE' ? '下架' : '上架' }}</button>
+                <button class="btn btn-xs" :class="s.status === 'ACTIVE' ? 'btn-warning' : 'btn-success'" @click="toggleServiceStatus(s)">{{ s.status === 'ACTIVE' ? '停用' : '启用' }}</button>
                 <button class="btn btn-xs btn-danger" @click="deleteService(s.id)">删除</button>
               </td>
             </tr>
@@ -119,13 +122,23 @@
           <form @submit.prevent="saveService">
             <div class="form-grid cols-2">
               <div class="form-group"><label>服务名称</label><input v-model="serviceForm.name" required class="input" /></div>
-              <div class="form-group"><label>分类</label><select v-model="serviceForm.category" class="input"><option>洗澡</option><option>美容</option><option>寄养</option><option>医疗</option><option>训练</option></select></div>
+              <div class="form-group">
+                <label>分类</label>
+                <select v-model.number="serviceForm.category_id" required class="input">
+                  <option :value="0" disabled>请选择分类</option>
+                  <option v-for="category in serviceCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
+                </select>
+              </div>
               <div class="form-group"><label>价格</label><input v-model.number="serviceForm.price" type="number" step="0.01" required class="input" /></div>
-              <div class="form-group"><label>原价</label><input v-model.number="serviceForm.original_price" type="number" step="0.01" class="input" /></div>
-              <div class="form-group"><label>商家ID</label><input v-model.number="serviceForm.merchant_id" type="number" class="input" /></div>
-              <div class="form-group"><label>状态</label><select v-model="serviceForm.status" class="input"><option>ONLINE</option><option>OFFLINE</option></select></div>
-              <div class="form-group full-width"><label>描述</label><textarea v-model="serviceForm.description" class="input" rows="3"></textarea></div>
-              <div class="form-group full-width"><label>封面图URL</label><input v-model="serviceForm.cover_url" class="input" /></div>
+              <div class="form-group"><label>服务时长（分钟）</label><input v-model.number="serviceForm.duration_minutes" type="number" min="1" required class="input" /></div>
+              <div class="form-group">
+                <label>所属商家</label>
+                <select v-model.number="serviceForm.merchant_id" required class="input">
+                  <option :value="0" disabled>请选择商家</option>
+                  <option v-for="merchant in merchants" :key="merchant.id" :value="merchant.id">{{ merchant.name }}</option>
+                </select>
+              </div>
+              <div class="form-group"><label>状态</label><select v-model="serviceForm.status" class="input"><option value="ACTIVE">启用</option><option value="DISABLED">停用</option></select></div>
             </div>
             <div class="modal-actions">
               <button type="button" class="btn btn-cancel" @click="closeServiceModal">取消</button>
@@ -147,9 +160,11 @@
           <form @submit.prevent="saveMerchant">
             <div class="form-grid">
               <div class="form-group"><label>商家名称</label><input v-model="merchantForm.name" required class="input" /></div>
-              <div class="form-group"><label>联系电话</label><input v-model="merchantForm.phone" class="input" /></div>
-              <div class="form-group"><label>地址</label><input v-model="merchantForm.address" class="input" /></div>
-              <div class="form-group"><label>状态</label><select v-model="merchantForm.status" class="input"><option>ACTIVE</option><option>INACTIVE</option></select></div>
+              <div class="form-group"><label>联系电话</label><input v-model="merchantForm.phone" required class="input" /></div>
+              <div class="form-group"><label>所在区域</label><input v-model="merchantForm.district" required class="input" /></div>
+              <div class="form-group"><label>详细地址</label><input v-model="merchantForm.address" required class="input" /></div>
+              <div class="form-group"><label>营业时间</label><input v-model="merchantForm.business_hours" required class="input" placeholder="09:00-20:00" /></div>
+              <div class="form-group"><label>状态</label><select v-model="merchantForm.status" class="input"><option value="ACTIVE">启用</option><option value="DISABLED">停用</option></select></div>
             </div>
             <div class="modal-actions">
               <button type="button" class="btn btn-cancel" @click="closeMerchantModal">取消</button>
@@ -170,6 +185,7 @@ import {
   fetchAdminServiceItems, createAdminServiceItem, updateAdminServiceItem, deleteAdminServiceItem,
   fetchAdminMerchants, createAdminMerchant, updateAdminMerchant, deleteAdminMerchant,
   fetchAdminBookings, updateAdminBooking,
+  fetchAdminServiceCategories,
 } from '@/api/modules/admin';
 import { toErrorMessage } from '@/api/http';
 
@@ -182,36 +198,95 @@ const activeTab = ref('services');
 
 // 服务列表
 const services = ref<any[]>([]);
+const serviceCategories = ref<any[]>([]);
 const serviceLoading = ref(false);
 const serviceError = ref('');
 const serviceKeyword = ref('');
 const serviceCategory = ref('');
+const loadServiceCategories = async () => {
+  try {
+    serviceCategories.value = await fetchAdminServiceCategories();
+  } catch (e) {
+    serviceError.value = toErrorMessage(e);
+  }
+};
 const loadServices = async () => {
   serviceLoading.value = true;
   try {
-    const res = await fetchAdminServiceItems({ keyword: serviceKeyword.value || undefined, category: serviceCategory.value || undefined, page: 1, page_size: 50 });
+    const res = await fetchAdminServiceItems({
+      keyword: serviceKeyword.value || undefined,
+      category_id: serviceCategory.value || undefined,
+      page: 1,
+      page_size: 50
+    });
     services.value = res.list || [];
   } catch (e) { serviceError.value = toErrorMessage(e); } finally { serviceLoading.value = false; }
 };
 const serviceModalVisible = ref(false);
 const editingService = ref<any>(null);
-const serviceForm = reactive({ name: '', category: '洗澡', price: 0, original_price: 0, merchant_id: 0, description: '', cover_url: '', status: 'ONLINE' });
+const serviceForm = reactive({ name: '', category_id: 0, price: 0, duration_minutes: 30, merchant_id: 0, status: 'ACTIVE' });
+const serviceCategoryName = (categoryId?: number) => serviceCategories.value.find((item) => Number(item.id) === Number(categoryId))?.name || '-';
+const serviceMerchantName = (merchantId?: number) => merchants.value.find((item) => Number(item.id) === Number(merchantId))?.name || '-';
+const serviceStatusLabel = (status: string) => status === 'ACTIVE' ? '启用' : '停用';
+const defaultServiceCategoryId = () => Number(serviceCategories.value.find((item) => item.status !== 'DISABLED')?.id || serviceCategories.value[0]?.id || 0);
+const defaultMerchantId = () => Number(merchants.value.find((item) => item.status !== 'DISABLED')?.id || merchants.value[0]?.id || 0);
 const openServiceModal = (s?: any) => {
-  if (s) { editingService.value = s; Object.assign(serviceForm, s); }
-  else { editingService.value = null; Object.assign(serviceForm, { name: '', category: '洗澡', price: 0, original_price: 0, merchant_id: 0, description: '', cover_url: '', status: 'ONLINE' }); }
+  if (s) {
+    editingService.value = s;
+    Object.assign(serviceForm, {
+      name: s.name || '',
+      category_id: Number(s.category_id || s.categoryId || 0),
+      price: Number(s.price || 0),
+      duration_minutes: Number(s.duration_minutes || s.durationMinutes || 30),
+      merchant_id: Number(s.merchant_id || s.merchantId || 0),
+      status: s.status || 'ACTIVE'
+    });
+  }
+  else {
+    editingService.value = null;
+    Object.assign(serviceForm, {
+      name: '',
+      category_id: defaultServiceCategoryId(),
+      price: 0,
+      duration_minutes: 30,
+      merchant_id: defaultMerchantId(),
+      status: 'ACTIVE'
+    });
+  }
   serviceModalVisible.value = true;
 };
 const closeServiceModal = () => { serviceModalVisible.value = false; };
+const buildServicePayload = () => {
+  if (!serviceForm.category_id) throw new Error('请先选择服务分类');
+  if (!serviceForm.merchant_id) throw new Error('请先选择所属商家');
+  return {
+    name: serviceForm.name.trim(),
+    category_id: Number(serviceForm.category_id),
+    merchant_id: Number(serviceForm.merchant_id),
+    price: Number(serviceForm.price),
+    duration_minutes: Number(serviceForm.duration_minutes),
+    status: serviceForm.status
+  };
+};
 const saveService = async () => {
   try {
-    if (editingService.value) await updateAdminServiceItem(editingService.value.id, serviceForm);
-    else await createAdminServiceItem(serviceForm);
+    const payload = buildServicePayload();
+    if (editingService.value) await updateAdminServiceItem(editingService.value.id, payload);
+    else await createAdminServiceItem(payload);
     await loadServices(); closeServiceModal();
   } catch (e) { serviceError.value = toErrorMessage(e); }
 };
 const toggleServiceStatus = async (s: any) => {
-  const ns = s.status === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
-  try { await updateAdminServiceItem(s.id, { ...s, status: ns }); await loadServices(); } catch (e) { serviceError.value = toErrorMessage(e); }
+  const ns = s.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+  const payload = {
+    name: s.name,
+    category_id: Number(s.category_id || s.categoryId),
+    merchant_id: Number(s.merchant_id || s.merchantId),
+    price: Number(s.price),
+    duration_minutes: Number(s.duration_minutes || s.durationMinutes || 30),
+    status: ns
+  };
+  try { await updateAdminServiceItem(s.id, payload); await loadServices(); } catch (e) { serviceError.value = toErrorMessage(e); }
 };
 const deleteService = async (id: number) => {
   if (confirm('确定删除该服务吗？')) { try { await deleteAdminServiceItem(id); await loadServices(); } catch (e) { serviceError.value = toErrorMessage(e); } }
@@ -228,17 +303,36 @@ const loadMerchants = async () => {
 };
 const merchantModalVisible = ref(false);
 const editingMerchant = ref<any>(null);
-const merchantForm = reactive({ name: '', phone: '', address: '', status: 'ACTIVE' });
+const merchantForm = reactive({ name: '', district: '', phone: '', address: '', business_hours: '09:00-20:00', status: 'ACTIVE' });
 const openMerchantModal = (m?: any) => {
-  if (m) { editingMerchant.value = m; Object.assign(merchantForm, m); }
-  else { editingMerchant.value = null; Object.assign(merchantForm, { name: '', phone: '', address: '', status: 'ACTIVE' }); }
+  if (m) {
+    editingMerchant.value = m;
+    Object.assign(merchantForm, {
+      name: m.name || '',
+      district: m.district || '',
+      phone: m.phone || '',
+      address: m.address || '',
+      business_hours: m.business_hours || m.businessHours || '09:00-20:00',
+      status: m.status || 'ACTIVE'
+    });
+  }
+  else { editingMerchant.value = null; Object.assign(merchantForm, { name: '', district: '', phone: '', address: '', business_hours: '09:00-20:00', status: 'ACTIVE' }); }
   merchantModalVisible.value = true;
 };
 const closeMerchantModal = () => { merchantModalVisible.value = false; };
+const buildMerchantPayload = () => ({
+  name: merchantForm.name.trim(),
+  district: merchantForm.district.trim(),
+  phone: merchantForm.phone.trim(),
+  address: merchantForm.address.trim(),
+  business_hours: merchantForm.business_hours.trim(),
+  status: merchantForm.status
+});
 const saveMerchant = async () => {
   try {
-    if (editingMerchant.value) await updateAdminMerchant(editingMerchant.value.id, merchantForm);
-    else await createAdminMerchant(merchantForm);
+    const payload = buildMerchantPayload();
+    if (editingMerchant.value) await updateAdminMerchant(editingMerchant.value.id, payload);
+    else await createAdminMerchant(payload);
     await loadMerchants(); closeMerchantModal();
   } catch (e) { merchantError.value = toErrorMessage(e); }
 };
@@ -280,6 +374,7 @@ const formatDateTime = (value?: string) => {
   return value.replace('T', ' ').slice(0, 16);
 };
 
+loadServiceCategories();
 loadServices();
 loadMerchants();
 loadBookings();

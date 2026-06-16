@@ -160,6 +160,7 @@ Authorization: Bearer <token>
 | `tab` | string | 否 | `recommended` / `latest` |
 | `category` | string | 否 | 帖子分类 |
 | `tag` | string | 否 | 标签名 |
+| `keyword` | string | 否 | 搜索帖子标题、内容、分类或标签 |
 | `page` | int | 否 | 页码 |
 | `page_size` | int | 否 | 每页数量 |
 

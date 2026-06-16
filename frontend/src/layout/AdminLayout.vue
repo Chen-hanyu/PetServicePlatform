@@ -91,6 +91,11 @@ const menus = [
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
   },
   {
+    name: "客服消息",
+    path: "/admin/support",
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z"/><path d="M8 9h8M8 13h5"/></svg>'
+  },
+  {
     name: "领养管理",
     path: "/admin/adoption",
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="12" cy="12" r="3"/></svg>'
@@ -116,6 +121,7 @@ const pageTitles: Record<string, string> = {
   "/admin/dashboard": "仪表盘",
   "/admin/users": "用户管理",
   "/admin/content": "内容审核",
+  "/admin/support": "客服消息",
   "/admin/adoption": "领养管理",
   "/admin/services": "服务管理",
   "/admin/shop": "商城管理"

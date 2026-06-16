@@ -79,6 +79,7 @@ public class CommunityService {
             String tab,
             String category,
             String tag,
+            String keyword,
             int page,
             int pageSize
     ) {
@@ -110,6 +111,21 @@ public class CommunityService {
                 return new PageResponse<>(List.of(), 0, page, pageSize);
             }
             queryWrapper.in(CommunityPost::getId, postIds);
+        }
+
+        if (StringUtils.hasText(keyword)) {
+            String normalizedKeyword = keyword.trim();
+            List<Long> keywordPostIds = loadPostIdsByTagKeyword(normalizedKeyword);
+            queryWrapper.and(wrapper -> {
+                wrapper.like(CommunityPost::getTitle, normalizedKeyword)
+                        .or()
+                        .like(CommunityPost::getContent, normalizedKeyword)
+                        .or()
+                        .like(CommunityPost::getCategory, normalizedKeyword);
+                if (!keywordPostIds.isEmpty()) {
+                    wrapper.or().in(CommunityPost::getId, keywordPostIds);
+                }
+            });
         }
 
         IPage<CommunityPost> postPage = communityPostMapper.selectPage(pager, queryWrapper);
@@ -418,6 +434,22 @@ public class CommunityService {
                         PostTag::getPostId,
                         Collectors.mapping(postTag -> tags.get(postTag.getTagId()).getName(), Collectors.toList())
                 ));
+    }
+
+    private List<Long> loadPostIdsByTagKeyword(String keyword) {
+        List<Tag> tags = tagMapper.selectList(new LambdaQueryWrapper<Tag>()
+                .eq(Tag::getStatus, "ACTIVE")
+                .like(Tag::getName, keyword));
+        if (tags.isEmpty()) {
+            return List.of();
+        }
+        List<PostTag> postTags = postTagMapper.selectList(new LambdaQueryWrapper<PostTag>()
+                .in(PostTag::getTagId, tags.stream().map(Tag::getId).toList()));
+        return postTags.stream()
+                .map(PostTag::getPostId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
     }
 
     private PostSummaryResponse toPostSummary(CommunityPost post, User author, List<String> tags) {

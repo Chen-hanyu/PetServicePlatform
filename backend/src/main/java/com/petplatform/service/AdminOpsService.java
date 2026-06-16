@@ -25,8 +25,10 @@ import com.petplatform.dto.admin.UpdateProductStatusRequest;
 import com.petplatform.dto.admin.UpdateProductStatusResponse;
 import com.petplatform.dto.service.ServiceCategoryResponse;
 import com.petplatform.dto.shop.ProductCategoryResponse;
+import com.petplatform.entity.AdoptionApplication;
 import com.petplatform.entity.AdoptionPet;
 import com.petplatform.entity.Banner;
+import com.petplatform.entity.CartItem;
 import com.petplatform.entity.CommunityPost;
 import com.petplatform.entity.Merchant;
 import com.petplatform.entity.MerchantService;
@@ -34,16 +36,22 @@ import com.petplatform.entity.Product;
 import com.petplatform.entity.ProductCategory;
 import com.petplatform.entity.Recommendation;
 import com.petplatform.entity.ServiceCategory;
+import com.petplatform.entity.ServiceBooking;
+import com.petplatform.entity.ShopOrderItem;
 import com.petplatform.entity.Tag;
+import com.petplatform.mapper.AdoptionApplicationMapper;
 import com.petplatform.mapper.AdoptionPetMapper;
 import com.petplatform.mapper.BannerMapper;
+import com.petplatform.mapper.CartItemMapper;
 import com.petplatform.mapper.CommunityPostMapper;
 import com.petplatform.mapper.MerchantMapper;
 import com.petplatform.mapper.MerchantServiceMapper;
 import com.petplatform.mapper.ProductCategoryMapper;
 import com.petplatform.mapper.ProductMapper;
 import com.petplatform.mapper.RecommendationMapper;
+import com.petplatform.mapper.ServiceBookingMapper;
 import com.petplatform.mapper.ServiceCategoryMapper;
+import com.petplatform.mapper.ShopOrderItemMapper;
 import com.petplatform.mapper.TagMapper;
 import com.petplatform.security.SecurityUtils;
 import org.springframework.stereotype.Service;
@@ -64,11 +72,15 @@ public class AdminOpsService {
     private static final List<String> RECOMMENDATION_SLOT_CODES = List.of("HOME_POST", "HOME_SERVICE", "HOME_PRODUCT");
 
     private final AdoptionPetMapper adoptionPetMapper;
+    private final AdoptionApplicationMapper adoptionApplicationMapper;
     private final ProductCategoryMapper productCategoryMapper;
     private final ProductMapper productMapper;
+    private final CartItemMapper cartItemMapper;
+    private final ShopOrderItemMapper shopOrderItemMapper;
     private final ServiceCategoryMapper serviceCategoryMapper;
     private final MerchantMapper merchantMapper;
     private final MerchantServiceMapper merchantServiceMapper;
+    private final ServiceBookingMapper serviceBookingMapper;
     private final BannerMapper bannerMapper;
     private final TagMapper tagMapper;
     private final RecommendationMapper recommendationMapper;
@@ -76,22 +88,30 @@ public class AdminOpsService {
 
     public AdminOpsService(
             AdoptionPetMapper adoptionPetMapper,
+            AdoptionApplicationMapper adoptionApplicationMapper,
             ProductCategoryMapper productCategoryMapper,
             ProductMapper productMapper,
+            CartItemMapper cartItemMapper,
+            ShopOrderItemMapper shopOrderItemMapper,
             ServiceCategoryMapper serviceCategoryMapper,
             MerchantMapper merchantMapper,
             MerchantServiceMapper merchantServiceMapper,
+            ServiceBookingMapper serviceBookingMapper,
             BannerMapper bannerMapper,
             TagMapper tagMapper,
             RecommendationMapper recommendationMapper,
             CommunityPostMapper communityPostMapper
     ) {
         this.adoptionPetMapper = adoptionPetMapper;
+        this.adoptionApplicationMapper = adoptionApplicationMapper;
         this.productCategoryMapper = productCategoryMapper;
         this.productMapper = productMapper;
+        this.cartItemMapper = cartItemMapper;
+        this.shopOrderItemMapper = shopOrderItemMapper;
         this.serviceCategoryMapper = serviceCategoryMapper;
         this.merchantMapper = merchantMapper;
         this.merchantServiceMapper = merchantServiceMapper;
+        this.serviceBookingMapper = serviceBookingMapper;
         this.bannerMapper = bannerMapper;
         this.tagMapper = tagMapper;
         this.recommendationMapper = recommendationMapper;
@@ -131,6 +151,20 @@ public class AdminOpsService {
         applyAdoptionPetChanges(pet, request);
         adoptionPetMapper.updateById(pet);
         return AdminAdoptionPetResponse.from(adoptionPetMapper.selectById(petId));
+    }
+
+    @Transactional
+    public void deleteAdoptionPet(Long petId) {
+        AdoptionPet pet = adoptionPetMapper.selectById(petId);
+        if (pet == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "待领养宠物不存在");
+        }
+        Long applicationCount = adoptionApplicationMapper.selectCount(new LambdaQueryWrapper<AdoptionApplication>()
+                .eq(AdoptionApplication::getPetId, petId));
+        if (applicationCount > 0) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "该宠物已有领养申请，不能直接删除");
+        }
+        adoptionPetMapper.deleteById(petId);
     }
 
     public List<ProductCategoryResponse> getProductCategories() {
@@ -198,6 +232,21 @@ public class AdminOpsService {
         product.setStatus(normalizedStatus);
         productMapper.updateById(product);
         return new UpdateProductStatusResponse(product.getId(), product.getStatus());
+    }
+
+    @Transactional
+    public void deleteProduct(Long productId) {
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "商品不存在");
+        }
+        Long orderItemCount = shopOrderItemMapper.selectCount(new LambdaQueryWrapper<ShopOrderItem>()
+                .eq(ShopOrderItem::getProductId, productId));
+        if (orderItemCount > 0) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "该商品已有订单记录，不能直接删除");
+        }
+        cartItemMapper.delete(new LambdaQueryWrapper<CartItem>().eq(CartItem::getProductId, productId));
+        productMapper.deleteById(productId);
     }
 
     public List<ServiceCategoryResponse> getServiceCategories() {
@@ -283,6 +332,22 @@ public class AdminOpsService {
         return AdminMerchantResponse.from(merchantMapper.selectById(merchantId));
     }
 
+    @Transactional
+    public void deleteMerchant(Long merchantId) {
+        Merchant merchant = merchantMapper.selectById(merchantId);
+        if (merchant == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "商家不存在");
+        }
+        Long serviceCount = merchantServiceMapper.selectCount(new LambdaQueryWrapper<MerchantService>()
+                .eq(MerchantService::getMerchantId, merchantId));
+        Long bookingCount = serviceBookingMapper.selectCount(new LambdaQueryWrapper<ServiceBooking>()
+                .eq(ServiceBooking::getMerchantId, merchantId));
+        if (serviceCount > 0 || bookingCount > 0) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "该商家已有服务或预约记录，不能直接删除");
+        }
+        merchantMapper.deleteById(merchantId);
+    }
+
     public PageResponse<AdminMerchantServiceResponse> getMerchantServicePage(
             Long merchantId,
             Long categoryId,
@@ -344,6 +409,20 @@ public class AdminOpsService {
         applyMerchantServiceChanges(service, request, normalizedStatus);
         merchantServiceMapper.updateById(service);
         return AdminMerchantServiceResponse.from(merchantServiceMapper.selectById(serviceId));
+    }
+
+    @Transactional
+    public void deleteMerchantService(Long serviceId) {
+        MerchantService service = merchantServiceMapper.selectById(serviceId);
+        if (service == null) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "服务项目不存在");
+        }
+        Long bookingCount = serviceBookingMapper.selectCount(new LambdaQueryWrapper<ServiceBooking>()
+                .eq(ServiceBooking::getMerchantServiceId, serviceId));
+        if (bookingCount > 0) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "该服务已有预约记录，不能直接删除");
+        }
+        merchantServiceMapper.deleteById(serviceId);
     }
 
     public List<AdminBannerResponse> getBanners() {

@@ -73,6 +73,12 @@ public class AdminOpsController {
         return ApiResponse.success(adminOpsService.updateAdoptionPet(petId, request));
     }
 
+    @DeleteMapping("/adoption/pets/{petId}")
+    public ApiResponse<Void> deleteAdoptionPet(@PathVariable Long petId) {
+        adminOpsService.deleteAdoptionPet(petId);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/shop/categories")
     public ApiResponse<List<ProductCategoryResponse>> getProductCategories() {
         return ApiResponse.success(adminOpsService.getProductCategories());
@@ -107,6 +113,12 @@ public class AdminOpsController {
             @Valid @RequestBody UpdateProductStatusRequest request
     ) {
         return ApiResponse.success(adminOpsService.updateProductStatus(productId, request));
+    }
+
+    @DeleteMapping("/shop/products/{productId}")
+    public ApiResponse<Void> deleteProduct(@PathVariable Long productId) {
+        adminOpsService.deleteProduct(productId);
+        return ApiResponse.success();
     }
 
     @GetMapping("/services/categories")
@@ -152,6 +164,12 @@ public class AdminOpsController {
         return ApiResponse.success(adminOpsService.updateMerchant(merchantId, request));
     }
 
+    @DeleteMapping("/services/merchants/{merchantId}")
+    public ApiResponse<Void> deleteMerchant(@PathVariable Long merchantId) {
+        adminOpsService.deleteMerchant(merchantId);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/services/items")
     public ApiResponse<PageResponse<AdminMerchantServiceResponse>> getMerchantServices(
             @RequestParam(name = "merchant_id", required = false) Long merchantId,
@@ -179,6 +197,12 @@ public class AdminOpsController {
             @Valid @RequestBody SaveMerchantServiceRequest request
     ) {
         return ApiResponse.success(adminOpsService.updateMerchantService(serviceId, request));
+    }
+
+    @DeleteMapping("/services/items/{serviceId}")
+    public ApiResponse<Void> deleteMerchantService(@PathVariable Long serviceId) {
+        adminOpsService.deleteMerchantService(serviceId);
+        return ApiResponse.success();
     }
 
     @GetMapping("/banners")

@@ -219,12 +219,27 @@ CREATE TABLE IF NOT EXISTS adoption_pets (
     adoption_requirements TEXT,
     story TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'ONLINE',
-    cover_url VARCHAR(255),
+    cover_url VARCHAR(1000),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY idx_adoption_pets_status_type_city (status, type, city),
     KEY idx_adoption_pets_status_created (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET @adoption_pets_cover_url_sql := (
+    SELECT IF(
+        COALESCE(CHARACTER_MAXIMUM_LENGTH, 0) < 1000,
+        'ALTER TABLE adoption_pets MODIFY COLUMN cover_url VARCHAR(1000)',
+        'SELECT 1'
+    )
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'adoption_pets'
+      AND column_name = 'cover_url'
+);
+PREPARE adoption_pets_cover_url_stmt FROM @adoption_pets_cover_url_sql;
+EXECUTE adoption_pets_cover_url_stmt;
+DEALLOCATE PREPARE adoption_pets_cover_url_stmt;
 
 CREATE TABLE IF NOT EXISTS adoption_applications (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -332,7 +347,7 @@ CREATE TABLE IF NOT EXISTS products (
     category_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
     subtitle VARCHAR(255),
-    image_url VARCHAR(255),
+    image_url VARCHAR(1000),
     price DECIMAL(10, 2) NOT NULL,
     stock INT NOT NULL DEFAULT 0,
     pet_type VARCHAR(20),
@@ -345,6 +360,21 @@ CREATE TABLE IF NOT EXISTS products (
     KEY idx_products_pet_type (pet_type),
     CONSTRAINT fk_products_category_id FOREIGN KEY (category_id) REFERENCES product_categories(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET @products_image_url_sql := (
+    SELECT IF(
+        COALESCE(CHARACTER_MAXIMUM_LENGTH, 0) < 1000,
+        'ALTER TABLE products MODIFY COLUMN image_url VARCHAR(1000)',
+        'SELECT 1'
+    )
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'products'
+      AND column_name = 'image_url'
+);
+PREPARE products_image_url_stmt FROM @products_image_url_sql;
+EXECUTE products_image_url_stmt;
+DEALLOCATE PREPARE products_image_url_stmt;
 
 CREATE TABLE IF NOT EXISTS cart_items (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -429,7 +459,7 @@ CREATE TABLE IF NOT EXISTS shop_order_items (
     order_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     product_name VARCHAR(100) NOT NULL,
-    product_image_url VARCHAR(255),
+    product_image_url VARCHAR(1000),
     unit_price DECIMAL(10, 2) NOT NULL,
     quantity INT NOT NULL,
     subtotal_amount DECIMAL(10, 2) NOT NULL,
@@ -438,6 +468,21 @@ CREATE TABLE IF NOT EXISTS shop_order_items (
     CONSTRAINT fk_shop_order_items_order_id FOREIGN KEY (order_id) REFERENCES shop_orders(id),
     CONSTRAINT fk_shop_order_items_product_id FOREIGN KEY (product_id) REFERENCES products(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET @shop_order_items_product_image_url_sql := (
+    SELECT IF(
+        COALESCE(CHARACTER_MAXIMUM_LENGTH, 0) < 1000,
+        'ALTER TABLE shop_order_items MODIFY COLUMN product_image_url VARCHAR(1000)',
+        'SELECT 1'
+    )
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'shop_order_items'
+      AND column_name = 'product_image_url'
+);
+PREPARE shop_order_items_product_image_url_stmt FROM @shop_order_items_product_image_url_sql;
+EXECUTE shop_order_items_product_image_url_stmt;
+DEALLOCATE PREPARE shop_order_items_product_image_url_stmt;
 
 CREATE TABLE IF NOT EXISTS banners (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,

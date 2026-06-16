@@ -43,6 +43,7 @@ const router = createRouter({
       { path: "dashboard", component: () => import("@/pages/admin/dashboard/DashboardPage.vue") },
       { path: "users", component: () => import("@/pages/admin/users/UsersPage.vue") },
       { path: "content", component: () => import("@/pages/admin/content/ContentPage.vue") },
+      { path: "support", component: () => import("@/pages/admin/support/SupportAdminPage.vue") },
       { path: "adoption", component: () => import("@/pages/admin/adoption/AdoptionAdminPage.vue") },
       { path: "services", component: () => import("@/pages/admin/services/ServicesAdminPage.vue") },
       { path: "shop", component: () => import("@/pages/admin/shop/ShopAdminPage.vue") },

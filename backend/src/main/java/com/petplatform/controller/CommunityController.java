@@ -43,12 +43,13 @@ public class CommunityController {
             @RequestParam(required = false) String tab,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码必须大于等于1") int page,
             @RequestParam(name = "page_size", defaultValue = "10")
             @Min(value = 1, message = "每页数量必须大于等于1")
             @Max(value = 50, message = "每页数量不能超过50") int pageSize
     ) {
-        return ApiResponse.success(communityService.getPostPage(tab, category, tag, page, pageSize));
+        return ApiResponse.success(communityService.getPostPage(tab, category, tag, keyword, page, pageSize));
     }
 
     @GetMapping("/posts/mine")

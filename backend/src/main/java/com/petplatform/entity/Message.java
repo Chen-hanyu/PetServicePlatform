@@ -67,6 +67,14 @@ public class Message {
         this.readFlag = read;
     }
 
+    public Boolean getReadFlag() {
+        return readFlag;
+    }
+
+    public void setReadFlag(Boolean readFlag) {
+        this.readFlag = readFlag;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
