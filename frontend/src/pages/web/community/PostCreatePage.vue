@@ -123,7 +123,7 @@
                 <line x1="8" y1="12" x2="16" y2="12"/>
               </svg>
             </div>
-            <span class="upload-text">{{ form.images.length > 0 ? '继续添加' : '添加图片' }}</span>
+            <span class="upload-text">{{ uploading ? '上传中...' : form.images.length > 0 ? '继续添加' : '添加图片' }}</span>
             <span class="upload-hint">最多9张，支持jpg、png</span>
           </div>
         </div>
@@ -245,6 +245,7 @@ import { ref, computed, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { createPost } from "@/api/modules/community";
+import { uploadImage } from "@/api/modules/files";
 import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
@@ -252,11 +253,10 @@ const auth = useAuthStore();
 
 const categories = [
   { value: 'daily', label: '日常', color: '#ff9b7a' },
-  { value: 'pet', label: '晒宠', color: '#9370db' },
-  { value: 'qa', label: '问答', color: '#40e0d0' },
-  { value: 'share', label: '种草', color: '#ff69b4' },
+  { value: 'help', label: '问答', color: '#40e0d0' },
+  { value: 'training', label: '训练', color: '#9370db' },
+  { value: 'rescue', label: '救助', color: '#ff69b4' },
   { value: 'knowledge', label: '知识', color: '#3cb371' },
-  { value: 'goods', label: '好物', color: '#ffb347' }
 ];
 
 const selectedCategory = ref("daily");
@@ -264,6 +264,7 @@ const tagInput = ref("");
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const titleTextareaRef = ref<HTMLTextAreaElement | null>(null);
 const isPublic = ref(true);
+const uploading = ref(false);
 
 const form = reactive({
   title: "",
@@ -281,7 +282,7 @@ const toast = reactive({
 });
 
 const canPublish = computed(() => {
-  return form.title.trim().length > 0 && form.content.trim().length > 0;
+  return form.title.trim().length > 0 && form.content.trim().length > 0 && !uploading.value;
 });
 
 const goBack = () => {
@@ -300,21 +301,26 @@ const triggerUpload = () => {
   fileInputRef.value?.click();
 };
 
-const handleFileChange = (e: Event) => {
+const handleFileChange = async (e: Event) => {
   const target = e.target as HTMLInputElement;
   const files = target.files;
   if (!files) return;
 
-  Array.from(files).forEach(file => {
-    if (form.images.length >= 9) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        form.images.push(event.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
-  });
+  uploading.value = true;
+  try {
+    for (const file of Array.from(files)) {
+      if (form.images.length >= 9) break;
+      if (!file.type.startsWith("image/")) continue;
+      const result = await uploadImage(file);
+      form.images.push(result.url);
+    }
+    showToast("图片上传成功", "success");
+  } catch (error) {
+    showToast(toErrorMessage(error), "error");
+  } finally {
+    uploading.value = false;
+    target.value = "";
+  }
 };
 
 const removeImage = (index: number) => {

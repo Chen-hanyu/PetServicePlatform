@@ -96,28 +96,20 @@
           <div class="detail-section-card">
             <div class="section-header">
               <h2>宝贝评价 (1.2k+)</h2>
-              <button class="view-all-btn">查看全部 →</button>
+              <button class="view-all-btn" @click="showAllReviews = !showAllReviews">
+                {{ showAllReviews ? "收起评价" : "查看全部 →" }}
+              </button>
             </div>
             <div class="reviews-grid">
-              <div class="review-item">
+              <div v-for="review in visibleReviews" :key="review.id" class="review-item">
                 <div class="review-user">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Review1" alt="" />
+                  <img :src="review.avatar" alt="" />
                   <div class="user-info">
-                    <span class="username">小木屋的猫</span>
+                    <span class="username">{{ review.user }}</span>
                     <div class="stars">★★★★★</div>
                   </div>
                 </div>
-                <p class="review-text">大福超级软糯！抹茶味道很正，一点都不甜腻，包装也太可爱了吧～ 顺丰快递很快，好评！</p>
-              </div>
-              <div class="review-item">
-                <div class="review-user">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Review2" alt="" />
-                  <div class="user-info">
-                    <span class="username">J***n</span>
-                    <div class="stars">★★★★★</div>
-                  </div>
-                </div>
-                <p class="review-text">回购好几次了，抹茶控必入。口感真的没话说，像是在日本当地吃到的一样。每一颗都很大。</p>
+                <p class="review-text">{{ review.text }}</p>
               </div>
             </div>
           </div>
@@ -145,12 +137,12 @@ import { useRoute, useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchProduct } from "@/api/modules/shop";
 import { toErrorMessage } from "@/api/http";
-import type { ProductDetail } from "@/types/shop";
+import type { EntityId, ProductDetail } from "@/types/shop";
 import { useShopCartStore } from "@/store/shopCart";
 import { flyImageToCart } from "@/composables/useFlyToCart";
 
 type DisplayProduct = {
-  id: number;
+  id: EntityId;
   name: string;
   subtitle?: string;
   price: number;
@@ -173,6 +165,7 @@ const product = ref<DisplayProduct | null>(null);
 const activeImg = ref(0);
 const qty = ref(1);
 const galleryMainRef = ref<HTMLElement | null>(null);
+const showAllReviews = ref(false);
 
 const galleryImages = computed(() => product.value?.images?.filter(Boolean) || []);
 
@@ -180,6 +173,18 @@ const descriptionParagraphs = computed(() => {
   const text = product.value?.description?.trim() || product.value?.subtitle || "暂无详细说明。";
   return text.split(/\n+/).filter(Boolean);
 });
+
+const allReviews = computed(() => {
+  const name = product.value?.name || "商品";
+  return [
+    { id: 1, user: "团子妈", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Review1", text: `${name}和描述一致，家里猫咪接受度不错，包装也很完整。` },
+    { id: 2, user: "小橘饲养员", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Review2", text: "发货很快，质感比预期好，日常使用很方便。" },
+    { id: 3, user: "阿柴研究员", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Review3", text: "第二次购买了，价格和品质比较稳定，推荐给新手家长。" },
+    { id: 4, user: "糯米家", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Review4", text: "客服回复及时，使用说明清楚，整体体验不错。" }
+  ];
+});
+
+const visibleReviews = computed(() => showAllReviews.value ? allReviews.value : allReviews.value.slice(0, 2));
 
 const formatPrice = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 

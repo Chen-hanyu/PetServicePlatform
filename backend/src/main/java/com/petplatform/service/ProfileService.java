@@ -61,17 +61,23 @@ public class ProfileService {
     public ProfileOverviewResponse getCurrentUserOverview() {
         Long userId = SecurityUtils.getCurrentUser().id();
         User user = userService.getByIdOrThrow(userId);
+        long likeCount = communityPostMapper.selectList(new LambdaQueryWrapper<CommunityPost>()
+                        .eq(CommunityPost::getUserId, userId))
+                .stream()
+                .mapToLong(post -> post.getLikeCount() == null ? 0L : post.getLikeCount())
+                .sum();
         return new ProfileOverviewResponse(
                 userService.toUserProfile(user),
                 petMapper.selectCount(new LambdaQueryWrapper<Pet>().eq(Pet::getUserId, userId)),
                 communityPostMapper.selectCount(new LambdaQueryWrapper<CommunityPost>().eq(CommunityPost::getUserId, userId)),
+                likeCount,
                 postFavoriteMapper.selectCount(new LambdaQueryWrapper<PostFavorite>().eq(PostFavorite::getUserId, userId)),
                 shopOrderMapper.selectCount(new LambdaQueryWrapper<ShopOrder>().eq(ShopOrder::getUserId, userId)),
                 serviceBookingMapper.selectCount(new LambdaQueryWrapper<ServiceBooking>().eq(ServiceBooking::getUserId, userId)),
                 adoptionApplicationMapper.selectCount(new LambdaQueryWrapper<AdoptionApplication>().eq(AdoptionApplication::getUserId, userId)),
                 messageMapper.selectCount(new LambdaQueryWrapper<Message>()
                         .eq(Message::getUserId, userId)
-                        .eq(Message::getRead, false))
+                        .eq(Message::getReadFlag, false))
         );
     }
 }

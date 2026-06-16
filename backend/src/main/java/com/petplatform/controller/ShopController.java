@@ -13,6 +13,7 @@ import com.petplatform.dto.shop.OrderSummaryResponse;
 import com.petplatform.dto.shop.ProductCategoryResponse;
 import com.petplatform.dto.shop.ProductDetailResponse;
 import com.petplatform.dto.shop.ProductSummaryResponse;
+import com.petplatform.dto.shop.SaveAddressRequest;
 import com.petplatform.dto.shop.UpdateCartItemRequest;
 import com.petplatform.service.ShopService;
 import jakarta.validation.Valid;
@@ -76,6 +77,19 @@ public class ShopController {
         return ApiResponse.success(shopService.getAddresses());
     }
 
+    @PostMapping("/addresses")
+    public ApiResponse<AddressResponse> createAddress(@Valid @RequestBody SaveAddressRequest request) {
+        return ApiResponse.success(shopService.saveAddress(null, request));
+    }
+
+    @PutMapping("/addresses/{addressId}")
+    public ApiResponse<AddressResponse> updateAddress(
+            @PathVariable Long addressId,
+            @Valid @RequestBody SaveAddressRequest request
+    ) {
+        return ApiResponse.success(shopService.saveAddress(addressId, request));
+    }
+
     @GetMapping("/coupons/available")
     public ApiResponse<List<CouponResponse>> getAvailableCoupons(
             @RequestParam(required = false) BigDecimal amount
@@ -120,5 +134,20 @@ public class ShopController {
     @GetMapping("/orders/{orderId}")
     public ApiResponse<OrderDetailResponse> getOrderDetail(@PathVariable Long orderId) {
         return ApiResponse.success(shopService.getOrderDetail(orderId));
+    }
+
+    @PostMapping("/orders/{orderId}/pay")
+    public ApiResponse<OrderSummaryResponse> payOrder(@PathVariable Long orderId) {
+        return ApiResponse.success(shopService.payOrder(orderId));
+    }
+
+    @PostMapping("/orders/{orderId}/cancel")
+    public ApiResponse<OrderSummaryResponse> cancelOrder(@PathVariable Long orderId) {
+        return ApiResponse.success(shopService.cancelOrder(orderId));
+    }
+
+    @PostMapping("/orders/{orderId}/confirm")
+    public ApiResponse<OrderSummaryResponse> confirmOrder(@PathVariable Long orderId) {
+        return ApiResponse.success(shopService.confirmOrder(orderId));
     }
 }

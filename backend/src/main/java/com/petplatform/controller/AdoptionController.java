@@ -72,4 +72,10 @@ public class AdoptionController {
     ) {
         return ApiResponse.success(adoptionService.getMyApplications(status, page, pageSize));
     }
+
+    @PostMapping("/applications/{applicationId}/cancel")
+    public ApiResponse<Void> cancelApplication(@PathVariable Long applicationId) {
+        adoptionService.cancelApplication(applicationId);
+        return ApiResponse.success();
+    }
 }

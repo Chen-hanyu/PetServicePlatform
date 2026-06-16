@@ -298,6 +298,12 @@ const toggleService = () => {
   }
 };
 
+const openServiceChat = (source = "在线客服") => {
+  if (serviceChatRef.value) {
+    serviceChatRef.value.open(source);
+  }
+};
+
 const goBookingEdit = () => {
   if (!booking.merchantId) return;
   bookingOpen.value = false;
@@ -352,7 +358,22 @@ const onUserMenuLeave = () => {
   }, 180);
 };
 
-onBeforeUnmount(() => clearMenuLeaveTimer());
+let serviceChatListener: ((event: Event) => void) | undefined;
+
+onMounted(() => {
+  serviceChatListener = (event: Event) => {
+    const detail = (event as CustomEvent<{ source?: string }>).detail;
+    openServiceChat(detail?.source || "在线客服");
+  };
+  document.addEventListener("open-service-chat", serviceChatListener);
+});
+
+onBeforeUnmount(() => {
+  clearMenuLeaveTimer();
+  if (serviceChatListener) {
+    document.removeEventListener("open-service-chat", serviceChatListener);
+  }
+});
 
 const goProfile = () => {
   userMenuOpen.value = false;

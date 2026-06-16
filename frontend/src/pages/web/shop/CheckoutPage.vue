@@ -22,6 +22,7 @@
               </svg>
               <h2>收货人信息</h2>
               <button class="change-btn" @click="cycleAddress">选择其他地址</button>
+              <button class="change-btn" @click="openAddressModal(selectedAddress)">{{ selectedAddress ? "编辑地址" : "新增地址" }}</button>
             </div>
             <div class="address-card" v-if="selectedAddress">
               <div class="address-info">
@@ -36,7 +37,10 @@
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </div>
-            <div v-else class="address-empty">暂无收货地址，请先在数据库示例数据中为当前用户配置地址</div>
+            <div v-else class="address-empty">
+              暂无收货地址
+              <button class="inline-add-btn" @click="openAddressModal(null)">新增收货地址</button>
+            </div>
           </div>
 
           <!-- Products Section -->
@@ -235,6 +239,49 @@
       </div>
     </Teleport>
 
+    <!-- 地址编辑弹窗 -->
+    <Teleport to="body">
+      <div v-if="showAddressModal" class="modal-overlay" @click.self="closeAddressModal">
+        <div class="address-modal">
+          <div class="coupon-modal-head">
+            <h3>{{ editingAddress ? "编辑收货地址" : "新增收货地址" }}</h3>
+            <button type="button" class="close-btn" @click="closeAddressModal">×</button>
+          </div>
+          <form class="address-form" @submit.prevent="saveAddress">
+            <label>收货人</label>
+            <input v-model="addressForm.receiver_name" required />
+            <label>联系电话</label>
+            <input v-model="addressForm.receiver_phone" required />
+            <div class="address-form-grid">
+              <div>
+                <label>省份</label>
+                <input v-model="addressForm.province" required />
+              </div>
+              <div>
+                <label>城市</label>
+                <input v-model="addressForm.city" required />
+              </div>
+              <div>
+                <label>区县</label>
+                <input v-model="addressForm.district" required />
+              </div>
+            </div>
+            <label>详细地址</label>
+            <textarea v-model="addressForm.detail_address" required rows="3"></textarea>
+            <label class="default-row">
+              <input v-model="addressForm.is_default" type="checkbox" />
+              <span>设为默认地址</span>
+            </label>
+            <p v-if="addressError" class="checkout-error">{{ addressError }}</p>
+            <div class="coupon-modal-foot">
+              <button type="button" class="btn-cancel" @click="closeAddressModal">取消</button>
+              <button type="submit" class="btn-primary" :disabled="savingAddress">{{ savingAddress ? "保存中..." : "保存" }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
+
     <CommerceDock />
   </div>
 </template>
@@ -246,13 +293,16 @@ import { useRoute, useRouter } from "vue-router";
 import CommerceDock from "@/components/shop/CommerceDock.vue";
 import { useShopCartStore } from "@/store/shopCart";
 import {
+  createAddress,
   createDirectOrder,
   fetchAddresses,
   fetchAvailableCoupons,
-  fetchProduct
+  fetchProduct,
+  payOrder,
+  updateAddress
 } from "@/api/modules/shop";
 import { toErrorMessage } from "@/api/http";
-import type { AddressInfo, CouponInfo } from "@/types/shop";
+import type { AddressInfo, CouponInfo, SaveAddressPayload } from "@/types/shop";
 
 const route = useRoute();
 const router = useRouter();
@@ -271,6 +321,19 @@ const paymentMethod = ref("wechat");
 const showCouponPicker = ref(false);
 const selectedCoupon = ref<CouponInfo | null>(null);
 const couponList = ref<CouponInfo[]>([]);
+const showAddressModal = ref(false);
+const savingAddress = ref(false);
+const addressError = ref("");
+const editingAddress = ref<AddressInfo | null>(null);
+const addressForm = ref<SaveAddressPayload>({
+  receiver_name: "",
+  receiver_phone: "",
+  province: "",
+  city: "",
+  district: "",
+  detail_address: "",
+  is_default: true
+});
 
 const isBuyNow = computed(() => route.query.buyNow === "1");
 const buyNowId = computed(() => Number(route.query.id));
@@ -306,6 +369,55 @@ const cycleAddress = () => {
   if (addresses.value.length <= 1 || !selectedAddress.value) return;
   const index = addresses.value.findIndex((address) => address.id === selectedAddress.value?.id);
   selectedAddress.value = addresses.value[(index + 1) % addresses.value.length];
+};
+
+const openAddressModal = (address: AddressInfo | null) => {
+  editingAddress.value = address;
+  addressError.value = "";
+  addressForm.value = address
+    ? {
+        receiver_name: address.receiver_name,
+        receiver_phone: address.receiver_phone,
+        province: address.province,
+        city: address.city,
+        district: address.district,
+        detail_address: address.detail_address,
+        is_default: address.is_default
+      }
+    : {
+        receiver_name: "",
+        receiver_phone: "",
+        province: "上海市",
+        city: "上海市",
+        district: "",
+        detail_address: "",
+        is_default: addresses.value.length === 0
+      };
+  showAddressModal.value = true;
+};
+
+const closeAddressModal = () => {
+  showAddressModal.value = false;
+  editingAddress.value = null;
+  addressError.value = "";
+};
+
+const saveAddress = async () => {
+  savingAddress.value = true;
+  addressError.value = "";
+  try {
+    const saved = editingAddress.value
+      ? await updateAddress(editingAddress.value.id, addressForm.value)
+      : await createAddress(addressForm.value);
+    const addressData = await fetchAddresses();
+    addresses.value = addressData;
+    selectedAddress.value = addressData.find((address) => address.id === saved.id) || addressData.find((address) => address.is_default) || addressData[0] || null;
+    closeAddressModal();
+  } catch (error) {
+    addressError.value = toErrorMessage(error);
+  } finally {
+    savingAddress.value = false;
+  }
 };
 
 async function loadBuyNow() {
@@ -385,7 +497,7 @@ async function submitPay() {
 
   submitting.value = true;
   try {
-    await createDirectOrder({
+    const order = await createDirectOrder({
       items,
       address_id: selectedAddress.value.id,
       coupon_id: selectedCoupon.value?.user_coupon_id,
@@ -394,6 +506,10 @@ async function submitPay() {
       receiver_address: selectedAddress.value.full_address,
       remark: remark.value || undefined
     });
+    const orderId = (order as any)?.id;
+    if (orderId) {
+      await payOrder(orderId);
+    }
     if (!isBuyNow.value) cart.clearCart();
     paid.value = true;
   } catch (error) {
@@ -536,6 +652,15 @@ async function submitPay() {
   border-radius: 12px;
   color: var(--muted);
   font-size: 14px;
+}
+
+.inline-add-btn {
+  margin-left: 10px;
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .address-user {
@@ -951,7 +1076,19 @@ input:checked + .slider:before {
 }
 
 // 优惠券弹窗样式
-.coupon-modal {
+:global(.modal-overlay) {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(48, 33, 24, 0.42);
+}
+
+.coupon-modal,
+.address-modal {
   width: 100%;
   max-width: 480px;
   max-height: 80vh;
@@ -1031,6 +1168,53 @@ input:checked + .slider:before {
   &.disabled {
     cursor: not-allowed;
     opacity: 0.55;
+  }
+}
+
+.address-form {
+  padding: 18px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    border: 1px solid var(--border-warm);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 155, 122, 0.12);
+    }
+  }
+}
+
+.address-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.default-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    width: auto;
   }
 }
 

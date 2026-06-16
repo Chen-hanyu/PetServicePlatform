@@ -126,13 +126,14 @@ class QueryEndpointsWebMvcTest {
     void profileOverviewShouldReturnAggregatedCounts() throws Exception {
         when(profileService.getCurrentUserOverview()).thenReturn(new ProfileOverviewResponse(
                 new UserProfileResponse(2L, "USER", "13800000001", "团子妈", null, "FEMALE", "两只猫的铲屎官", "ACTIVE"),
-                2, 3, 4, 1, 2, 1, 5
+                2, 3, 9, 4, 1, 2, 1, 5
         ));
 
         mockMvc.perform(get("/api/v1/profile/overview"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.pet_count").value(2))
+                .andExpect(jsonPath("$.data.like_count").value(9))
                 .andExpect(jsonPath("$.data.unread_message_count").value(5));
     }
 
@@ -247,6 +248,15 @@ class QueryEndpointsWebMvcTest {
                         1L,
                         "PSP20260320000001AAAA1111",
                         new AdminOrderResponse.UserProfileLite(2L, "团子妈", "13800000001"),
+                        List.of(new AdminOrderResponse.OrderItemLite(
+                                5L,
+                                "幼猫营养罐头",
+                                "/static/images/product-cat-food.png",
+                                2,
+                                new BigDecimal("99.80")
+                        )),
+                        "幼猫营养罐头",
+                        2,
                         new BigDecimal("99.80"),
                         new BigDecimal("99.80"),
                         "SHIPPED",

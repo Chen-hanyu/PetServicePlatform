@@ -1,6 +1,7 @@
 package com.petplatform.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.petplatform.common.PageResponse;
@@ -20,6 +21,7 @@ import com.petplatform.dto.shop.OrderSummaryResponse;
 import com.petplatform.dto.shop.ProductCategoryResponse;
 import com.petplatform.dto.shop.ProductDetailResponse;
 import com.petplatform.dto.shop.ProductSummaryResponse;
+import com.petplatform.dto.shop.SaveAddressRequest;
 import com.petplatform.dto.shop.UpdateCartItemRequest;
 import com.petplatform.entity.CartItem;
 import com.petplatform.entity.Coupon;
@@ -169,6 +171,45 @@ public class ShopService {
                 .toList();
     }
 
+    @Transactional
+    public AddressResponse saveAddress(Long addressId, SaveAddressRequest request) {
+        Long userId = SecurityUtils.getCurrentUser().id();
+        UserAddress address;
+        if (addressId == null) {
+            address = new UserAddress();
+            address.setUserId(userId);
+            address.setStatus("ACTIVE");
+        } else {
+            address = userAddressMapper.selectById(addressId);
+            if (address == null || !address.getUserId().equals(userId) || !"ACTIVE".equals(address.getStatus())) {
+                throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "收货地址不存在");
+            }
+        }
+
+        address.setReceiverName(request.receiverName().trim());
+        address.setReceiverPhone(request.receiverPhone().trim());
+        address.setProvince(request.province().trim());
+        address.setCity(request.city().trim());
+        address.setDistrict(request.district().trim());
+        address.setDetailAddress(request.detailAddress().trim());
+
+        boolean shouldSetDefault = Boolean.TRUE.equals(request.isDefault())
+                || userAddressMapper.selectCount(new LambdaQueryWrapper<UserAddress>()
+                .eq(UserAddress::getUserId, userId)
+                .eq(UserAddress::getStatus, "ACTIVE")) == 0;
+        address.setIsDefault(shouldSetDefault);
+        if (shouldSetDefault) {
+            clearDefaultAddress(userId, addressId);
+        }
+
+        if (addressId == null) {
+            userAddressMapper.insert(address);
+        } else {
+            userAddressMapper.updateById(address);
+        }
+        return AddressResponse.from(userAddressMapper.selectById(address.getId()));
+    }
+
     public List<CouponResponse> getAvailableCoupons(BigDecimal amount) {
         Long userId = SecurityUtils.getCurrentUser().id();
         BigDecimal orderAmount = amount == null ? BigDecimal.ZERO : amount;
@@ -302,10 +343,7 @@ public class ShopService {
 
     public OrderDetailResponse getOrderDetail(Long orderId) {
         Long userId = SecurityUtils.getCurrentUser().id();
-        ShopOrder order = shopOrderMapper.selectById(orderId);
-        if (order == null || !order.getUserId().equals(userId)) {
-            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "订单不存在");
-        }
+        ShopOrder order = getUserOrderOrThrow(userId, orderId);
         List<OrderItemResponse> items = shopOrderItemMapper.selectList(new LambdaQueryWrapper<ShopOrderItem>()
                         .eq(ShopOrderItem::getOrderId, orderId)
                         .orderByAsc(ShopOrderItem::getId))
@@ -321,6 +359,61 @@ public class ShopService {
                 ))
                 .toList();
         return OrderDetailResponse.from(order, items);
+    }
+
+    @Transactional
+    public OrderSummaryResponse payOrder(Long orderId) {
+        Long userId = SecurityUtils.getCurrentUser().id();
+        ShopOrder order = getUserOrderOrThrow(userId, orderId);
+        if (!"PENDING".equals(order.getStatus())) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "当前订单状态不支持支付");
+        }
+        order.setStatus("PAID");
+        shopOrderMapper.updateById(order);
+        return OrderSummaryResponse.from(order);
+    }
+
+    @Transactional
+    public OrderSummaryResponse cancelOrder(Long orderId) {
+        Long userId = SecurityUtils.getCurrentUser().id();
+        ShopOrder order = getUserOrderOrThrow(userId, orderId);
+        if (!"PENDING".equals(order.getStatus())) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "当前订单状态不支持取消");
+        }
+
+        List<ShopOrderItem> orderItems = shopOrderItemMapper.selectList(new LambdaQueryWrapper<ShopOrderItem>()
+                .eq(ShopOrderItem::getOrderId, orderId));
+        for (ShopOrderItem item : orderItems) {
+            Product product = productMapper.selectById(item.getProductId());
+            if (product != null && product.getStock() != null) {
+                product.setStock(product.getStock() + item.getQuantity());
+                productMapper.updateById(product);
+            }
+        }
+        if (order.getUserCouponId() != null) {
+            UserCoupon userCoupon = userCouponMapper.selectById(order.getUserCouponId());
+            if (userCoupon != null && "USED".equals(userCoupon.getStatus())) {
+                userCoupon.setStatus("UNUSED");
+                userCoupon.setUsedOrderId(null);
+                userCoupon.setUsedAt(null);
+                userCouponMapper.updateById(userCoupon);
+            }
+        }
+        order.setStatus("CANCELLED");
+        shopOrderMapper.updateById(order);
+        return OrderSummaryResponse.from(order);
+    }
+
+    @Transactional
+    public OrderSummaryResponse confirmOrder(Long orderId) {
+        Long userId = SecurityUtils.getCurrentUser().id();
+        ShopOrder order = getUserOrderOrThrow(userId, orderId);
+        if (!"SHIPPED".equals(order.getStatus())) {
+            throw new BusinessException(ResultCode.INVALID_OPERATION, "当前订单状态不支持确认收货");
+        }
+        order.setStatus("COMPLETED");
+        shopOrderMapper.updateById(order);
+        return OrderSummaryResponse.from(order);
     }
 
     private OrderSummaryResponse createOrderFromProducts(
@@ -462,6 +555,14 @@ public class ShopService {
         return address;
     }
 
+    private ShopOrder getUserOrderOrThrow(Long userId, Long orderId) {
+        ShopOrder order = shopOrderMapper.selectById(orderId);
+        if (order == null || !order.getUserId().equals(userId)) {
+            throw new BusinessException(ResultCode.RESOURCE_NOT_FOUND, "订单不存在");
+        }
+        return order;
+    }
+
     private AppliedCoupon applyCouponIfPresent(Long userId, Long userCouponId, BigDecimal totalAmount) {
         if (userCouponId == null) {
             return new AppliedCoupon(null, BigDecimal.ZERO);
@@ -509,6 +610,17 @@ public class ShopService {
                 .eq(CartItem::getUserId, userId)
                 .eq(CartItem::getProductId, productId)
                 .last("limit 1"));
+    }
+
+    private void clearDefaultAddress(Long userId, Long currentAddressId) {
+        LambdaUpdateWrapper<UserAddress> wrapper = new LambdaUpdateWrapper<UserAddress>()
+                .eq(UserAddress::getUserId, userId)
+                .eq(UserAddress::getStatus, "ACTIVE")
+                .set(UserAddress::getIsDefault, false);
+        if (currentAddressId != null) {
+            wrapper.ne(UserAddress::getId, currentAddressId);
+        }
+        userAddressMapper.update(null, wrapper);
     }
 
     private void mergeCartItemQuantity(Product product, CartItem existing, int deltaQuantity) {

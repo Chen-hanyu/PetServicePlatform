@@ -1,9 +1,11 @@
 import { webHttp, unwrap } from "@/api/http";
 import type { ApiResponse, PageResult } from "@/types/api";
 
+type EntityId = string | number;
+
 /** 消息类型 */
 export interface MessageItem {
-  id: number;
+  id: EntityId;
   type: string;
   title: string;
   content: string;
@@ -20,7 +22,7 @@ export const fetchMessages = async (params: Record<string, string | number | und
 };
 
 /** 标记消息为已读 */
-export const markMessageRead = async (messageId: number) => {
+export const markMessageRead = async (messageId: EntityId) => {
   const { data } = await webHttp.post<ApiResponse<void>>(`/messages/${messageId}/read`);
   return unwrap(data);
 };
@@ -32,7 +34,13 @@ export const markAllMessagesRead = async () => {
 };
 
 /** 删除消息 */
-export const deleteMessage = async (messageId: number) => {
+export const deleteMessage = async (messageId: EntityId) => {
   const { data } = await webHttp.delete<ApiResponse<void>>(`/messages/${messageId}`);
+  return unwrap(data);
+};
+
+/** 提交在线客服咨询 */
+export const submitSupportMessage = async (payload: { content: string; source?: string }) => {
+  const { data } = await webHttp.post<ApiResponse<MessageItem>>("/messages/support", payload);
   return unwrap(data);
 };

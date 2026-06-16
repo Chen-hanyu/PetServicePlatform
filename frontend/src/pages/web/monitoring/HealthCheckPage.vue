@@ -72,7 +72,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { webHttp } from "@/api/http";
+import { webHttp, unwrap, toErrorMessage } from "@/api/http";
+import type { ApiResponse } from "@/types/api";
 
 interface HealthResponse {
   status: string;
@@ -114,13 +115,13 @@ const checkHealth = async () => {
   const startTime = Date.now();
 
   try {
-    const res = await webHttp.get("/health");
+    const res = await webHttp.get<ApiResponse<HealthResponse>>("/health");
     responseTime.value = Date.now() - startTime;
-    healthData.value = res.data as HealthResponse;
-    rawResponse.value = JSON.stringify(res.data, null, 2);
+    healthData.value = unwrap(res.data);
+    rawResponse.value = JSON.stringify(healthData.value, null, 2);
   } catch (err: unknown) {
     responseTime.value = Date.now() - startTime;
-    error.value = err instanceof Error ? err.message : "请求失败";
+    error.value = toErrorMessage(err);
     healthData.value = { status: "unhealthy", timestamp: new Date().toISOString(), version: "N/A" };
     rawResponse.value = JSON.stringify({ error: error.value }, null, 2);
   } finally {

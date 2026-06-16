@@ -8,9 +8,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="text" placeholder="搜索附近的服务或商家..." v-model="searchQuery" />
-        <button class="search-btn">搜索商家</button>
+        <input type="text" placeholder="搜索附近的服务或商家..." v-model="searchQuery" @keydown.enter.prevent="loadMerchants" />
+        <button class="search-btn" @click="loadMerchants">搜索商家</button>
       </div>
+      <RouterLink to="/profile/bookings" class="booking-link">查看我的预约</RouterLink>
     </div>
 
     <!-- Service Categories -->
@@ -18,8 +19,8 @@
       <div 
         v-for="cat in categories" 
         :key="cat.id" 
-        :class="['category-card', { active: selectedCategory === cat.name }]"
-        @click="selectCategory(cat.name)"
+        :class="['category-card', { active: selectedCategory === cat.apiName }]"
+        @click="selectCategory(cat.apiName)"
       >
         <div class="category-icon" :style="{ background: cat.bgColor }">
           <span v-html="cat.icon"></span>
@@ -60,7 +61,7 @@
             @click="goDetail(m.id)"
           >
             <div class="merchant-image">
-              <img :src="m.cover_url || '/static/images/merchant-grooming.svg'" :alt="m.name" />
+              <img :src="getMerchantCover(m)" :alt="m.name" />
               <div class="merchant-rating">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -92,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import DataState from "@/components/DataState.vue";
 import { fetchMerchants } from "@/api/modules/services";
@@ -100,26 +101,40 @@ import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 
+const merchantCoverById: Record<string, string> = {
+  1: "/static/images/merchant-grooming.png",
+  2: "/static/images/merchant-clinic.png",
+  3: "/static/images/merchant-training.png",
+  4: "/static/images/merchant-boarding.png",
+  5: "/static/images/merchant-home-care.png"
+};
+
 const loading = ref(false);
 const error = ref("");
 const searchQuery = ref("");
 const sortBy = ref("default");
 const selectedCategory = ref("");
-const categories = ref<Array<{ id: number; name: string; desc: string; icon: string; bgColor: string }>>([
-  { id: 1, name: "宠物医院", desc: "医疗体检/急诊", icon: "🏥", bgColor: "rgba(231, 76, 60, 0.1)" },
-  { id: 2, name: "洗护美容", desc: "洗澡/剪毛/SPA", icon: "✂️", bgColor: "rgba(52, 152, 219, 0.1)" },
-  { id: 3, name: "宠物寄养", desc: "家庭寄养/酒店", icon: "🏠", bgColor: "rgba(243, 156, 18, 0.1)" },
-  { id: 4, name: "宠物训练", desc: "行为纠正/技能", icon: "🎯", bgColor: "rgba(46, 204, 113, 0.1)" }
+const categoryIcons = {
+  clinic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg>',
+  grooming: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>',
+  boarding: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>',
+  training: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>'
+};
+const categories = ref<Array<{ id: number; name: string; apiName: string; desc: string; icon: string; bgColor: string }>>([
+  { id: 1, name: "宠物医院", apiName: "体检", desc: "医疗体检/急诊", icon: categoryIcons.clinic, bgColor: "rgba(231, 76, 60, 0.1)" },
+  { id: 2, name: "洗护美容", apiName: "洗护", desc: "洗澡/剪毛/SPA", icon: categoryIcons.grooming, bgColor: "rgba(52, 152, 219, 0.1)" },
+  { id: 3, name: "宠物寄养", apiName: "寄养", desc: "家庭寄养/酒店", icon: categoryIcons.boarding, bgColor: "rgba(243, 156, 18, 0.1)" },
+  { id: 4, name: "宠物训练", apiName: "训练", desc: "行为纠正/技能", icon: categoryIcons.training, bgColor: "rgba(46, 204, 113, 0.1)" }
 ]);
 
 const merchants = ref<
   Array<{
-    id: number;
+    id: string | number;
     name: string;
     district: string;
     address?: string;
     description?: string;
-    cover_url: string;
+    cover_url?: string;
     score?: number;
     rating: number;
     business_hours?: string;
@@ -129,11 +144,12 @@ const merchants = ref<
   }>
 >([]);
 
+const getMerchantCover = (merchant: { id: string | number; cover_url?: string }) => {
+  return merchant.cover_url || merchantCoverById[merchant.id] || "/static/images/merchant-grooming.png";
+};
+
 const filteredMerchants = computed(() => {
   let result = merchants.value;
-  if (selectedCategory.value) {
-    result = result.filter(m => m.category === selectedCategory.value);
-  }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.trim().toLowerCase();
     result = result.filter(m =>
@@ -149,7 +165,7 @@ const loadMerchants = async () => {
   loading.value = true;
   error.value = "";
   try {
-    const data = await fetchMerchants({ page: 1, page_size: 20 });
+    const data = await fetchMerchants({ category: selectedCategory.value || undefined, sort: sortBy.value === "rating" ? "score_desc" : undefined, page: 1, page_size: 20 });
     merchants.value = (data.list || []) as typeof merchants.value;
   } catch (e) {
     error.value = toErrorMessage(e);
@@ -163,12 +179,16 @@ const selectCategory = (name: string) => {
   selectedCategory.value = selectedCategory.value === name ? "" : name;
 };
 
-const goDetail = (id: number) => {
+const goDetail = (id: string | number) => {
   router.push(`/services/merchant/${id}`);
 };
 
 onMounted(async () => {
   await loadMerchants();
+});
+
+watch([selectedCategory, sortBy], () => {
+  void loadMerchants();
 });
 </script>
 
@@ -259,6 +279,19 @@ onMounted(async () => {
   }
 }
 
+.booking-link {
+  display: inline-flex;
+  margin-top: 18px;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--primary-strong);
+  }
+}
+
 // Categories
 .category-grid {
   display: grid;
@@ -305,6 +338,12 @@ onMounted(async () => {
   margin-bottom: 16px;
   font-size: 32px;
   transition: all 0.3s ease;
+
+  :deep(svg) {
+    width: 34px;
+    height: 34px;
+    color: var(--text-heading);
+  }
 }
 
 .category-card h3 {

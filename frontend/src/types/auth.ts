@@ -22,6 +22,7 @@ export interface ProfileOverview {
   user: UserProfile;
   pet_count: number;
   post_count: number;
+  like_count: number;
   favorite_count: number;
   order_count: number;
   booking_count: number;

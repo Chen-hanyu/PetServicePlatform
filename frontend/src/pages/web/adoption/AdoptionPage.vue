@@ -6,9 +6,12 @@
         <h1>用领养代替购买，给它一个温暖的家</h1>
         <p>每一个流浪的小生命都值得被温柔以待</p>
         <div class="hero-actions">
-          <button class="btn-hero-primary" @click="scrollToSection('adoption-process')">领养流程指南</button>
-          <button class="btn-hero-secondary" @click="scrollToSection('adoption-requirements')">查看领养要求</button>
+          <button class="btn-hero-primary" @click="openGuideModal('process')">领养流程指南</button>
+          <button class="btn-hero-secondary" @click="openGuideModal('requirements')">查看领养要求</button>
         </div>
+      </div>
+      <div class="hero-pet-image">
+        <img src="/static/images/adoption-cat-naigao.png" alt="待领养猫咪" />
       </div>
     </div>
 
@@ -207,7 +210,7 @@
           <!-- CTA -->
           <div class="detail-cta">
             <button class="btn-primary-full" @click="openApplicationForm">申请领养</button>
-            <button class="btn-secondary-full">在线咨询</button>
+            <button class="btn-secondary-full" @click="openAdoptionConsult">在线咨询</button>
             <p class="cta-tip">温馨提示：领养不收任何费用，请勿相信任何形式的线上转账要求</p>
           </div>
         </div>
@@ -215,6 +218,34 @@
     </div>
 
     <!-- 领养申请表弹窗 -->
+    <Teleport to="body">
+      <div v-if="guideModal" class="modal-overlay" @click.self="guideModal = null">
+        <div class="modal-content guide-modal">
+          <button class="close-btn" @click="guideModal = null">×</button>
+          <div class="detail-body">
+            <div class="detail-header">
+              <div class="detail-title">
+                <h2>{{ guideContent.title }}</h2>
+                <span class="status-badge">{{ guideContent.subtitle }}</span>
+              </div>
+            </div>
+            <div v-if="guideModal === 'process'" class="process-steps modal-steps">
+              <div v-for="(step, index) in guideContent.items" :key="step" class="process-step">
+                <div class="step-number">{{ index + 1 }}</div>
+                <p class="step-title">{{ step }}</p>
+                <p class="step-desc">{{ guideContent.desc[index] }}</p>
+              </div>
+            </div>
+            <div v-else class="requirements-grid">
+              <div v-for="item in guideContent.items" :key="item" class="requirement-item">
+                <p>{{ item }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <Teleport to="body">
       <div v-if="showApplicationForm" class="modal-overlay" @click.self="showApplicationForm = false">
         <div class="modal-content form-modal">
@@ -232,7 +263,7 @@
             <form @submit.prevent="doSubmitApplication" class="application-form">
               <div class="form-group">
                 <label>联系电话</label>
-                <input v-model="applicationForm.contact_phone" type="tel" placeholder="请输入手机号" class="form-input" required />
+                <input v-model="applicationForm.contact_phone" type="tel" placeholder="当前账号手机号" class="form-input" readonly required />
               </div>
               <div class="form-group">
                 <label>养宠经验</label>
@@ -262,8 +293,10 @@ import { onMounted, reactive, ref, computed } from "vue";
 import DataState from "@/components/DataState.vue";
 import { createAdoptionApplication, fetchAdoptionPets } from "@/api/modules/adoption";
 import { toErrorMessage } from "@/api/http";
+import { useAuthStore } from "@/store/auth";
 import type { AdoptionPetDetail, AdoptionPetSummary } from "@/types/adoption";
 
+const auth = useAuthStore();
 const loading = ref(false);
 const error = ref("");
 const pets = ref<(AdoptionPetSummary & { gender?: string, story?: string })[]>([]);
@@ -280,6 +313,7 @@ const applicationForm = reactive({
 });
 const submitting = ref(false);
 const submitError = ref("");
+const guideModal = ref<"process" | "requirements" | null>(null);
 
 const filter = reactive({ type: "", age: "", gender: "" });
 
@@ -318,21 +352,46 @@ const goToPage = (page: number | string) => {
 
 const petTypes = [
   { label: "全部", value: "" },
-  { label: "猫咪", value: "cat" },
-  { label: "狗狗", value: "dog" },
-  { label: "其他", value: "other" }
+  { label: "猫咪", value: "CAT" },
+  { label: "狗狗", value: "DOG" },
+  { label: "其他", value: "OTHER" }
 ];
 
-const scrollToSection = (id: string) => {
-  const el = document.getElementById(id);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+const guideContent = computed(() => {
+  if (guideModal.value === "requirements") {
+    return {
+      title: "查看领养要求",
+      subtitle: "提交申请前请确认",
+      items: [
+        "有稳定居所并完成必要防护，如封窗、防逃逸门禁等。",
+        "家人共同认可，能长期负责宠物饮食、医疗与陪伴。",
+        "接受平台后续回访，并愿意持续记录宠物健康情况。",
+        "不以转卖、繁殖、表演等商业用途领养宠物。"
+      ],
+      desc: []
+    };
   }
+  return {
+    title: "领养流程指南",
+    subtitle: "四步完成安心领养",
+    items: ["在线申请", "资料审核", "沟通见面", "签订协议"],
+    desc: ["填写基础信息与养宠经验", "后台核对居住与联系方式", "预约时间与宠物线下互动", "确认责任后接它回家"]
+  };
+});
+
+const openGuideModal = (type: "process" | "requirements") => {
+  guideModal.value = type;
+};
+
+const openAdoptionConsult = () => {
+  const petName = selectedPet.value?.name ? `领养咨询：${selectedPet.value.name}` : "领养在线咨询";
+  document.dispatchEvent(new CustomEvent("open-service-chat", { detail: { source: petName } }));
 };
 
 const filteredPets = computed(() => {
   return pets.value.filter(pet => {
     if (filter.type && pet.type !== filter.type) return false;
+    if (filter.gender && pet.gender !== filter.gender && pet.gender !== (filter.gender === "公" ? "MALE" : "FEMALE")) return false;
     return true;
   });
 });
@@ -366,7 +425,7 @@ const selectPet = (pet: any) => {
 const openApplicationForm = () => {
   if (!selectedPet.value) return;
   submitError.value = "";
-  applicationForm.contact_phone = "";
+  applicationForm.contact_phone = auth.user?.phone || "";
   applicationForm.experience_desc = "";
   applicationForm.living_condition_desc = "";
   showApplicationForm.value = true;
@@ -414,10 +473,12 @@ onMounted(loadPets);
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border-warm);
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
   
   .hero-overlay {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -436,6 +497,18 @@ onMounted(loadPets);
       color: var(--muted);
       margin: 0 0 24px;
     }
+  }
+}
+
+.hero-pet-image {
+  align-self: stretch;
+  min-width: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
   }
 }
 
@@ -476,6 +549,50 @@ onMounted(loadPets);
   &:hover {
     border-color: var(--primary);
     color: var(--primary);
+  }
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.guide-card {
+  background: var(--surface);
+  border: 1px solid var(--border-warm);
+  border-radius: 18px;
+  padding: 22px;
+  scroll-margin-top: 96px;
+  box-shadow: 0 6px 18px rgba(34, 60, 52, 0.06);
+
+  h2 {
+    margin: 0 0 14px;
+    font-size: 20px;
+    color: var(--text-heading);
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+}
+
+.guide-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+
+  span {
+    padding: 10px 8px;
+    border-radius: 12px;
+    background: var(--surface-muted);
+    color: var(--text-heading);
+    font-weight: 700;
+    text-align: center;
+    font-size: 13px;
   }
 }
 

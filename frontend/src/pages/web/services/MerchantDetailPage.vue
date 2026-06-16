@@ -54,7 +54,7 @@ import { fetchMerchantDetail } from "@/api/modules/services";
 import { toErrorMessage } from "@/api/http";
 
 type MerchantVm = {
-  id: number;
+  id: string | number;
   name: string;
   district: string;
   address: string;
@@ -73,6 +73,14 @@ const loading = ref(true);
 const error = ref("");
 const merchant = ref<MerchantVm | null>(null);
 
+const merchantCoverById: Record<string, string> = {
+  1: "/static/images/merchant-grooming.png",
+  2: "/static/images/merchant-clinic.png",
+  3: "/static/images/merchant-training.png",
+  4: "/static/images/merchant-boarding.png",
+  5: "/static/images/merchant-home-care.png"
+};
+
 const formatPrice = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
 function mergeMerchant(api: Record<string, unknown>): MerchantVm | null {
@@ -84,8 +92,9 @@ function mergeMerchant(api: Record<string, unknown>): MerchantVm | null {
     rating?: number;
     score?: number;
   };
+  const id = String(api?.id ?? "");
   return {
-    id: Number(api?.id),
+    id,
     name: String(api?.name ?? ""),
     district: String(api?.district ?? ""),
     address: String(api?.address ?? ""),
@@ -93,7 +102,7 @@ function mergeMerchant(api: Record<string, unknown>): MerchantVm | null {
     business_hours: String(api?.business_hours ?? ""),
     status: String(api?.status === "ACTIVE" ? "营业中" : (api?.status ?? "营业中")),
     rating: Number(a.score ?? a.rating ?? 0),
-    cover_url: String(a.cover_url ?? "/static/images/merchant-grooming.svg"),
+    cover_url: String(a.cover_url ?? merchantCoverById[id] ?? "/static/images/merchant-grooming.png"),
     description: String(a.description ?? ""),
     services: services.map((s: { id: number; name: string; price: number; duration?: string }) => ({
       id: s.id,
@@ -109,8 +118,8 @@ async function load() {
   error.value = "";
   merchant.value = null;
 
-  const id = Number(route.params.id);
-  if (!Number.isFinite(id) || id < 1) {
+  const id = String(route.params.id || "");
+  if (!id) {
     loading.value = false;
     router.replace("/services");
     return;

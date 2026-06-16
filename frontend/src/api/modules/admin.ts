@@ -1,6 +1,6 @@
 import { adminHttp, unwrap } from "@/api/http";
 import type { ApiResponse, PageResult } from "@/types/api";
-import type { DashboardOverview } from "@/types/admin";
+import type { AdminSupportMessage, DashboardOverview } from "@/types/admin";
 import type { PostSummary } from "@/types/community";
 import type { UserProfile } from "@/types/auth";
 
@@ -57,6 +57,16 @@ export const fetchAdminComments = async (params: Record<string, string | number 
 
 export const deleteAdminComment = async (commentId: number) => {
   const { data } = await adminHttp.delete<ApiResponse<null>>(`/comments/${commentId}`);
+  return unwrap(data);
+};
+
+export const fetchAdminSupportMessages = async (params: Record<string, string | number | undefined>) => {
+  const { data } = await adminHttp.get<ApiResponse<PageResult<AdminSupportMessage>>>("/support/messages", { params });
+  return unwrap(data);
+};
+
+export const handleAdminSupportMessage = async (messageId: string | number, payload?: { reply_content?: string }) => {
+  const { data } = await adminHttp.put<ApiResponse<AdminSupportMessage>>(`/support/messages/${messageId}/handle`, payload || {});
   return unwrap(data);
 };
 
@@ -123,6 +133,8 @@ export const deleteAdminRecommendation = async (recommendationId: number) => {
 };
 
 // -----------------------------
+type EntityId = string | number;
+
 // Adoption（领养宠物/申请审核）
 // -----------------------------
 
@@ -136,13 +148,13 @@ export const createAdminAdoptionPet = async (payload: Record<string, unknown>) =
   return unwrap(data);
 };
 
-export const updateAdminAdoptionPet = async (petId: number, payload: Record<string, unknown>) => {
+export const updateAdminAdoptionPet = async (petId: EntityId, payload: Record<string, unknown>) => {
   const { data } = await adminHttp.put<ApiResponse<any>>(`/adoption/pets/${petId}`, payload);
   return unwrap(data);
 };
 
 // docs 中未明确声明 delete，这里按常规 REST pattern 预留
-export const deleteAdminAdoptionPet = async (petId: number) => {
+export const deleteAdminAdoptionPet = async (petId: EntityId) => {
   const { data } = await adminHttp.delete<ApiResponse<null>>(`/adoption/pets/${petId}`);
   return unwrap(data);
 };
@@ -152,7 +164,7 @@ export const fetchAdminAdoptionApplications = async (params: Record<string, stri
   return unwrap(data);
 };
 
-export const reviewAdminAdoptionApplication = async (applicationId: number, status: string, remark = "") => {
+export const reviewAdminAdoptionApplication = async (applicationId: EntityId, status: string, remark = "") => {
   const { data } = await adminHttp.put<ApiResponse<any>>(`/adoption/applications/${applicationId}/review`, {
     status,
     review_remark: remark
@@ -295,5 +307,24 @@ export const fetchAdminOrders = async (params: Record<string, string | number | 
 
 export const updateAdminOrder = async (orderId: number, payload: Record<string, unknown>) => {
   const { data } = await adminHttp.put<ApiResponse<any>>(`/shop/orders/${orderId}`, payload);
+  return unwrap(data);
+};
+
+// -----------------------------
+// Monitoring
+// -----------------------------
+
+export const fetchAdminMonitoringMetrics = async () => {
+  const { data } = await adminHttp.get<ApiResponse<Record<string, any>>>("/monitoring/metrics");
+  return unwrap(data);
+};
+
+export const fetchAdminMonitoringPathStats = async () => {
+  const { data } = await adminHttp.get<ApiResponse<Record<string, any>>>("/monitoring/metrics/paths");
+  return unwrap(data);
+};
+
+export const resetAdminMonitoringMetrics = async () => {
+  const { data } = await adminHttp.post<ApiResponse<null>>("/monitoring/metrics/reset");
   return unwrap(data);
 };

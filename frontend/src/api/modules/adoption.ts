@@ -2,12 +2,14 @@
 import type { ApiResponse, PageResult } from "@/types/api";
 import type { AdoptionApplicationPayload, AdoptionPetDetail, AdoptionPetSummary, AdoptionProcess } from "@/types/adoption";
 
+type EntityId = string | number;
+
 export const fetchAdoptionPets = async (params: Record<string, string | number | undefined>) => {
   const { data } = await webHttp.get<ApiResponse<PageResult<AdoptionPetSummary>>>("/adoption/pets", { params });
   return unwrap(data);
 };
 
-export const fetchAdoptionPetDetail = async (petId: number) => {
+export const fetchAdoptionPetDetail = async (petId: EntityId) => {
   const { data } = await webHttp.get<ApiResponse<AdoptionPetDetail>>(`/adoption/pets/${petId}`);
   return unwrap(data);
 };
@@ -29,7 +31,7 @@ export const fetchMyApplications = async (params: Record<string, string | number
 };
 
 /** 撤销领养申请 */
-export const cancelApplication = async (applicationId: number) => {
+export const cancelApplication = async (applicationId: EntityId) => {
   const { data } = await webHttp.post<ApiResponse<void>>(`/adoption/applications/${applicationId}/cancel`);
   return unwrap(data);
 };

@@ -1,12 +1,14 @@
-﻿export interface ServiceCategory {
-  id: number;
+export type EntityId = string | number;
+
+export interface ServiceCategory {
+  id: EntityId;
   name: string;
   sort: number;
   status: string;
 }
 
 export interface MerchantSummary {
-  id: number;
+  id: EntityId;
   name: string;
   district?: string;
   address?: string;
@@ -16,7 +18,7 @@ export interface MerchantSummary {
 }
 
 export interface MerchantServiceItem {
-  id: number;
+  id: EntityId;
   name: string;
   price: number;
 }
@@ -28,7 +30,7 @@ export interface MerchantDetail extends MerchantSummary {
 }
 
 export interface ServiceBookingSummary {
-  id: number;
+  id: EntityId;
   merchant: MerchantSummary;
   service_name: string;
   booking_time: string;
@@ -36,8 +38,8 @@ export interface ServiceBookingSummary {
 }
 
 export interface CreateBookingPayload {
-  merchant_id: number;
-  merchant_service_id: number;
+  merchant_id: EntityId;
+  merchant_service_id: EntityId;
   booking_time: string;
   contact_name: string;
   contact_phone: string;

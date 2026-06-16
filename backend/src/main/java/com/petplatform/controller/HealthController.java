@@ -29,7 +29,7 @@ public class HealthController {
     }
 
     @Operation(summary = "健康检查端点")
-    @GetMapping("/health")
+    @GetMapping({"/health", "/api/v1/health"})
     public ApiResponse<Map<String, Object>> health() {
         String dbStatus = checkDatabase();
         String uptime = getUptime();

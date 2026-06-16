@@ -87,6 +87,7 @@
             <span aria-hidden="true">📅</span>
             确认预约 ¥{{ formatPrice(booking.totalAmount) }}
           </button>
+          <p v-if="errorMessage" class="checkout-error">{{ errorMessage }}</p>
           <p class="tip">演示收银台 · 不发起真实支付与短信</p>
         </section>
       </template>
@@ -98,13 +99,21 @@
 import { ref, watch } from "vue";
 import { useServiceBookingStore } from "@/store/serviceBooking";
 import { createBooking } from "@/api/modules/services";
+import { toErrorMessage } from "@/api/http";
+import { useAuthStore } from "@/store/auth";
 
 const booking = useServiceBookingStore();
+const auth = useAuthStore();
 
 const done = ref(false);
 const submitting = ref(false);
-const nameLocal = ref(booking.contactName);
-const phoneLocal = ref(booking.contactPhone);
+const nameLocal = ref(booking.contactName || auth.user?.nickname || "");
+const phoneLocal = ref(booking.contactPhone || auth.user?.phone || "");
+const errorMessage = ref("");
+
+if (!booking.contactName || !booking.contactPhone) {
+  booking.setContact(nameLocal.value, phoneLocal.value);
+}
 
 const formatPrice = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
@@ -114,6 +123,7 @@ watch(phoneLocal, (v) => booking.setContact(nameLocal.value, v));
 async function submit() {
   if (!booking.mainServices.length || !booking.merchantId) return;
   submitting.value = true;
+  errorMessage.value = "";
   const mainLine = `主服务：${booking.mainServices.map((m) => m.name).join("、")}`;
   const pkgLine = booking.appliedPackage ? `套餐：${booking.appliedPackage.name}` : "";
   const addonText = booking.addons.map((a) => `${a.name}(¥${a.price})`).join("、");
@@ -130,12 +140,12 @@ async function submit() {
       contact_phone: phoneLocal.value.trim(),
       remark: remark || undefined
     });
-  } catch {
-    /* 演示：接口不可用时仍完成流程 */
-  } finally {
-    submitting.value = false;
     booking.clear();
     done.value = true;
+  } catch (error) {
+    errorMessage.value = toErrorMessage(error);
+  } finally {
+    submitting.value = false;
   }
 }
 </script>
@@ -409,5 +419,13 @@ async function submit() {
   text-align: center;
   font-size: 13px;
   color: var(--muted);
+}
+
+.checkout-error {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e65f4f;
 }
 </style>

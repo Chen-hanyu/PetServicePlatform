@@ -36,6 +36,19 @@
         <p>我可以帮你解答宠物健康、习性、饮食等方面的问题</p>
 
         <div class="quick-questions">
+          <div v-if="pets.length > 0" class="pet-context">
+            <p class="quick-title">咨询对象</p>
+            <select v-model="selectedPetId" class="pet-select">
+              <option value="">不指定宠物</option>
+              <option v-for="pet in pets" :key="pet.id" :value="String(pet.id)">
+                {{ pet.name }} · {{ pet.breed || pet.type }}
+              </option>
+            </select>
+            <div v-if="selectedPet" class="selected-pet">
+              <img :src="selectedPet.avatar_url || '/static/images/avatar-user1.png'" alt="" />
+              <span>{{ selectedPet.name }}</span>
+            </div>
+          </div>
           <p class="quick-title">快捷问题</p>
           <button
             v-for="q in quickQuestions"
@@ -45,6 +58,19 @@
           >
             {{ q }}
           </button>
+          <p class="quick-title">实用工具</p>
+          <div class="tool-grid">
+            <button
+              v-for="tool in smartTools"
+              :key="tool.title"
+              class="tool-card"
+              @click="sendQuickQuestion(tool.prompt)"
+            >
+              <span>{{ tool.icon }}</span>
+              <strong>{{ tool.title }}</strong>
+              <small>{{ tool.desc }}</small>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -107,6 +133,8 @@ import { ref, nextTick, watch, computed } from "vue";
 import type { ChatMessage } from "@/api/modules/ai";
 import { sendChatMessage } from "@/api/modules/ai";
 import { toErrorMessage } from "@/api/http";
+import { fetchMyPets } from "@/api/modules/pet";
+import type { PetProfile } from "@/types/pet";
 
 const props = defineProps<{
   open?: boolean;
@@ -124,6 +152,8 @@ const isOpen = computed({
 const inputText = ref("");
 const messagesRef = ref<HTMLElement | null>(null);
 const isLoading = ref(false);
+const pets = ref<PetProfile[]>([]);
+const selectedPetId = ref("");
 
 const messages = ref<ChatMessage[]>([]);
 
@@ -133,6 +163,52 @@ const quickQuestions = [
   "猫咪多久洗一次澡比较好？",
   "如何给狗狗选择合适的狗粮？"
 ];
+
+const smartTools = [
+  { icon: "🩺", title: "症状预判", desc: "整理就医紧急程度", prompt: "请根据我选择的宠物，帮我做一次症状紧急程度预判，并告诉我需要补充哪些观察信息。" },
+  { icon: "📅", title: "7天护理计划", desc: "生成可执行安排", prompt: "请根据我选择的宠物，生成一份未来7天护理计划，包含饮食、清洁、运动和观察重点。" },
+  { icon: "🧾", title: "用品清单", desc: "按场景列出准备项", prompt: "请根据我选择的宠物，整理一份本周需要准备的宠物用品清单，并标注必买和可选。" }
+];
+
+const selectedPet = computed(() => pets.value.find((pet) => String(pet.id) === selectedPetId.value) || null);
+
+const loadPets = async () => {
+  try {
+    pets.value = await fetchMyPets();
+    if (!selectedPetId.value && pets.value.length > 0) {
+      selectedPetId.value = String(pets.value[0].id);
+    }
+  } catch {
+    pets.value = [];
+  }
+};
+
+const buildPetContext = () => {
+  const pet = selectedPet.value;
+  if (!pet) return "";
+  return [
+    `咨询对象：${pet.name}`,
+    `类型：${pet.type}`,
+    pet.breed ? `品种：${pet.breed}` : "",
+    pet.gender ? `性别：${pet.gender}` : "",
+    pet.birthday ? `生日：${pet.birthday}` : "",
+    pet.weight ? `体重：${pet.weight}kg` : "",
+    pet.description ? `备注：${pet.description}` : ""
+  ].filter(Boolean).join("；");
+};
+
+const buildMessagesForApi = () => {
+  const context = buildPetContext();
+  if (!context || messages.value.length === 0) return messages.value;
+  const cloned = messages.value.map((message) => ({ ...message }));
+  for (let index = cloned.length - 1; index >= 0; index--) {
+    if (cloned[index].role === "user") {
+      cloned[index].content = `${cloned[index].content}\n\n请结合以下宠物档案回答：${context}`;
+      break;
+    }
+  }
+  return cloned;
+};
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -159,7 +235,7 @@ const sendMessage = async () => {
   isLoading.value = true;
 
   try {
-    const response = await sendChatMessage(messages.value);
+    const response = await sendChatMessage(buildMessagesForApi());
     messages.value.push({ role: "assistant", content: response.reply });
     scrollToBottom();
   } catch (error) {
@@ -181,6 +257,7 @@ const sendQuickQuestion = async (question: string) => {
 watch(isOpen, (v) => {
   if (v) {
     messages.value = [];
+    void loadPets();
   }
 });
 
@@ -218,8 +295,8 @@ defineExpose({ toggle, open: isOpen });
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  background: var(--hero-gradient);
+  color: var(--hero-text);
 }
 
 .chat-title {
@@ -301,7 +378,7 @@ defineExpose({ toggle, open: isOpen });
   .welcome-avatar {
     width: 72px;
     height: 72px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--hero-gradient);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -341,6 +418,46 @@ defineExpose({ toggle, open: isOpen });
   font-weight: 600;
 }
 
+.pet-context {
+  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-warm);
+}
+
+.pet-select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-input);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+
+  &:focus {
+    border-color: var(--primary);
+  }
+}
+
+.selected-pet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-heading);
+
+  img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}
+
 .quick-btn {
   display: block;
   width: 100%;
@@ -362,6 +479,47 @@ defineExpose({ toggle, open: isOpen });
   }
 }
 
+.tool-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.tool-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-warm);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  span {
+    grid-row: span 2;
+    font-size: 20px;
+  }
+
+  strong {
+    color: var(--text-heading);
+    font-size: 13px;
+  }
+
+  small {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  &:hover {
+    border-color: var(--primary);
+    background: var(--chip-bg);
+  }
+}
+
 .message {
   display: flex;
   gap: 10px;
@@ -372,7 +530,7 @@ defineExpose({ toggle, open: isOpen });
     flex-direction: row-reverse;
 
     .message-content {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--primary);
       color: #fff;
       border-radius: 18px 18px 4px 18px;
     }
@@ -393,7 +551,7 @@ defineExpose({ toggle, open: isOpen });
 .message-avatar {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--hero-gradient);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -472,7 +630,7 @@ defineExpose({ toggle, open: isOpen });
   line-height: 1.4;
 
   &:focus {
-    border-color: #667eea;
+    border-color: var(--primary);
   }
 
   &::placeholder {
@@ -485,7 +643,7 @@ defineExpose({ toggle, open: isOpen });
   height: 44px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary);
   color: #fff;
   cursor: pointer;
   display: flex;
@@ -501,7 +659,7 @@ defineExpose({ toggle, open: isOpen });
 
   &:hover:not(:disabled) {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(255, 155, 122, 0.28);
   }
 
   &:disabled {

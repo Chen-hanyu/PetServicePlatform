@@ -73,6 +73,12 @@ public class AdminOpsController {
         return ApiResponse.success(adminOpsService.updateAdoptionPet(petId, request));
     }
 
+    @DeleteMapping("/adoption/pets/{petId}")
+    public ApiResponse<Void> deleteAdoptionPet(@PathVariable Long petId) {
+        adminOpsService.deleteAdoptionPet(petId);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/shop/categories")
     public ApiResponse<List<ProductCategoryResponse>> getProductCategories() {
         return ApiResponse.success(adminOpsService.getProductCategories());
@@ -107,6 +113,12 @@ public class AdminOpsController {
             @Valid @RequestBody UpdateProductStatusRequest request
     ) {
         return ApiResponse.success(adminOpsService.updateProductStatus(productId, request));
+    }
+
+    @DeleteMapping("/shop/products/{productId}")
+    public ApiResponse<Void> deleteProduct(@PathVariable Long productId) {
+        adminOpsService.deleteProduct(productId);
+        return ApiResponse.success();
     }
 
     @GetMapping("/services/categories")
@@ -152,6 +164,12 @@ public class AdminOpsController {
         return ApiResponse.success(adminOpsService.updateMerchant(merchantId, request));
     }
 
+    @DeleteMapping("/services/merchants/{merchantId}")
+    public ApiResponse<Void> deleteMerchant(@PathVariable Long merchantId) {
+        adminOpsService.deleteMerchant(merchantId);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/services/items")
     public ApiResponse<PageResponse<AdminMerchantServiceResponse>> getMerchantServices(
             @RequestParam(name = "merchant_id", required = false) Long merchantId,
@@ -179,6 +197,12 @@ public class AdminOpsController {
             @Valid @RequestBody SaveMerchantServiceRequest request
     ) {
         return ApiResponse.success(adminOpsService.updateMerchantService(serviceId, request));
+    }
+
+    @DeleteMapping("/services/items/{serviceId}")
+    public ApiResponse<Void> deleteMerchantService(@PathVariable Long serviceId) {
+        adminOpsService.deleteMerchantService(serviceId);
+        return ApiResponse.success();
     }
 
     @GetMapping("/banners")
@@ -229,15 +253,22 @@ public class AdminOpsController {
         return ApiResponse.success(adminOpsService.updateTag(tagId, request));
     }
 
+    @DeleteMapping("/tags/{tagId}")
+    public ApiResponse<Void> deleteTag(@PathVariable Long tagId) {
+        adminOpsService.deleteTag(tagId);
+        return ApiResponse.success();
+    }
+
     @GetMapping("/recommendations")
     public ApiResponse<PageResponse<AdminRecommendationResponse>> getRecommendations(
             @RequestParam(name = "slot_code", required = false) String slotCode,
             @RequestParam(name = "biz_type", required = false) String bizType,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(name = "page_size", defaultValue = "10") @Min(1) @Max(50) int pageSize
     ) {
-        return ApiResponse.success(adminOpsService.getRecommendationPage(slotCode, bizType, status, page, pageSize));
+        return ApiResponse.success(adminOpsService.getRecommendationPage(slotCode, bizType, status, keyword, page, pageSize));
     }
 
     @PostMapping("/recommendations")
@@ -253,5 +284,11 @@ public class AdminOpsController {
             @Valid @RequestBody SaveRecommendationRequest request
     ) {
         return ApiResponse.success(adminOpsService.updateRecommendation(recommendationId, request));
+    }
+
+    @DeleteMapping("/recommendations/{recommendationId}")
+    public ApiResponse<Void> deleteRecommendation(@PathVariable Long recommendationId) {
+        adminOpsService.deleteRecommendation(recommendationId);
+        return ApiResponse.success();
     }
 }

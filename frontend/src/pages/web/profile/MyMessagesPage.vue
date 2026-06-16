@@ -12,7 +12,14 @@
     </div>
 
     <div class="messages-container">
-      <div v-if="messages.length === 0" class="empty-state">
+      <div v-if="loading" class="empty-state">
+        <p class="empty-text">消息加载中...</p>
+      </div>
+      <div v-else-if="error" class="empty-state">
+        <p class="error-text">{{ error }}</p>
+        <button class="mark-all-btn" @click="loadMessages">重试</button>
+      </div>
+      <div v-else-if="messages.length === 0" class="empty-state">
         <div class="empty-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
@@ -77,13 +84,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import {
+  deleteMessage as deleteMessageApi,
+  fetchMessages,
+  markAllMessagesRead,
+  markMessageRead
+} from "@/api/modules/messages";
+import { toErrorMessage } from "@/api/http";
 
 const router = useRouter();
 
 const loading = ref(true);
+const error = ref("");
 
 interface Message {
-  id: number;
+  id: string | number;
   type: string;
   title: string;
   content: string;
@@ -94,58 +109,40 @@ interface Message {
 
 const messages = ref<Message[]>([]);
 
+const normalizeType = (type?: string) => String(type || "system").toLowerCase();
+
+const formatRelativeTime = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const diff = Date.now() - date.getTime();
+  if (diff < 60000) return "刚刚";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+  if (diff < 172800000) return "昨天";
+  return date.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" });
+};
+
 const loadMessages = async () => {
   loading.value = true;
-  // TODO: 当后端消息 API 就绪后，替换为真实 API 调用
-  // import { fetchNotifications } from "@/api/modules/xxx";
-  // const data = await fetchNotifications({ page: 1, page_size: 20 });
-  // messages.value = data.list ?? [];
-  
-  // 当前使用模拟数据
-  await new Promise(resolve => setTimeout(resolve, 300));
-  messages.value = [
-    {
-      id: 1,
-      type: "system",
-      title: "系统通知",
-      content: "您的账号已完成实名认证，感谢您对宠物之家的支持！",
-      time: "刚刚",
-      isRead: false
-    },
-    {
-      id: 2,
-      type: "order",
-      title: "订单发货提醒",
-      content: "您购买的【智能逗猫激光灯】已发货，快递单号：SF1234567890，预计3天内送达。",
-      time: "10分钟前",
-      isRead: false
-    },
-    {
-      id: 3,
-      type: "like",
-      title: "收到点赞",
-      content: "您的帖子《分享一下糯米刚回家的样子》收到了 15 个赞，继续加油哦~",
-      time: "2小时前",
-      isRead: false
-    },
-    {
-      id: 4,
-      type: "comment",
-      title: "新评论",
-      content: "用户「萌宠达人」评论了您的帖子：\"糯米好可爱呀！请问是什么品种的猫猫？\"",
-      time: "昨天",
-      isRead: true
-    },
-    {
-      id: 5,
-      type: "system",
-      title: "领养申请通过",
-      content: "恭喜！您申请领养的【小橘】已通过审核，请于本周六上午10点携带身份证到机构办理手续。",
-      time: "昨天",
-      isRead: true
-    }
-  ];
-  loading.value = false;
+  error.value = "";
+  try {
+    const data = await fetchMessages({ page: 1, page_size: 50 });
+    messages.value = (data.list ?? []).map((item: any) => ({
+      id: item.id,
+      type: normalizeType(item.type),
+      title: item.title,
+      content: item.content,
+      time: formatRelativeTime(item.created_at),
+      isRead: Boolean(item.is_read ?? item.isRead),
+      link: item.link
+    }));
+  } catch (e) {
+    error.value = toErrorMessage(e);
+    messages.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
 
 const hasUnread = computed(() => messages.value.some(msg => !msg.isRead));
@@ -176,24 +173,41 @@ const goBack = () => {
   router.back();
 };
 
-const markAllRead = () => {
-  messages.value.forEach(msg => {
-    msg.isRead = true;
-  });
+const markAllRead = async () => {
+  try {
+    await markAllMessagesRead();
+    messages.value.forEach(msg => {
+      msg.isRead = true;
+    });
+  } catch (e) {
+    error.value = toErrorMessage(e);
+  }
 };
 
-const viewMessage = (msg: Message) => {
-  msg.isRead = true;
+const viewMessage = async (msg: Message) => {
+  if (!msg.isRead) {
+    try {
+      await markMessageRead(msg.id);
+      msg.isRead = true;
+    } catch (e) {
+      error.value = toErrorMessage(e);
+    }
+  }
   if (msg.link) {
     router.push(msg.link);
   }
 };
 
-const deleteMessage = (msg: Message) => {
+const deleteMessage = async (msg: Message) => {
   if (confirm("确定要删除该消息吗？")) {
-    const index = messages.value.findIndex(m => m.id === msg.id);
-    if (index > -1) {
-      messages.value.splice(index, 1);
+    try {
+      await deleteMessageApi(msg.id);
+      const index = messages.value.findIndex(m => m.id === msg.id);
+      if (index > -1) {
+        messages.value.splice(index, 1);
+      }
+    } catch (e) {
+      error.value = toErrorMessage(e);
     }
   }
 };
@@ -297,6 +311,12 @@ onMounted(loadMessages);
     font-size: 16px;
     color: var(--muted);
     margin: 0;
+  }
+
+  .error-text {
+    font-size: 16px;
+    color: #E97A7A;
+    margin: 0 0 16px;
   }
 }
 

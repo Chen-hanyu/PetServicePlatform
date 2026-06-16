@@ -15,23 +15,26 @@
       </div>
       <div class="filter-bar">
         <input v-model="productKeyword" placeholder="商品名称" class="input input-sm" />
-        <select v-model="productCategory" class="input input-sm"><option value="">全部分类</option><option>食品</option><option>玩具</option><option>用品</option><option>药品</option></select>
+        <select v-model="productCategory" class="input input-sm">
+          <option value="">全部分类</option>
+          <option v-for="category in productCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
+        </select>
         <button class="btn btn-secondary" @click="loadProducts">查询</button>
       </div>
-      <DataState :loading="productLoading" :error="productError" :empty="products.length === 0">
+      <DataState :loading="productLoading" :error="productError" :empty="visibleProducts.length === 0">
         <table class="table">
           <thead><tr><th>ID</th><th>商品名称</th><th>分类</th><th>价格</th><th>库存</th><th>状态</th><th class="col-ops">操作</th></tr></thead>
           <tbody>
-            <tr v-for="p in products" :key="p.id">
+            <tr v-for="p in visibleProducts" :key="p.id">
               <td><span class="id-tag">#{{ p.id }}</span></td>
               <td><span class="product-name">{{ p.name }}</span></td>
-              <td><span class="tag tag-light">{{ p.category }}</span></td>
+              <td><span class="tag tag-light">{{ productCategoryName(p.category_id) }}</span></td>
               <td><span class="price-text">¥{{ p.price }}</span></td>
               <td><span class="stock-badge">{{ p.stock }}</span></td>
-              <td><StatusBadge :variant="p.status === 'ONLINE' ? 'success' : 'warning'">{{ p.status }}</StatusBadge></td>
+              <td><StatusBadge :variant="p.status === 'ON_SALE' ? 'success' : 'warning'">{{ productStatusLabel(p.status) }}</StatusBadge></td>
               <td class="col-ops ops-group">
                 <button class="btn btn-xs" @click="openProductModal(p)">编辑</button>
-                <button class="btn btn-xs" :class="p.status === 'ONLINE' ? 'btn-warning' : 'btn-success'" @click="toggleProductStatus(p)">{{ p.status === 'ONLINE' ? '下架' : '上架' }}</button>
+                <button class="btn btn-xs" :class="p.status === 'ON_SALE' ? 'btn-warning' : 'btn-success'" @click="toggleProductStatus(p)">{{ p.status === 'ON_SALE' ? '下架' : '上架' }}</button>
                 <button class="btn btn-xs btn-danger" @click="deleteProduct(p.id)">删除</button>
               </td>
             </tr>
@@ -55,8 +58,8 @@
           <tbody>
             <tr v-for="o in orders" :key="o.id">
               <td><span class="id-tag">#{{ o.id }}</span></td>
-              <td><span class="product-name">{{ o.product_name }}</span></td>
-              <td>{{ o.quantity }}</td>
+              <td><span class="product-name">{{ formatOrderProducts(o) }}</span></td>
+              <td>{{ formatOrderQuantity(o) }}</td>
               <td><span class="price-text">¥{{ o.total_amount }}</span></td>
               <td><StatusBadge :variant="orderStatusVariant(o.status)">{{ o.status }}</StatusBadge></td>
               <td class="col-ops ops-group">
@@ -81,11 +84,19 @@
           <form @submit.prevent="saveProduct">
             <div class="form-grid cols-2">
               <div class="form-group"><label>商品名称</label><input v-model="productForm.name" required class="input" /></div>
-              <div class="form-group"><label>分类</label><select v-model="productForm.category" class="input"><option>食品</option><option>玩具</option><option>用品</option><option>药品</option></select></div>
+              <div class="form-group">
+                <label>分类</label>
+                <select v-model.number="productForm.category_id" required class="input">
+                  <option :value="0" disabled>请选择分类</option>
+                  <option v-for="category in productCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
+                </select>
+              </div>
+              <div class="form-group"><label>副标题</label><input v-model="productForm.subtitle" class="input" /></div>
               <div class="form-group"><label>价格</label><input v-model.number="productForm.price" type="number" step="0.01" required class="input" /></div>
               <div class="form-group"><label>库存</label><input v-model.number="productForm.stock" type="number" required class="input" /></div>
-              <div class="form-group"><label>状态</label><select v-model="productForm.status" class="input"><option>ONLINE</option><option>OFFLINE</option></select></div>
-              <div class="form-group"><label>封面图URL</label><input v-model="productForm.cover_url" class="input" /></div>
+              <div class="form-group"><label>适用宠物</label><select v-model="productForm.pet_type" class="input"><option value="ALL">通用</option><option value="CAT">猫咪</option><option value="DOG">狗狗</option></select></div>
+              <div class="form-group"><label>状态</label><select v-model="productForm.status" class="input"><option value="ON_SALE">上架</option><option value="OFF_SHELF">下架</option></select></div>
+              <div class="form-group full-width"><label>封面图URL</label><input v-model="productForm.image_url" required class="input" /></div>
               <div class="form-group full-width"><label>描述</label><textarea v-model="productForm.description" class="input" rows="3"></textarea></div>
             </div>
             <div class="modal-actions">
@@ -100,12 +111,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { computed, ref, reactive } from 'vue';
 import DataState from '@/components/DataState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import {
   fetchAdminProducts, createAdminProduct, updateAdminProduct, deleteAdminProduct,
   fetchAdminOrders, updateAdminOrder,
+  fetchAdminShopCategories,
 } from '@/api/modules/admin';
 import { toErrorMessage } from '@/api/http';
 
@@ -117,36 +129,127 @@ const activeTab = ref('products');
 
 // 商品列表
 const products = ref<any[]>([]);
+const productCategories = ref<any[]>([]);
 const productLoading = ref(false);
 const productError = ref('');
 const productKeyword = ref('');
 const productCategory = ref('');
+const visibleProducts = computed(() => {
+  if (!productCategory.value) return products.value;
+  return products.value.filter((product) => Number(product.category_id || product.categoryId) === Number(productCategory.value));
+});
+const loadProductCategories = async () => {
+  try {
+    productCategories.value = await fetchAdminShopCategories();
+  } catch (e) {
+    productError.value = toErrorMessage(e);
+  }
+};
 const loadProducts = async () => {
   productLoading.value = true;
   try {
-    const res = await fetchAdminProducts({ keyword: productKeyword.value || undefined, category: productCategory.value || undefined, page: 1, page_size: 50 });
+    const res = await fetchAdminProducts({ keyword: productKeyword.value || undefined, page: 1, page_size: 50 });
     products.value = res.list || [];
   } catch (e) { productError.value = toErrorMessage(e); } finally { productLoading.value = false; }
 };
 const productModalVisible = ref(false);
 const editingProduct = ref<any>(null);
-const productForm = reactive({ name: '', category: '食品', price: 0, stock: 0, cover_url: '', description: '', status: 'ONLINE' });
+const productForm = reactive({
+  name: '',
+  category_id: 0,
+  subtitle: '',
+  image_url: '',
+  price: 0,
+  stock: 0,
+  pet_type: 'ALL',
+  description: '',
+  status: 'ON_SALE'
+});
+const productCategoryName = (categoryId?: number) => productCategories.value.find((item) => Number(item.id) === Number(categoryId))?.name || '-';
+const productStatusLabel = (status: string) => status === 'ON_SALE' ? '上架' : '下架';
+const defaultProductCategoryId = () => Number(productCategories.value.find((item) => item.status !== 'DISABLED')?.id || productCategories.value[0]?.id || 0);
+const normalizeImageUrl = (value: string) => {
+  const raw = value.trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    const imageUrl = url.searchParams.get('objurl') || url.searchParams.get('imgurl');
+    return imageUrl ? decodeURIComponent(imageUrl) : raw;
+  } catch {
+    return raw;
+  }
+};
 const openProductModal = (p?: any) => {
-  if (p) { editingProduct.value = p; Object.assign(productForm, p); }
-  else { editingProduct.value = null; Object.assign(productForm, { name: '', category: '食品', price: 0, stock: 0, cover_url: '', description: '', status: 'ONLINE' }); }
+  if (p) {
+    editingProduct.value = p;
+    Object.assign(productForm, {
+      name: p.name || '',
+      category_id: Number(p.category_id || p.categoryId || 0),
+      subtitle: p.subtitle || '',
+      image_url: p.image_url || p.imageUrl || '',
+      price: Number(p.price || 0),
+      stock: Number(p.stock || 0),
+      pet_type: p.pet_type || p.petType || 'ALL',
+      description: p.description || '',
+      status: p.status || 'ON_SALE'
+    });
+  }
+  else {
+    editingProduct.value = null;
+    Object.assign(productForm, {
+      name: '',
+      category_id: defaultProductCategoryId(),
+      subtitle: '',
+      image_url: '',
+      price: 0,
+      stock: 0,
+      pet_type: 'ALL',
+      description: '',
+      status: 'ON_SALE'
+    });
+  }
   productModalVisible.value = true;
 };
 const closeProductModal = () => { productModalVisible.value = false; };
+const buildProductPayload = () => {
+  const imageUrl = normalizeImageUrl(productForm.image_url);
+  if (!productForm.category_id) throw new Error('请先选择商品分类');
+  if (!imageUrl) throw new Error('请填写商品封面图 URL');
+  if (imageUrl.length > 1000) throw new Error('图片 URL 过长，请使用直接图片地址或上传后的图片地址');
+  return {
+    name: productForm.name.trim(),
+    category_id: Number(productForm.category_id),
+    subtitle: productForm.subtitle.trim(),
+    image_url: imageUrl,
+    price: Number(productForm.price),
+    stock: Number(productForm.stock),
+    pet_type: productForm.pet_type,
+    description: productForm.description.trim(),
+    status: productForm.status
+  };
+};
 const saveProduct = async () => {
   try {
-    if (editingProduct.value) await updateAdminProduct(editingProduct.value.id, productForm);
-    else await createAdminProduct(productForm);
+    const payload = buildProductPayload();
+    if (editingProduct.value) await updateAdminProduct(editingProduct.value.id, payload);
+    else await createAdminProduct(payload);
     await loadProducts(); closeProductModal();
   } catch (e) { productError.value = toErrorMessage(e); }
 };
 const toggleProductStatus = async (p: any) => {
-  const ns = p.status === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
-  try { await updateAdminProduct(p.id, { ...p, status: ns }); await loadProducts(); } catch (e) { productError.value = toErrorMessage(e); }
+  const ns = p.status === 'ON_SALE' ? 'OFF_SHELF' : 'ON_SALE';
+  const payload = {
+    name: p.name,
+    category_id: Number(p.category_id || p.categoryId),
+    subtitle: p.subtitle || '',
+    image_url: p.image_url || p.imageUrl || '',
+    price: Number(p.price),
+    stock: Number(p.stock || 0),
+    pet_type: p.pet_type || p.petType || 'ALL',
+    description: p.description || '',
+    status: ns
+  };
+  try { await updateAdminProduct(p.id, payload); await loadProducts(); } catch (e) { productError.value = toErrorMessage(e); }
 };
 const deleteProduct = async (id: number) => {
   if (confirm('确定删除该商品吗？')) { try { await deleteAdminProduct(id); await loadProducts(); } catch (e) { productError.value = toErrorMessage(e); } }
@@ -161,11 +264,24 @@ const loadOrders = async () => {
   orderLoading.value = true;
   try { const res = await fetchAdminOrders({ status: orderStatus.value || undefined, page: 1, page_size: 50 }); orders.value = res.list || []; } catch (e) { orderError.value = toErrorMessage(e); } finally { orderLoading.value = false; }
 };
-const orderStatusVariant = (s: string) => ({ PENDING: 'warning', PAID: 'info', SHIPPED: 'primary', DELIVERED: 'success', CANCELLED: 'danger' }[s] || 'neutral');
+const formatOrderProducts = (order: any) => {
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    return order.items.map((item: any) => item.product_name || item.productName || item.name).filter(Boolean).join('、') || '-';
+  }
+  return order.product_name || order.productName || '-';
+};
+const formatOrderQuantity = (order: any) => {
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    return order.items.reduce((sum: number, item: any) => sum + Number(item.quantity || 0), 0);
+  }
+  return order.quantity ?? '-';
+};
+const orderStatusVariant = (s: string) => ({ PENDING: 'warning', PAID: 'info', SHIPPED: 'info', DELIVERED: 'success', COMPLETED: 'success', CANCELLED: 'danger' }[s] || 'neutral');
 const updateOrderStatus = async (id: number, status: string) => {
   try { await updateAdminOrder(id, { status }); await loadOrders(); } catch (e) { orderError.value = toErrorMessage(e); }
 };
 
+loadProductCategories();
 loadProducts();
 loadOrders();
 </script>
