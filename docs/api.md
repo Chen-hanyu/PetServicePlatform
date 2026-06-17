@@ -273,10 +273,15 @@ Authorization: Bearer <token>
 | `GET` | `/api/v1/shop/categories` | 否 | 获取商品分类 |
 | `GET` | `/api/v1/shop/products` | 否 | 获取商品列表 |
 | `GET` | `/api/v1/shop/products/{productId}` | 否 | 获取商品详情 |
+| `GET` | `/api/v1/shop/addresses` | 是 | 获取当前用户收货地址列表 |
+| `POST` | `/api/v1/shop/addresses` | 是 | 新增当前用户收货地址 |
+| `PUT` | `/api/v1/shop/addresses/{addressId}` | 是 | 更新当前用户收货地址 |
+| `GET` | `/api/v1/shop/coupons/available` | 是 | 获取当前用户可用于订单金额的优惠券 |
 | `GET` | `/api/v1/shop/cart` | 是 | 获取购物车 |
 | `POST` | `/api/v1/shop/cart/items` | 是 | 添加购物车商品 |
 | `PUT` | `/api/v1/shop/cart/items/{itemId}` | 是 | 更新购物车商品 |
 | `POST` | `/api/v1/shop/orders` | 是 | 创建订单 |
+| `POST` | `/api/v1/shop/orders/direct` | 是 | 按商品明细直接创建订单，支持立即购买和前端本地购物车 |
 | `GET` | `/api/v1/shop/orders` | 是 | 获取我的订单列表 |
 | `GET` | `/api/v1/shop/orders/{orderId}` | 是 | 获取订单详情 |
 | `POST` | `/api/v1/shop/orders/{orderId}/pay` | 是 | 演示支付订单，状态由 `PENDING` 变为 `PAID` |
@@ -293,6 +298,24 @@ Authorization: Bearer <token>
 | `pet_type` | string | 否 | 适用品类 |
 | `page` | int | 否 | 页码 |
 | `page_size` | int | 否 | 每页数量 |
+
+收货地址请求体：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `receiver_name` | string | 是 | 收货人 |
+| `receiver_phone` | string | 是 | 收货电话 |
+| `province` | string | 是 | 省份 |
+| `city` | string | 是 | 城市 |
+| `district` | string | 是 | 区县 |
+| `detail_address` | string | 是 | 详细地址 |
+| `is_default` | boolean | 否 | 是否设为默认地址 |
+
+可用优惠券查询参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `amount` | decimal | 否 | 当前订单商品总额，用于判断满减门槛 |
 
 添加购物车请求体：
 
@@ -316,6 +339,22 @@ Authorization: Bearer <token>
 | `receiver_name` | string | 是 | 收货人 |
 | `receiver_phone` | string | 是 | 收货电话 |
 | `receiver_address` | string | 是 | 收货地址 |
+| `address_id` | long | 否 | 收货地址 ID，传入后后端以地址表为准 |
+| `coupon_id` | long | 否 | 用户优惠券 ID，即优惠券列表中的 `user_coupon_id` |
+| `remark` | string | 否 | 备注 |
+
+直购下单请求体：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `items` | array<object> | 是 | 商品明细列表 |
+| `items[].product_id` | long | 是 | 商品 ID |
+| `items[].quantity` | int | 是 | 购买数量 |
+| `address_id` | long | 否 | 收货地址 ID，传入后后端以地址表为准 |
+| `coupon_id` | long | 否 | 用户优惠券 ID，即优惠券列表中的 `user_coupon_id` |
+| `receiver_name` | string | 是 | 收货人 |
+| `receiver_phone` | string | 是 | 收货电话 |
+| `receiver_address` | string | 是 | 收货地址 |
 | `remark` | string | 否 | 备注 |
 
 订单列表查询参数：
@@ -331,6 +370,7 @@ Authorization: Bearer <token>
 | 方法 | 路径 | 认证 | 说明 |
 |---|---|---|---|
 | `GET` | `/api/v1/messages` | 是 | 获取消息列表 |
+| `POST` | `/api/v1/messages/support` | 是 | 提交在线客服或领养咨询 |
 | `POST` | `/api/v1/messages/{messageId}/read` | 是 | 标记消息已读 |
 | `POST` | `/api/v1/messages/read-all` | 是 | 全部消息标记已读 |
 | `POST` | `/api/v1/messages/support` | 是 | 提交在线客服/领养咨询 |
@@ -623,7 +663,6 @@ Authorization: Bearer <token>
 |---|---|---|---|
 | `GET` | `/api/v1/admin/shop/orders` | 是 | 获取订单列表 |
 | `PUT` | `/api/v1/admin/shop/orders/{orderId}` | 是 | 更新订单状态 |
-| `GET` | `/api/v1/admin/support/messages` | 是 | 查看用户提交的客服咨询 |
 | `GET` | `/api/v1/admin/shop/categories` | 是 | 获取商品分类 |
 | `GET` | `/api/v1/admin/shop/products` | 是 | 获取商品列表 |
 | `POST` | `/api/v1/admin/shop/products` | 是 | 创建商品 |
@@ -743,57 +782,29 @@ Banner 请求体：
 | `page` | int | 否 | 页码 |
 | `page_size` | int | 否 | 每页数量 |
 
+### 4.8 客服消息管理
+
+| 方法 | 路径 | 认证 | 说明 |
+|---|---|---|---|
+| `GET` | `/api/v1/admin/support/messages` | 是 | 查看用户提交的客服咨询 |
+| `PUT` | `/api/v1/admin/support/messages/{messageId}/handle` | 是 | 回复并标记客服咨询已处理 |
+
+客服处理请求体：
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `reply_content` | string | 否 | 管理员回复内容，会同步生成用户消息通知，并在前台在线客服对话中展示 |
+
+### 4.9 运行监控
+
+| 方法 | 路径 | 认证 | 说明 |
+|---|---|---|---|
+| `GET` | `/api/v1/admin/monitoring/metrics` | 是 | 获取运行监控汇总指标 |
+| `GET` | `/api/v1/admin/monitoring/metrics/paths` | 是 | 获取各接口路径访问统计 |
+| `POST` | `/api/v1/admin/monitoring/metrics/reset` | 是 | 重置运行监控指标 |
+
 ## 5. Swagger 访问入口
 
 - Swagger UI：`http://127.0.0.1:8080/swagger-ui.html`
 - OpenAPI JSON：`http://127.0.0.1:8080/v3/api-docs`
 - OpenAPI YAML：`docs/api.yaml`
-
-## 商城结算补充接口
-
-| 方法 | 路径 | 认证 | 说明 |
-|---|---|---|---|
-| `GET` | `/api/v1/shop/addresses` | 是 | 获取当前用户收货地址列表 |
-| `POST` | `/api/v1/shop/addresses` | 是 | 新增当前用户收货地址 |
-| `PUT` | `/api/v1/shop/addresses/{addressId}` | 是 | 更新当前用户收货地址 |
-| `GET` | `/api/v1/shop/coupons/available` | 是 | 获取当前用户可用于订单金额的优惠券 |
-| `POST` | `/api/v1/shop/orders/direct` | 是 | 按商品明细直接创建订单，支持立即购买和前端本地购物车 |
-
-`POST /api/v1/shop/addresses`、`PUT /api/v1/shop/addresses/{addressId}` 请求体：
-
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `receiver_name` | string | 是 | 收货人 |
-| `receiver_phone` | string | 是 | 收货电话 |
-| `province` | string | 是 | 省份 |
-| `city` | string | 是 | 城市 |
-| `district` | string | 是 | 区县 |
-| `detail_address` | string | 是 | 详细地址 |
-| `is_default` | boolean | 否 | 是否设为默认地址 |
-
-`GET /api/v1/shop/coupons/available` 查询参数：
-
-| 参数 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `amount` | decimal | 否 | 当前订单商品总额，用于判断满减门槛 |
-
-`POST /api/v1/shop/orders` 请求体补充字段：
-
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `address_id` | long | 否 | 收货地址 ID，传入后后端以地址表为准 |
-| `coupon_id` | long | 否 | 用户优惠券 ID，即优惠券列表中的 `user_coupon_id` |
-
-`POST /api/v1/shop/orders/direct` 请求体：
-
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `items` | array<object> | 是 | 商品明细列表 |
-| `items[].product_id` | long | 是 | 商品 ID |
-| `items[].quantity` | int | 是 | 购买数量 |
-| `address_id` | long | 否 | 收货地址 ID，传入后后端以地址表为准 |
-| `coupon_id` | long | 否 | 用户优惠券 ID，即优惠券列表中的 `user_coupon_id` |
-| `receiver_name` | string | 是 | 收货人 |
-| `receiver_phone` | string | 是 | 收货电话 |
-| `receiver_address` | string | 是 | 收货地址 |
-| `remark` | string | 否 | 备注 |

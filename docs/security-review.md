@@ -1,6 +1,7 @@
 # 安全审查报告
 
 审查日期：2026-05-06
+最近更新：2026-06-16
 
 ## 前端审查（qutianshun）
 
@@ -55,11 +56,23 @@
 - **危害等级**：中
 - **修复**：将 `allow-default-code` 默认设为 `false`，移除 `default-code` 默认值
 
-#### 4. CORS 配置较宽松（记录，暂不修复）
+#### 4. CORS 配置较宽松（已收敛为环境变量）
 - **文件**：`SecurityConfig.java`
-- **问题**：允许了内网 IP 段通配
+- **问题**：早期仅覆盖本地开发地址，Vercel 前端上线后会被后端 CORS 拦截；同时生产环境不应把来源写死在代码里
 - **危害等级**：低
-- **说明**：当前为开发阶段配置，生产环境应限制为具体域名
+- **修复**：通过 `APP_CORS_ALLOWED_ORIGIN_PATTERNS` 配置允许来源，生产环境设置为 `https://pet-service-platform-7shx.vercel.app`
+
+#### 5. 文件上传过大导致 413（已修复）
+- **文件**：`application.yml`、`WebConfig.java`、前端上传交互
+- **问题**：帖子图片上传未限制前端文件大小，超过后端或代理限制时返回 413
+- **危害等级**：低
+- **修复**：限制前端图片体积并在后端配置 multipart 大小；部署代理需同步 `client_max_body_size` 等上传限制
+
+#### 6. SQL 初始化在生产重复执行（已记录部署要求）
+- **文件**：`schema.sql`、`seed.sql`、`.env.example`、`docs/deployment.md`
+- **问题**：生产库已初始化后继续执行种子数据可能因唯一键、迁移列或历史数据差异导致启动失败
+- **危害等级**：中
+- **修复**：本地首次初始化使用 `SPRING_SQL_INIT_MODE=always`；生产完成初始化后使用 `SPRING_SQL_INIT_MODE=never`
 
 ### 后端已确认的安全措施
 - 密码存储：使用 `BCryptPasswordEncoder` 哈希存储，不存明文
@@ -75,6 +88,8 @@
 - 修复 SQL 注入（`ServiceBookingService.java`、`CommunityService.java`）
 - 移除 JWT secret 默认值，强制环境变量注入
 - 禁用验证码默认值，`allow-default-code` 默认设为 `false`
+- 将生产 CORS 来源改为环境变量配置，避免部署域名变更时改代码
+- 补充上传大小限制与生产 SQL 初始化模式要求
 
 ---
 
@@ -91,6 +106,9 @@
 | API Key 硬编码 | 已做 | 已移除默认值，强制通过环境变量读取 |
 | .env 文件 | 已做 | 已加入 .gitignore，仓库中有 .env.example |
 | 依赖安全 | 已做 | CI 中配置 gitleaks 扫描密钥泄露 |
+| CORS 来源 | 已做 | 通过 `APP_CORS_ALLOWED_ORIGIN_PATTERNS` 配置具体前端域名 |
+| 上传限制 | 已做 | 前后端限制图片上传大小，避免超大请求拖垮服务 |
+| 生产数据初始化 | 已做 | 部署文档要求初始化后切换为 `SPRING_SQL_INIT_MODE=never` |
 
 ## CI 安全扫描配置
 - 已集成 Gitleaks（选项 A），扫描提交历史中的密钥泄露。

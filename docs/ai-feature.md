@@ -6,6 +6,8 @@
 
 该功能属于课程作业要求中的 **智能客服 / 基于上下文问答** 场景，当前采用轻量实现，不引入知识库、向量检索或复杂编排，优先满足 MVP 联调与演示需要。
 
+当前版本已从单一问答组件扩展为用户端侧边栏 AI 助手，和“在线客服”入口并列展示。前端会读取“我的宠物”档案，允许用户在对话前选择具体宠物，并将宠物名称、类型、品种、性别、生日、体重、备注等上下文追加到最近一条用户消息中，再统一发送给后端 `POST /api/v1/ai/chat`。
+
 ## 2. 使用模型
 
 - 默认模型：`deepseek-chat`
@@ -31,10 +33,12 @@ Content-Type: application/json
   - 封装 `POST /api/v1/ai/chat`
 - `frontend/src/components/ai/AIPetDoctorChat.vue`
   - 对话抽屉、快捷问题、消息流展示
+  - 支持选择“我的宠物”中的档案作为咨询上下文
+  - 提供症状预判、7 天护理计划、用品清单三个实用工具入口
 - `frontend/src/components/ai/AIPetDoctorDock.vue`
   - AI 功能入口
 - `frontend/src/layout/WebLayout.vue`
-  - 集成到用户端主布局
+  - 集成到用户端主布局与侧边停靠栏
 
 ### 3.2 后端
 
@@ -55,6 +59,8 @@ Content-Type: application/json
 ### 3.3 接口契约
 
 接口路径：`POST /api/v1/ai/chat`
+
+后端接口仍保持通用聊天契约，只接收 `messages`。宠物上下文由前端在发送前追加到用户消息内容中，避免为了前端交互频繁调整后端 DTO。
 
 请求示例：
 

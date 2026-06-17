@@ -1,497 +1,220 @@
 # 前后端联调文档
 
-本文档详细描述宠物综合服务平台前后端 API 接口的联调情况，包括已匹配接口、缺失接口、字段映射关系及联调注意事项。
-
----
-
 ## 1. 文档说明
 
-### 1.1 目的
+本文档合并原 `integration.md`、`integration-alignment-2026-04-15.md` 和 `integration-test-plan.md`，作为当前项目唯一的前后端联调说明。它用于记录联调原则、环境准备、主流程验收清单、问题记录规范和回归模板。
 
-本文档旨在帮助开发团队快速识别前后端 API 的差异，确保联调工作顺利进行。
+联调以代码和接口规范为准：
 
-### 1.2 分析范围
+- 后端接口契约：`docs/api.md`、`docs/api.yaml`
+- 前端 API 调用层：`frontend/src/api/http.ts`、`frontend/src/api/modules/*.ts`
+- 后端 Controller：`backend/src/main/java/com/petplatform/controller/`、`backend/src/main/java/com/petplatform/admin/controller/`
 
-- 前端：`frontend/src/api/modules/` 目录下的所有 API 模块
-- 后端：`backend/src/main/java/com/petplatform/controller/` 目录下的所有 Controller
+## 2. 基础约定
 
-### 1.3 联调状态说明
+| 项目 | 约定 |
+|---|---|
+| 用户端 API 前缀 | `/api/v1` |
+| 管理端 API 前缀 | `/api/v1/admin` |
+| 用户端 HTTP 客户端 | `webHttp` |
+| 管理端 HTTP 客户端 | `adminHttp` |
+| 认证头 | `Authorization: Bearer <token>` |
+| 统一响应 | `{ code, message, data }` |
+| 分页响应 | `{ list, total, page, page_size }` |
+| 用户端本地端口 | `8081`，Vite 代理到后端 |
+| 后端本地端口 | `8080` |
 
-| 状态 | 说明 |
-|------|------|
-| ✅ 已匹配 | 前后端接口已对齐，可直接联调 |
-| ⚠️ 需确认 | 存在差异，需要确认或调整 |
-| ❌ 缺失 | 后端未实现该接口 |
-| 🔧 需前端修改 | 前端代码需要调整 |
+前端页面不得直接拼接后端地址，应通过 `frontend/src/api/modules/*.ts` 的封装函数访问接口。
 
----
+## 3. 环境准备
 
-## 2. 基础配置对比
+### 3.1 数据库
 
-### 2.1 HTTP 客户端配置
-
-| 项目 | 前端 | 后端 | 状态 |
-|------|------|------|------|
-| Base URL（用户端） | `/api/v1` | `/api/v1` | ✅ 一致 |
-| Base URL（管理端） | `/api/v1/admin` | `/api/v1/admin` | ✅ 一致 |
-| Token 存储 | localStorage | - | ✅ 配合 |
-| Token 名称 | `pet_platform_token` | - | ✅ 配合 |
-| 认证头 | `Bearer {token}` | JWT 验证 | ✅ 一致 |
-| 响应格式 | `{code, message, data}` | `{code, message, data}` | ✅ 一致 |
-
-### 2.2 响应结构
-
-```typescript
-// 前端期望
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-}
-
-interface PageResult<T> {
-  list: T[];
-  total: number;
-  page: number;
-  page_size: number;
-}
-```
-
----
-
-## 3. 用户端接口联调状态
-
-### 3.1 用户认证 `/api/v1/auth`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `loginUser(phone, password)` | `/api/v1/auth/login` | POST | ✅ 已匹配 | - |
-| `registerUser(payload)` | `/api/v1/auth/register` | POST | ✅ 已匹配 | - |
-| `logoutUser()` | `/api/v1/auth/logout` | POST | ✅ 已匹配 | - |
-| - | `/api/v1/auth/verify-code` | POST | ⚠️ 可选 | 验证码接口（已实现，前端暂不使用） |
-
-**✅ 已修复**：后端 `RegisterRequest` 使用 `phone` 字段，与前端保持一致。前端已补充 `registerUser` 函数并对接真实 API，移除验证码流程（注册成功后自动登录）。
-
----
-
-### 3.2 首页 `/api/v1/home`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchHomeData()` | `/api/v1/home` | GET | ✅ 已匹配 | - |
-
----
-
-### 3.3 个人中心 `/api/v1/profile`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchCurrentUser()` | `/api/v1/profile/me` | GET | ✅ 已匹配 | - |
-| `fetchOverview()` | `/api/v1/profile/overview` | GET | ✅ 已匹配 | - |
-
-**✅ 已修复**：前端已补充 `fetchCurrentUser` 函数。
-
----
-
-### 3.4 社区 `/api/v1/community`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchPosts(params)` | `/api/v1/community/posts` | GET | ✅ 已匹配 | - |
-| `fetchPostDetail(postId)` | `/api/v1/community/posts/{postId}` | GET | ✅ 已匹配 | - |
-| `createPost(payload)` | `/api/v1/community/posts` | POST | ✅ 已匹配 | - |
-| `fetchPostComments(postId)` | `/api/v1/community/posts/{postId}/comments` | GET | ✅ 已匹配 | - |
-| `createComment(postId, content)` | `/api/v1/community/posts/{postId}/comments` | POST | ✅ 已匹配 | - |
-| `toggleLike(postId)` | `/api/v1/community/posts/{postId}/like` | POST | ✅ 已匹配 | - |
-| `toggleFavorite(postId)` | `/api/v1/community/posts/{postId}/favorite` | POST | ✅ 已匹配 | - |
-| `fetchMyFavorites(params)` | `/api/v1/community/favorites` | GET | ✅ 已匹配 | - |
-| `removeFavorite(postId)` | `/api/v1/community/favorites/{postId}` | DELETE | ✅ 已匹配 | - |
-
-**✅ 已修复**：后端已实现收藏列表接口 `GET /api/v1/community/favorites` 和 `DELETE /api/v1/community/favorites/{postId}`，前端已对接真实 API。
-
----
-
-### 3.5 商城 `/api/v1/shop`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchShopCategories()` | `/api/v1/shop/categories` | GET | ✅ 已匹配 | - |
-| `fetchProducts(params)` | `/api/v1/shop/products` | GET | ✅ 已匹配 | - |
-| `fetchProduct(id)` | `/api/v1/shop/products/{id}` | GET | ✅ 已匹配 | - |
-| `fetchCart()` | `/api/v1/shop/cart` | GET | ✅ 已匹配 | - |
-| `addCartItem(productId, quantity)` | `/api/v1/shop/cart/items` | POST | ✅ 已匹配 | - |
-| `updateCartItem(itemId, payload)` | `/api/v1/shop/cart/items/{itemId}` | PUT | ✅ 已匹配 | - |
-| `deleteCartItem(itemId)` | `/api/v1/shop/cart/items/{itemId}` | DELETE | ✅ 已匹配 | - |
-| `createOrder(payload)` | `/api/v1/shop/orders` | POST | ✅ 已匹配 | - |
-| `fetchOrders(params)` | `/api/v1/shop/orders` | GET | ✅ 已匹配 | - |
-| `fetchOrderDetail(orderId)` | `/api/v1/shop/orders/{orderId}` | GET | ✅ 已匹配 | - |
-
-**商城接口全部匹配** ✅
-
----
-
-### 3.6 服务预约 `/api/v1/services`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchServiceCategories()` | `/api/v1/services/categories` | GET | ✅ 已匹配 | - |
-| `fetchMerchants(params)` | `/api/v1/services/merchants` | GET | ✅ 已匹配 | - |
-| `fetchMerchantDetail(merchantId)` | `/api/v1/services/merchants/{merchantId}` | GET | ✅ 已匹配 | - |
-| `createBooking(payload)` | `/api/v1/services/bookings` | POST | ✅ 已匹配 | - |
-| `fetchMyBookings(params)` | `/api/v1/services/bookings` | GET | ✅ 已匹配 | - |
-| `cancelBooking(bookingId)` | `/api/v1/services/bookings/{bookingId}/cancel` | POST | ✅ 已匹配 | - |
-
-**服务接口全部匹配** ✅
-
----
-
-### 3.7 领养 `/api/v1/adoption`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdoptionPets(params)` | `/api/v1/adoption/pets` | GET | ✅ 已匹配 | - |
-| `fetchAdoptionPetDetail(petId)` | `/api/v1/adoption/pets/{petId}` | GET | ✅ 已匹配 | - |
-| `fetchAdoptionProcess()` | `/api/v1/adoption/process` | GET | ✅ 已匹配 | - |
-| `createAdoptionApplication(payload)` | `/api/v1/adoption/applications` | POST | ✅ 已匹配 | - |
-| `fetchMyAdoptionApplications(params)` | `/api/v1/adoption/applications` | GET | ✅ 已匹配 | - |
-
-**领养接口全部匹配** ✅
-
----
-
-### 3.8 宠物档案 `/api/v1/pets`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchMyPets()` | `/api/v1/pets` | GET | ✅ 已匹配 | - |
-| `createPet(payload)` | `/api/v1/pets` | POST | ✅ 已匹配 | - |
-| `fetchPetDetail(petId)` | `/api/v1/pets/{petId}` | GET | ✅ 已匹配 | - |
-| `updatePet(petId, payload)` | `/api/v1/pets/{petId}` | PUT | ✅ 已匹配 | - |
-| `deletePet(petId)` | `/api/v1/pets/{petId}` | DELETE | ✅ 已匹配 | - |
-| `fetchPetVaccines(petId)` | `/api/v1/pets/{petId}/vaccines` | GET | ✅ 已匹配 | - |
-| `createPetVaccine(petId, payload)` | `/api/v1/pets/{petId}/vaccines` | POST | ✅ 已匹配 | - |
-| `fetchPetWeights(petId)` | `/api/v1/pets/{petId}/weights` | GET | ✅ 已匹配 | - |
-| `createPetWeight(petId, payload)` | `/api/v1/pets/{petId}/weights` | POST | ✅ 已匹配 | - |
-| `fetchPetTimeline(petId)` | `/api/v1/pets/{petId}/timeline` | GET | ✅ 已匹配 | - |
-| `createPetAlbum(petId, payload)` | `/api/v1/pets/{petId}/albums` | POST | ✅ 已匹配 | - |
-
-**宠物档案接口全部匹配** ✅
-
----
-
-### 3.9 消息 `/api/v1/messages`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchMessages(params)` | `/api/v1/messages` | GET | ✅ 已匹配 | - |
-| `markAsRead(messageId)` | `/api/v1/messages/{messageId}/read` | POST | ✅ 已匹配 | - |
-
----
-
-### 3.10 文件上传 `/api/v1/files`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `uploadFile(file)` | `/api/v1/files/upload` | POST | ✅ 已匹配 | - |
-
----
-
-### 3.11 AI 宠医助手 `/api/v1/ai`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `sendChatMessage(messages)` | `/api/v1/ai/chat` | POST | ✅ 已实现 | 后端已实现 DeepSeek 接入 |
-
-**✅ 已修复**：后端已实现 `AiController`，接入 DeepSeek API，支持：
-- OpenAI 兼容接口
-- 系统提示词（宠物健康顾问角色）
-- 智能建议生成
-- 未配置 API Key 时返回友好提示
-
-配置方式：在 `.env` 或环境变量中设置 `DEEPSEEK_API_KEY` 或 `AI_API_KEY`。
-
----
-
-## 4. 管理端接口联调状态
-
-### 4.1 管理员认证 `/api/v1/admin/auth`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `loginAdmin(phone, password)` | `/api/v1/admin/auth/login` | POST | ✅ 已匹配 | - |
-| - | `/api/v1/admin/auth/verify-code` | POST | ⚠️ 可选 | 验证码接口 |
-| `logoutAdmin()` | `/api/v1/admin/auth/logout` | POST | ✅ 已匹配 | - |
-
----
-
-### 4.2 管理端仪表盘 `/api/v1/admin/dashboard`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminDashboard()` | `/api/v1/admin/dashboard` | GET | ✅ 已匹配 | - |
-
----
-
-### 4.3 用户管理 `/api/v1/admin/users`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminUsers(params)` | `/api/v1/admin/users` | GET | ✅ 已匹配 | - |
-| `fetchAdminUserDetail(userId)` | `/api/v1/admin/users/{userId}` | GET | ✅ 已匹配 | - |
-| `updateAdminUserStatus(userId, payload)` | `/api/v1/admin/users/{userId}/status` | PUT | ✅ 已匹配 | - |
-
-**✅ 已修复**：前端已补充 `fetchAdminUserDetail` 函数。
-
----
-
-### 4.4 帖子审核 `/api/v1/admin/posts`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminPosts(params)` | `/api/v1/admin/posts` | GET | ✅ 已匹配 | - |
-| `reviewAdminPost(postId, payload)` | `/api/v1/admin/posts/{postId}/review` | PUT | ✅ 已匹配 | - |
-
----
-
-### 4.5 评论管理 `/api/v1/admin/comments`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminComments(params)` | `/api/v1/admin/comments` | GET | ✅ 已匹配 | - |
-| `deleteAdminComment(commentId)` | `/api/v1/admin/comments/{commentId}` | DELETE | ✅ 已匹配 | - |
-
----
-
-### 4.6 订单管理 `/api/v1/admin/shop/orders`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminOrders(params)` | `/api/v1/admin/shop/orders` | GET | ✅ 已匹配 | - |
-| `updateAdminOrder(orderId, payload)` | `/api/v1/admin/shop/orders/{orderId}` | PUT | ✅ 已匹配 | - |
-
----
-
-### 4.7 预约管理 `/api/v1/admin/services/bookings`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminBookings(params)` | `/api/v1/admin/services/bookings` | GET | ✅ 已匹配 | - |
-| `updateAdminBooking(bookingId, payload)` | `/api/v1/admin/services/bookings/{bookingId}` | PUT | ✅ 已匹配 | - |
-
----
-
-### 4.8 评价管理 `/api/v1/admin/services/reviews`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminReviews(params)` | `/api/v1/admin/services/reviews` | GET | ✅ 已匹配 | - |
-| `deleteAdminReview(reviewId)` | `/api/v1/admin/services/reviews/{reviewId}` | DELETE | ✅ 已匹配 | - |
-
----
-
-### 4.9 领养管理 `/api/v1/admin/adoption`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminAdoptionApplications(params)` | `/api/v1/admin/adoption/applications` | GET | ✅ 已匹配 | - |
-| `reviewAdminAdoptionApplication(applicationId, payload)` | `/api/v1/admin/adoption/applications/{applicationId}/review` | PUT | ✅ 已匹配 | - |
-| `fetchAdminAdoptionPets(params)` | `/api/v1/admin/adoption/pets` | GET | ✅ 已匹配 | - |
-| `createAdminAdoptionPet(payload)` | `/api/v1/admin/adoption/pets` | POST | ✅ 已匹配 | - |
-| `updateAdminAdoptionPet(petId, payload)` | `/api/v1/admin/adoption/pets/{petId}` | PUT | ✅ 已匹配 | - |
-
----
-
-### 4.10 商品管理 `/api/v1/admin/shop`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminShopCategories()` | `/api/v1/admin/shop/categories` | GET | ✅ 已匹配 | - |
-| `fetchAdminProducts(params)` | `/api/v1/admin/shop/products` | GET | ✅ 已匹配 | - |
-| `createAdminProduct(payload)` | `/api/v1/admin/shop/products` | POST | ✅ 已匹配 | - |
-| `updateAdminProduct(productId, payload)` | `/api/v1/admin/shop/products/{productId}` | PUT | ✅ 已匹配 | - |
-| `updateAdminProductStatus(productId, payload)` | `/api/v1/admin/shop/products/{productId}/status` | PUT | ✅ 已匹配 | - |
-
----
-
-### 4.11 服务管理 `/api/v1/admin/services`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminServiceCategories()` | `/api/v1/admin/services/categories` | GET | ✅ 已匹配 | - |
-| `createAdminServiceCategory(payload)` | `/api/v1/admin/services/categories` | POST | ✅ 已匹配 | - |
-| `updateAdminServiceCategory(categoryId, payload)` | `/api/v1/admin/services/categories/{categoryId}` | PUT | ✅ 已匹配 | - |
-| `fetchAdminMerchants(params)` | `/api/v1/admin/services/merchants` | GET | ✅ 已匹配 | - |
-| `createAdminMerchant(payload)` | `/api/v1/admin/services/merchants` | POST | ✅ 已匹配 | - |
-| `updateAdminMerchant(merchantId, payload)` | `/api/v1/admin/services/merchants/{merchantId}` | PUT | ✅ 已匹配 | - |
-| `fetchAdminServiceItems(params)` | `/api/v1/admin/services/items` | GET | ✅ 已匹配 | - |
-| `createAdminServiceItem(payload)` | `/api/v1/admin/services/items` | POST | ✅ 已匹配 | - |
-| `updateAdminServiceItem(serviceId, payload)` | `/api/v1/admin/services/items/{serviceId}` | PUT | ✅ 已匹配 | - |
-
----
-
-### 4.12 内容管理 `/api/v1/admin`
-
-| 前端函数 | 后端接口 | 方法 | 状态 | 说明 |
-|----------|----------|------|------|------|
-| `fetchAdminBanners()` | `/api/v1/admin/banners` | GET | ✅ 已匹配 | - |
-| `createAdminBanner(payload)` | `/api/v1/admin/banners` | POST | ✅ 已匹配 | - |
-| `updateAdminBanner(bannerId, payload)` | `/api/v1/admin/banners/{bannerId}` | PUT | ✅ 已匹配 | - |
-| `deleteAdminBanner(bannerId)` | `/api/v1/admin/banners/{bannerId}` | DELETE | ✅ 已匹配 | - |
-| `fetchAdminTags(params)` | `/api/v1/admin/tags` | GET | ✅ 已匹配 | - |
-| `createAdminTag(payload)` | `/api/v1/admin/tags` | POST | ✅ 已匹配 | - |
-| `updateAdminTag(tagId, payload)` | `/api/v1/admin/tags/{tagId}` | PUT | ✅ 已匹配 | - |
-| `fetchAdminRecommendations(params)` | `/api/v1/admin/recommendations` | GET | ✅ 已匹配 | - |
-| `createAdminRecommendation(payload)` | `/api/v1/admin/recommendations` | POST | ✅ 已匹配 | - |
-| `updateAdminRecommendation(recommendationId, payload)` | `/api/v1/admin/recommendations/{recommendationId}` | PUT | ✅ 已匹配 | - |
-
----
-
-## 5. 问题汇总
-
-### 5.1 ✅ 已修复问题
-
-| 序号 | 问题 | 解决方案 | 状态 |
-|------|------|----------|------|
-| 1 | 注册接口字段不一致 | 后端使用 `phone`，前端对接真实 API | ✅ 已修复 |
-| 2 | 用户收藏列表接口缺失 | 后端实现 `GET /api/v1/community/favorites` | ✅ 已修复 |
-| 3 | AI 接口缺失 | 后端实现 `AiController` 接入 DeepSeek | ✅ 已修复 |
-| 4 | 前端未封装接口 | 补充 `fetchCurrentUser` 和 `fetchAdminUserDetail` | ✅ 已修复 |
-
----
-
-### 5.2 ✅ 当前所有接口已匹配
-
-经过本次联调对齐，前后端所有接口已完全匹配，可以开始联调测试。
-
----
-
-### 5.3 前端未封装但后端已实现的接口
-
-| 序号 | 接口 | 说明 | 状态 |
-|------|------|------|------|
-| - | - | 所有必要接口已封装 | ✅ 全部完成 |
-
----
-
-## 6. 联调建议
-
-### 6.1 联调顺序建议
-
-所有接口已匹配完成，可以直接进行联调测试。建议按以下顺序测试：
-
-1. **第一阶段：核心流程**
-   - 用户登录/注册 ✅
-   - 首页数据加载 ✅
-   - 帖子列表/详情 ✅
-
-2. **第二阶段：业务功能**
-   - 商城购物流程 ✅
-   - 服务预约流程 ✅
-   - 领养流程 ✅
-
-3. **第三阶段：用户中心**
-   - 订单管理 ✅
-   - 预约管理 ✅
-   - 宠物档案 ✅
-   - **我的收藏 ✅（新完成）**
-
-4. **第四阶段：管理后台**
-   - 用户管理 ✅
-   - 内容审核 ✅
-   - 商品/服务管理 ✅
-
-5. **第五阶段：高级功能**
-   - **AI 宠医助手 ✅（新完成）**
-   - 收藏功能 ✅
-
-### 6.2 联调检查清单
-
-- [ ] 前端开发服务器已启动 (`npm run dev`)
-- [ ] 后端服务已启动 (`mvn spring-boot:run`)
-- [ ] 数据库连接正常
-- [ ] 测试账号准备完毕
-- [ ] API 文档已同步
-- [ ] **AI 功能：配置 `DEEPSEEK_API_KEY` 环境变量（如需使用）**
-
-### 6.3 常见问题排查
-
-| 问题 | 可能原因 | 解决方案 |
-|------|----------|----------|
-| 401 未授权 | Token 未传递/已过期 | 检查 Authorization 头 |
-| 404 接口不存在 | 路径不匹配 | 核对 API 路径 |
-| 500 服务器错误 | 后端异常 | 检查后端日志 |
-| 数据为空 | 分页参数错误 | 检查 page/page_size |
-| AI 无响应 | 未配置 API Key | 配置 `DEEPSEEK_API_KEY` |
-
----
-
-## 7. 接口统计
-
-### 7.1 用户端接口
-
-| 状态 | 数量 |
-|------|------|
-| ✅ 已匹配 | 48 |
-| ⚠️ 可选（暂不使用） | 1（验证码） |
-| **合计** | **49** |
-
-### 7.2 管理端接口
-
-| 状态 | 数量 |
-|------|------|
-| ✅ 已匹配 | 37 |
-| **合计** | **37** |
-
-### 7.3 总计
-
-| 状态 | 数量 | 占比 |
-|------|------|------|
-| ✅ 已匹配 | 85 | 100% |
-| ⚠️ 可选 | 1 | - |
-
-**🎉 所有接口已完全匹配，前后端联调就绪！**
-
----
-
-## 8. 新增功能说明
-
-### 8.1 AI 宠医助手配置
-
-后端新增 AI 功能，支持 DeepSeek 或 OpenAI 兼容 API。
-
-**配置方式**：
-
-在项目根目录 `.env` 或环境变量中配置：
+本地联调推荐使用 Docker Compose：
 
 ```bash
-# DeepSeek API（推荐）
-DEEPSEEK_API_KEY=your_deepseek_api_key
-
-# 或使用通用配置
-AI_API_KEY=your_api_key
-AI_BASE_URL=https://api.deepseek.com
-AI_MODEL=deepseek-chat
+docker compose up -d mysql
 ```
 
-**接口信息**：
+如果需要手动初始化 MySQL：
 
-| 项目 | 说明 |
-|------|------|
-| 路径 | `POST /api/v1/ai/chat` |
-| 认证 | 无需认证（公开接口） |
-| 响应 | `{ reply: string, suggestions: string[] }` |
+```sql
+SOURCE backend/src/main/resources/sql/schema.sql;
+SOURCE backend/src/main/resources/sql/seed.sql;
+```
 
----
+注意：
 
-## 9. 后续更新
+- `seed.sql` 仅用于本地联调和演示数据，不应在生产库反复执行。
+- 生产环境首次初始化可使用 `SPRING_SQL_INIT_MODE=always`，初始化完成后应改为 `SPRING_SQL_INIT_MODE=never`。
+- 不要使用 PowerShell 管道导入中文 SQL，避免中文被错误转码；Docker 环境建议在 MySQL 容器内读取挂载脚本。
 
-本文档应随着项目开发持续更新，建议：
+### 3.2 启动服务
 
-1. 每次新增接口后更新本文档
-2. 发现问题时在本文档中记录
-3. 定期梳理已匹配和待处理接口
+后端：
 
----
+```bash
+cd backend
+.\mvnw.cmd spring-boot:run
+```
 
-*文档更新时间：2026-04-16*
-*本文档已完成前后端全部接口对齐*
+前端：
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 3.3 默认账号
+
+| 角色 | 手机号 | 密码 | 用途 |
+|---|---|---|---|
+| 管理员 | `13900000000` | `admin123` | 后台管理、审核、运营配置 |
+| 普通用户 | `13800000001` | `123456` | 用户端主流程测试 |
+| 普通用户 | `13800000002` | `123456` | 评论、互动、订单和预约辅助测试 |
+| 普通用户 | `13800000004` | `123456` | 扩展数据测试 |
+
+## 4. 联调前检查
+
+| 检查项 | 期望结果 |
+|---|---|
+| `http://localhost:8080/health` | 返回后端健康状态 |
+| `http://localhost:8080/swagger-ui.html` | 可打开 Swagger 页面 |
+| `http://localhost:8081` | 可打开前端首页 |
+| 浏览器 Network | 接口返回 `{ code, message, data }` |
+| 数据库 | `users`、`community_posts`、`products`、`service_bookings` 等表有演示数据 |
+| 后端日志 | 无启动失败、SQL 初始化失败、数据库连接失败 |
+
+## 5. 用户端联调清单
+
+### 5.1 认证与权限
+
+| 步骤 | 操作 | 期望结果 |
+|---|---|---|
+| 1 | 普通用户登录 | 登录成功，写入用户 token 和用户信息 |
+| 2 | 刷新后访问 `/profile` | 登录态保持，个人中心数据正常加载 |
+| 3 | 未登录访问受保护页面 | 跳转登录页或提示登录 |
+| 4 | 普通用户访问 `/admin/dashboard` | 前端路由阻止，后端接口返回 403 |
+| 5 | 管理员登录 `/admin/login` | 进入后台仪表盘 |
+
+### 5.2 首页与搜索
+
+| 步骤 | 操作 | 期望结果 |
+|---|---|---|
+| 1 | 打开 `/home` | Banner、推荐帖子、推荐服务、商品和宠物展示正常 |
+| 2 | 使用全站搜索 | 按关键词返回社区、领养、服务、商城数据 |
+| 3 | 点击推荐内容 | 能进入对应详情页 |
+
+### 5.3 社区
+
+| 步骤 | 操作 | 期望结果 |
+|---|---|---|
+| 1 | 打开 `/community` | 分类、话题、搜索、帖子列表可用 |
+| 2 | 发布帖子并上传合法图片 | 创建成功，新帖进入待审核或可查看状态 |
+| 3 | 点赞、收藏、评论帖子 | 数量和状态实时更新 |
+| 4 | 进入“我的动态/收藏” | 能看到当前用户真实数据 |
+| 5 | 管理端审核帖子 | 审核状态同步影响前台展示 |
+
+### 5.4 领养
+
+| 步骤 | 操作 | 期望结果 |
+|---|---|---|
+| 1 | 打开 `/adoption` | 类型筛选、图片、流程说明和领养要求可用 |
+| 2 | 提交领养申请 | 联系电话默认当前账号手机号，生成申请记录 |
+| 3 | 查看我的申请 | 能看到申请状态 |
+| 4 | 管理端审核申请 | 前台状态同步变化，并生成消息通知 |
+| 5 | 在线咨询 | 咨询进入后台客服消息，回复后前台可见 |
+
+### 5.5 服务预约
+
+| 步骤 | 操作 | 期望结果 |
+|---|---|---|
+| 1 | 打开 `/services` | 四类服务筛选商家与服务项目 |
+| 2 | 打开商家详情 | 商家图片、服务项目、评价与实际商家匹配 |
+| 3 | 提交预约 | 联系电话默认当前账号手机号，生成预约记录 |
+| 4 | 查看 `/profile/bookings` | 新预约可见，可取消符合条件的预约 |
+| 5 | 管理端处理预约 | 前台预约状态同步变化 |
+
+### 5.6 商城
+
+| 步骤 | 操作 | 期望结果 |
+|---|---|---|
+| 1 | 打开 `/shop` | 分类筛选与搜索可用 |
+| 2 | 商品详情查看评价 | 展示真实评价或空状态 |
+| 3 | 购物车加购/改数量 | 数量、选中状态、金额更新 |
+| 4 | 结算页编辑地址和选择优惠券 | 地址、优惠券来自后端接口 |
+| 5 | 提交并支付订单 | 支付成功后订单进入待发货/已支付状态 |
+| 6 | 管理端订单发货 | 前台订单状态同步为已发货 |
+
+### 5.7 个人中心、消息与 AI
+
+| 步骤 | 操作 | 期望结果 |
+|---|---|---|
+| 1 | 打开 `/profile` | 宠物、动态、获赞、消息、收藏、时间轴为真实数据 |
+| 2 | 点击宠物卡片 | 展示宠物详情 |
+| 3 | 切换成长时间轴宠物 | 时间轴按宠物区分展示 |
+| 4 | 打开 `/profile/messages` | 消息正常分页加载，时间显示正确 |
+| 5 | 使用侧边在线客服 | 提交咨询，后台可处理，回复回到前台会话和消息中心 |
+| 6 | 使用 AI 助手 | 可选择“我的宠物”作为上下文并获得 AI 回复 |
+
+## 6. 管理端联调清单
+
+| 模块 | 联调点 |
+|---|---|
+| 仪表盘 | 统计数据、待处理事项跳转、最近操作 |
+| 用户管理 | 搜索、状态筛选、禁用/启用 |
+| 内容管理 | 帖子审核、评论管理、Banner、标签、推荐位 |
+| 领养管理 | 新增/编辑/删除待领养宠物、审核申请 |
+| 服务管理 | 商家、服务分类、服务项目、预约处理、评价处理 |
+| 商城管理 | 商品新增/编辑/上下架、订单状态处理 |
+| 客服消息 | 查看在线客服和领养咨询、回复并标记已处理 |
+| 监控面板 | 汇总指标、路径统计、重置指标 |
+
+## 7. 异常与边界测试
+
+| 场景 | 操作 | 期望结果 |
+|---|---|---|
+| Token 失效 | 清空 token 后访问受保护页面 | 前端跳转登录，后端返回 401 |
+| 权限不足 | 普通用户请求后台接口 | 后端返回 403 |
+| 分页边界 | 请求空页、第二页、不同 page_size | 返回结构稳定 |
+| 重复领养申请 | 同一用户重复申请同一宠物 | 返回明确业务错误 |
+| 预约冲突 | 同一时间重复预约同一服务 | 返回明确业务错误 |
+| 库存不足 | 下单数量超过库存 | 返回明确业务错误 |
+| 上传超大图片 | 发布帖子或后台新增时上传过大图片 | 返回明确错误提示，不崩溃 |
+| 后端断开 | 停止后端后操作页面 | 前端展示网络错误或失败提示 |
+
+## 8. 问题记录模板
+
+| 问题编号 | 严重级别 | 模块 | 问题描述 | 复现步骤 | 请求路径 | 请求参数 | 实际响应 | 期望结果 | 负责人 | 状态 | 修复说明 | 回归结果 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| BUG-001 | P1 | 认证 | 示例：登录后未写入 token | 1. 打开登录页 2. 输入账号密码 3. 点击登录 | `/api/v1/auth/login` | `{ phone, password }` |  | 写入 token 并跳转首页 |  | 待处理 |  |  |
+
+严重级别建议：
+
+- `P0`：阻塞主流程
+- `P1`：影响核心功能
+- `P2`：影响普通功能
+- `P3`：体验、文案或文档问题
+
+状态建议：
+
+- `未测`
+- `通过`
+- `失败`
+- `阻塞`
+- `已修复待回归`
+- `回归通过`
+
+## 9. 回归记录模板
+
+| 问题编号 | 修复版本或提交 | 回归步骤 | 回归账号 | 回归结果 | 回归人 | 回归日期 | 备注 |
+|---|---|---|---|---|---|---|---|
+| BUG-001 |  | 重复原复现步骤 |  |  |  |  |  |
+
+## 10. 维护要求
+
+1. 新增接口后同步更新 `docs/api.md` 和 `docs/api.yaml`。
+2. 新增页面或后台模块后同步更新本文档的联调清单。
+3. 修复跨端问题后，在问题记录中补充修复说明和回归结果。
+4. 生产部署问题统一沉淀到 `docs/deployment.md`，不要在本文档重复记录一次性排障过程。
