@@ -147,6 +147,9 @@ Vercel 默认会自动部署：
 | `DEEPSEEK_API_KEY` | DeepSeek AI API 密钥（可选） | your-api-key |
 | `AI_BASE_URL` | AI API 基础 URL | https://api.deepseek.com |
 | `AI_MODEL` | AI 模型 | deepseek-chat |
+| `SPRING_SQL_INIT_MODE` | SQL 初始化模式，首次初始化可设 `always`，稳定生产建议 `never` | never |
+| `VERIFY_CODE_ALLOW_DEFAULT_CODE` | 是否允许默认验证码，生产建议关闭 | false |
+| `APP_CORS_ALLOWED_ORIGIN_PATTERNS` | 允许跨域来源，多个来源用英文逗号分隔 | https://pet-service-platform-7shx.vercel.app,https://*.vercel.app |
 
 ### 2.5 自动部署配置
 
@@ -231,9 +234,9 @@ docker compose -f compose.prod.yaml up -d
 
 ## 6. 在线地址
 
-- 后端 API：`https://your-app.railway.app`
-- 接口文档：`https://your-app.railway.app/swagger-ui.html`
-- 前端：`https://your-app.vercel.app`
+- 后端 API：`https://petserviceplatform-production.up.railway.app`
+- 接口文档：`https://petserviceplatform-production.up.railway.app/swagger-ui.html`
+- 前端：`https://pet-service-platform-7shx.vercel.app/`
 
 ---
 
@@ -279,7 +282,7 @@ docker compose -f compose.prod.yaml up -d
 后端 Spring Security CORS 现在读取环境变量 `APP_CORS_ALLOWED_ORIGIN_PATTERNS`，多个来源用英文逗号分隔。Railway 部署时建议配置：
 
 ```env
-APP_CORS_ALLOWED_ORIGIN_PATTERNS=https://pet-service-platform-eta.vercel.app,https://*.vercel.app,http://localhost:*,http://127.0.0.1:*
+APP_CORS_ALLOWED_ORIGIN_PATTERNS=https://pet-service-platform-7shx.vercel.app,https://*.vercel.app,http://localhost:*,http://127.0.0.1:*
 ```
 
 如果 Vercel 后续绑定自定义域名，需要把自定义域名追加到该变量中，例如 `https://www.example.com`。

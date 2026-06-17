@@ -2,83 +2,55 @@
 
 ## 1. 文档说明
 
-本文档基于当前项目的需求说明、信息架构、前后端模块说明与 API 草案整理而成，用于描述宠物综合服务平台的数据库设计方案。  
+本文档描述宠物综合服务平台当前 MySQL 数据库设计，基于 `backend/src/main/resources/sql/schema.sql` 和 `seed.sql` 整理。数据库支撑用户前台、管理后台、联调演示数据和部署初始化。
 
-本文档重点包含：
+SQL 初始化文件：
 
-- 数据存储方案
-- 核心实体关系
-- ER 图
-- 核心表设计建议
-- 索引与状态字段建议
+- `backend/src/main/resources/sql/schema.sql`
+- `backend/src/main/resources/sql/seed.sql`
 
----
+生产环境注意：
 
-## 2. 数据存储总体设计
+- `seed.sql` 仅适合本地演示和联调。
+- 生产首次初始化后应将 `SPRING_SQL_INIT_MODE` 改为 `never`。
+- `schema.sql` 包含少量兼容已有生产表的迁移语句，例如给 `shop_orders` 补 `discount_amount`、`user_coupon_id`。
 
-系统采用“关系型数据库 + 缓存 + 文件存储”的组合方案：
+## 2. 存储方案
 
-- **MySQL**：存储用户、帖子、领养、预约、订单、宠物档案等核心业务数据
-- **Redis**：缓存首页聚合数据、热门列表、验证码、登录会话辅助信息
-- **MinIO / 本地静态资源目录**：存储图片、帖子附件、宠物相册、Banner 图等文件资源
-
-说明：
-
-- ER 图仅描述 MySQL 中的核心业务实体
-- Redis 与文件存储不纳入 ER 图，但属于系统整体数据设计的一部分
-
----
-
-## 3. 数据库设计原则
-
-### 3.1 设计原则
-
-- 以业务模块为边界组织表结构
-- 先保证核心流程闭环，再考虑复杂扩展能力
-- 主键统一，状态字段明确，审计字段完整
-- 支持用户端和管理端共用同一套业务数据
-
-### 3.2 建议命名规范
-
-- 表名使用复数或复数语义的下划线命名，如 `users`、`community_posts`
-- 主键统一为 `id`
-- 外键字段统一使用 `{entity}_id`
-- 时间字段统一为 `created_at`、`updated_at`
-- 状态字段统一使用 `status`
-
-### 3.3 建议公共字段
-
-多数业务表建议包含以下公共字段：
-
-- `id`：主键
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-部分后台管理表建议增加：
-
-- `created_by`：创建人
-- `updated_by`：更新人
-- `remark`：备注
-
----
-
-## 4. 业务模块与核心表
-
-| 模块 | 核心表 |
+| 类型 | 用途 |
 |---|---|
-| 用户与权限 | `users`, `messages` |
-| 宠物档案 | `pets`, `pet_vaccines`, `pet_weights`, `pet_albums` |
-| 社区 | `community_posts`, `post_comments`, `post_likes`, `post_favorites`, `tags`, `post_tags` |
-| 领养 | `adoption_pets`, `adoption_applications` |
-| 宠物服务 | `service_categories`, `merchants`, `merchant_services`, `service_bookings`, `merchant_reviews` |
-| 商城 | `product_categories`, `products`, `cart_items`, `shop_orders`, `shop_order_items` |
-| 运营配置 | `banners`, `recommendations` |
+| MySQL | 用户、社区、领养、服务、商城、消息、宠物档案、运营配置等核心业务数据 |
+| 本地静态资源目录 | 图片上传、帖子图片、宠物图片、商品图片、Banner 图片 |
+| Redis | 当前不是必需依赖，验证码和缓存能力保留扩展空间 |
+| MinIO / 对象存储 | 当前不是必需依赖，文件存储保留扩展空间 |
 
----
+## 3. 设计原则
+
+- 按业务模块拆表，保持用户端和管理端共用同一业务数据源。
+- 主键统一使用 `id`。
+- 业务状态统一使用明确枚举字符串，如 `PENDING`、`APPROVED`、`REJECTED`、`CANCELLED`。
+- 需要跨端查询的表建立 `user_id`、`status`、`created_at` 等索引。
+- 订单、购物车、点赞、收藏等需要去重的关系使用唯一索引或业务校验。
+- 历史订单明细保留商品快照，避免商品后续修改影响历史记录。
+
+## 4. 核心表总览
+
+| 模块 | 表 |
+|---|---|
+| 用户与消息 | `users`、`messages` |
+| 宠物档案 | `pets`、`pet_vaccines`、`pet_weights`、`pet_albums` |
+| 社区 | `community_posts`、`post_comments`、`post_likes`、`post_favorites`、`tags`、`post_tags` |
+| 领养 | `adoption_pets`、`adoption_applications` |
+| 服务 | `service_categories`、`merchants`、`merchant_services`、`merchant_reviews`、`service_bookings` |
+| 商城 | `product_categories`、`products`、`cart_items`、`shop_orders`、`shop_order_items` |
+| 地址与优惠券 | `user_addresses`、`coupons`、`user_coupons` |
+| 运营配置 | `banners`、`recommendations` |
+
+客服咨询复用 `messages` 表，通过消息类型、标题、内容、状态和回复内容承载在线客服与领养咨询。
+
+后台监控指标当前为内存采集，不落库；接口见 `docs/monitoring.md`。
 
 ## 5. ER 图
-
-以下 ER 图为当前设计下的 **逻辑 ER 图**：
 
 ```mermaid
 erDiagram
@@ -86,6 +58,8 @@ erDiagram
     PETS ||--o{ PET_VACCINES : has
     PETS ||--o{ PET_WEIGHTS : has
     PETS ||--o{ PET_ALBUMS : has
+
+    USERS ||--o{ MESSAGES : receives
 
     USERS ||--o{ COMMUNITY_POSTS : publishes
     COMMUNITY_POSTS ||--o{ POST_COMMENTS : has
@@ -102,606 +76,251 @@ erDiagram
 
     SERVICE_CATEGORIES ||--o{ MERCHANT_SERVICES : classifies
     MERCHANTS ||--o{ MERCHANT_SERVICES : provides
+    MERCHANTS ||--o{ MERCHANT_REVIEWS : receives
+    USERS ||--o{ MERCHANT_REVIEWS : writes
     USERS ||--o{ SERVICE_BOOKINGS : places
     MERCHANTS ||--o{ SERVICE_BOOKINGS : receives
     MERCHANT_SERVICES ||--o{ SERVICE_BOOKINGS : books
-    USERS ||--o{ MERCHANT_REVIEWS : writes
-    MERCHANTS ||--o{ MERCHANT_REVIEWS : receives
 
     PRODUCT_CATEGORIES ||--o{ PRODUCTS : contains
     USERS ||--o{ CART_ITEMS : owns
     PRODUCTS ||--o{ CART_ITEMS : joins
+    USERS ||--o{ USER_ADDRESSES : owns
+    USERS ||--o{ USER_COUPONS : owns
+    COUPONS ||--o{ USER_COUPONS : issues
     USERS ||--o{ SHOP_ORDERS : places
+    USER_COUPONS ||--o{ SHOP_ORDERS : applies
     SHOP_ORDERS ||--o{ SHOP_ORDER_ITEMS : contains
     PRODUCTS ||--o{ SHOP_ORDER_ITEMS : snapshots
-
-    BANNERS }o--|| USERS : managed_by
-    RECOMMENDATIONS }o--|| USERS : managed_by
-
-    USERS {
-        bigint id PK
-        string role
-        string phone
-        string nickname
-        string status
-    }
-    PETS {
-        bigint id PK
-        bigint user_id FK
-        string name
-        string type
-        date birthday
-    }
-    COMMUNITY_POSTS {
-        bigint id PK
-        bigint user_id FK
-        string category
-        string status
-        string title
-    }
-    ADOPTION_PETS {
-        bigint id PK
-        string type
-        string city
-        string status
-        string name
-    }
-    ADOPTION_APPLICATIONS {
-        bigint id PK
-        bigint pet_id FK
-        bigint user_id FK
-        string status
-    }
-    MERCHANTS {
-        bigint id PK
-        string name
-        string district
-        string status
-    }
-    PRODUCTS {
-        bigint id PK
-        bigint category_id FK
-        string name
-        decimal price
-        string status
-    }
-    SHOP_ORDERS {
-        bigint id PK
-        bigint user_id FK
-        string order_no
-        decimal total_amount
-        string status
-    }
 ```
 
----
+## 6. 用户与消息
 
-## 6. 核心表设计
-
-以下表结构为建议方案，字段可以在开发阶段按实际实现做精简。
-
-### 6.1 用户与消息模块
-
-#### `users`
+### 6.1 `users`
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | `id` | bigint | 主键 |
-| `role` | varchar(20) | 角色，`USER` / `ADMIN` |
-| `phone` | varchar(20) | 手机号，用户登录标识 |
-| `nickname` | varchar(50) | 昵称 |
-| `avatar_url` | varchar(255) | 头像 |
-| `gender` | varchar(20) | 性别，可选 |
-| `status` | varchar(20) | 账号状态，`ACTIVE` / `DISABLED` |
-| `bio` | varchar(255) | 个人简介 |
+| `role` | varchar | `USER` / `ADMIN` |
+| `phone` | varchar | 登录手机号，唯一 |
+| `password_hash` | varchar | BCrypt 密码哈希 |
+| `nickname` | varchar | 昵称 |
+| `avatar_url` | varchar | 头像 |
+| `gender` | varchar | 性别 |
+| `bio` | varchar | 个人简介 |
+| `status` | varchar | `ACTIVE` / `DISABLED` |
 | `created_at` | datetime | 创建时间 |
 | `updated_at` | datetime | 更新时间 |
 
-建议索引：
-
-- 唯一索引：`phone`
-- 普通索引：`role`, `status`, `created_at`
-
-#### `messages`
+### 6.2 `messages`
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | `id` | bigint | 主键 |
 | `user_id` | bigint | 接收用户 |
-| `type` | varchar(30) | 消息类型，如系统消息、互动消息 |
-| `title` | varchar(100) | 标题 |
+| `type` | varchar | 系统、互动、客服等消息类型 |
+| `title` | varchar | 标题 |
 | `content` | text | 内容 |
 | `is_read` | tinyint | 是否已读 |
+| `status` | varchar | 客服处理状态等扩展状态 |
+| `reply_content` | text | 管理员回复内容 |
 | `created_at` | datetime | 创建时间 |
+| `updated_at` | datetime | 更新时间 |
 
-建议索引：
+## 7. 宠物档案
 
-- 组合索引：`user_id`, `is_read`, `created_at`
-
-### 6.2 宠物档案模块
-
-#### `pets`
+### 7.1 `pets`
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | `id` | bigint | 主键 |
 | `user_id` | bigint | 所属用户 |
-| `name` | varchar(50) | 宠物名 |
-| `type` | varchar(20) | 猫/狗等 |
-| `breed` | varchar(50) | 品种 |
-| `gender` | varchar(20) | 性别 |
+| `name` | varchar | 宠物名称 |
+| `type` | varchar | 猫、狗、其他 |
+| `breed` | varchar | 品种 |
+| `gender` | varchar | 性别 |
 | `birthday` | date | 生日 |
-| `weight` | decimal(8,2) | 当前体重，可做冗余 |
-| `avatar_url` | varchar(255) | 头像 |
-| `description` | varchar(255) | 简介 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-建议索引：
-
-- 组合索引：`user_id`, `type`
-
-#### `pet_vaccines`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `pet_id` | bigint | 宠物 ID |
-| `vaccine_name` | varchar(100) | 疫苗名称 |
-| `vaccinated_at` | date | 接种日期 |
-| `next_due_at` | date | 下次接种日期 |
-| `remark` | varchar(255) | 备注 |
-| `created_at` | datetime | 创建时间 |
-
-#### `pet_weights`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `pet_id` | bigint | 宠物 ID |
-| `weight` | decimal(8,2) | 体重 |
-| `recorded_at` | datetime | 记录时间 |
-| `created_at` | datetime | 创建时间 |
-
-#### `pet_albums`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `pet_id` | bigint | 宠物 ID |
-| `image_url` | varchar(255) | 图片地址 |
-| `caption` | varchar(255) | 图片说明 |
-| `created_at` | datetime | 创建时间 |
-
-### 6.3 社区模块
-
-#### `community_posts`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `user_id` | bigint | 发帖用户 |
-| `category` | varchar(30) | 分类，如日常、求助、知识 |
-| `title` | varchar(100) | 标题 |
-| `content` | text | 正文 |
-| `cover_url` | varchar(255) | 封面图 |
-| `status` | varchar(20) | `PENDING` / `APPROVED` / `REJECTED` |
-| `review_remark` | varchar(255) | 审核备注 |
-| `like_count` | int | 点赞数冗余 |
-| `favorite_count` | int | 收藏数冗余 |
-| `comment_count` | int | 评论数冗余 |
-| `published_at` | datetime | 发布时间 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-建议索引：
-
-- 组合索引：`status`, `category`, `published_at`
-- 普通索引：`user_id`
-
-#### `post_comments`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `post_id` | bigint | 帖子 ID |
-| `user_id` | bigint | 评论用户 |
-| `content` | text | 评论内容 |
-| `status` | varchar(20) | 正常/删除/屏蔽 |
-| `created_at` | datetime | 创建时间 |
-
-#### `post_likes`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `post_id` | bigint | 帖子 ID |
-| `user_id` | bigint | 点赞用户 |
-| `created_at` | datetime | 创建时间 |
-
-建议约束：
-
-- 唯一索引：`post_id`, `user_id`
-
-#### `post_favorites`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `post_id` | bigint | 帖子 ID |
-| `user_id` | bigint | 收藏用户 |
-| `created_at` | datetime | 创建时间 |
-
-建议约束：
-
-- 唯一索引：`post_id`, `user_id`
-
-#### `tags` 与 `post_tags`
-
-- `tags`：存储标签定义，如知识、晒宠、新手避坑
-- `post_tags`：帖子与标签的多对多关联表
-
-### 6.4 领养模块
-
-#### `adoption_pets`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `name` | varchar(50) | 宠物名 |
-| `type` | varchar(20) | 猫/狗 |
-| `breed` | varchar(50) | 品种 |
-| `gender` | varchar(20) | 性别 |
-| `age_desc` | varchar(50) | 年龄描述 |
-| `city` | varchar(50) | 所在城市 |
-| `health_status` | varchar(255) | 健康情况 |
-| `personality` | varchar(255) | 性格说明 |
-| `adoption_requirements` | text | 领养要求 |
-| `story` | text | 宠物故事 |
-| `status` | varchar(20) | `ONLINE` / `OFFLINE` / `ADOPTED` |
-| `cover_url` | varchar(255) | 封面图 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-建议索引：
-
-- 组合索引：`status`, `type`, `city`
-
-#### `adoption_applications`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `pet_id` | bigint | 待领养宠物 ID |
-| `user_id` | bigint | 申请用户 |
-| `experience_desc` | text | 养宠经验 |
-| `living_condition_desc` | text | 居住情况 |
-| `contact_phone` | varchar(20) | 联系方式 |
-| `status` | varchar(20) | `PENDING` / `APPROVED` / `REJECTED` |
-| `review_remark` | varchar(255) | 审核备注 |
-| `reviewed_by` | bigint | 审核管理员 |
-| `reviewed_at` | datetime | 审核时间 |
-| `created_at` | datetime | 创建时间 |
-
-建议索引：
-
-- 组合索引：`pet_id`, `status`
-- 组合索引：`user_id`, `status`
-
-### 6.5 宠物服务模块
-
-#### `service_categories`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `name` | varchar(50) | 分类名 |
-| `sort` | int | 排序值 |
-| `status` | varchar(20) | 启用状态 |
-
-#### `merchants`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `name` | varchar(100) | 商家名称 |
-| `district` | varchar(50) | 区域 |
-| `address` | varchar(255) | 地址 |
-| `phone` | varchar(20) | 联系方式 |
-| `business_hours` | varchar(100) | 营业时间 |
-| `score` | decimal(3,1) | 评分冗余 |
-| `status` | varchar(20) | 营业状态 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-#### `merchant_services`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `merchant_id` | bigint | 商家 ID |
-| `category_id` | bigint | 服务分类 ID |
-| `name` | varchar(100) | 服务项目名称 |
-| `price` | decimal(10,2) | 价格 |
-| `duration_minutes` | int | 时长 |
-| `status` | varchar(20) | 启用状态 |
-| `created_at` | datetime | 创建时间 |
-
-#### `service_bookings`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `user_id` | bigint | 预约用户 |
-| `merchant_id` | bigint | 商家 ID |
-| `merchant_service_id` | bigint | 服务项目 ID |
-| `booking_time` | datetime | 预约时间 |
-| `contact_name` | varchar(50) | 联系人 |
-| `contact_phone` | varchar(20) | 联系电话 |
-| `status` | varchar(20) | `PENDING` / `CONFIRMED` / `COMPLETED` / `CANCELLED` |
-| `remark` | varchar(255) | 备注 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-建议索引：
-
-- 组合索引：`merchant_id`, `booking_time`, `status`
-- 组合索引：`user_id`, `status`, `created_at`
-
-#### `merchant_reviews`
-
-- 记录用户对商家的评价
-- 当前实现采用“一位用户对同一商家仅允许一条评价”的约束，避免重复刷分
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `merchant_id` | bigint | 商家 ID |
-| `user_id` | bigint | 用户 ID |
-| `score` | int | 评分，1-5 |
-| `content` | varchar(255) | 评价内容 |
-| `created_at` | datetime | 创建时间 |
-
-### 6.6 商城模块
-
-#### `product_categories`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `name` | varchar(50) | 分类名 |
-| `pet_type` | varchar(20) | 适用宠物类型 |
-| `sort` | int | 排序值 |
-| `status` | varchar(20) | 启用状态 |
-
-#### `products`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `category_id` | bigint | 分类 ID |
-| `name` | varchar(100) | 商品名称 |
-| `subtitle` | varchar(255) | 副标题 |
-| `image_url` | varchar(255) | 主图 |
-| `price` | decimal(10,2) | 售价 |
-| `stock` | int | 库存 |
-| `pet_type` | varchar(20) | 适用宠物类型 |
-| `status` | varchar(20) | `ON_SALE` / `OFF_SHELF` |
-| `description` | text | 商品介绍 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-建议索引：
-
-- 组合索引：`category_id`, `status`, `price`
-- 普通索引：`pet_type`
-
-#### `cart_items`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `user_id` | bigint | 用户 ID |
-| `product_id` | bigint | 商品 ID |
-| `quantity` | int | 数量 |
-| `checked` | tinyint | 是否勾选 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-建议约束：
-
-- 唯一索引：`user_id`, `product_id`
-
-#### `shop_orders`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `user_id` | bigint | 下单用户 |
-| `order_no` | varchar(64) | 订单号 |
-| `total_amount` | decimal(10,2) | 订单总额 |
-| `pay_amount` | decimal(10,2) | 实付金额 |
-| `status` | varchar(20) | `PENDING` / `PAID` / `SHIPPED` / `COMPLETED` / `CANCELLED` |
-| `receiver_name` | varchar(50) | 收货人 |
-| `receiver_phone` | varchar(20) | 收货电话 |
-| `receiver_address` | varchar(255) | 收货地址 |
-| `remark` | varchar(255) | 用户备注 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-建议索引：
-
-- 唯一索引：`order_no`
-- 组合索引：`user_id`, `status`, `created_at`
-
-#### `shop_order_items`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `order_id` | bigint | 订单 ID |
-| `product_id` | bigint | 商品 ID |
-| `product_name` | varchar(100) | 商品名快照 |
-| `product_image_url` | varchar(255) | 商品图快照 |
-| `unit_price` | decimal(10,2) | 下单单价 |
-| `quantity` | int | 购买数量 |
-| `subtotal_amount` | decimal(10,2) | 小计 |
-
-### 6.7 运营配置模块
-
-#### `banners`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `title` | varchar(100) | Banner 标题 |
-| `image_url` | varchar(255) | 图片地址 |
-| `link_url` | varchar(255) | 跳转链接 |
-| `status` | varchar(20) | 上下线状态 |
-| `sort` | int | 排序 |
-| `created_by` | bigint | 创建管理员 |
-| `created_at` | datetime | 创建时间 |
-| `updated_at` | datetime | 更新时间 |
-
-#### `recommendations`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `biz_type` | varchar(30) | 推荐对象类型，如 post/service/product |
-| `biz_id` | bigint | 业务对象 ID |
-| `slot_code` | varchar(30) | 推荐位编码 |
-| `status` | varchar(20) | 启用状态 |
-| `sort` | int | 排序 |
-| `created_by` | bigint | 创建管理员 |
-| `created_at` | datetime | 创建时间 |
-
----
-
-## 7. 关键状态设计
-
-### 7.1 用户状态
-
-- `ACTIVE`：正常
-- `DISABLED`：禁用
-
-### 7.2 内容审核状态
-
-- `PENDING`：待审核
-- `APPROVED`：已通过
-- `REJECTED`：已驳回
-
-### 7.3 领养申请状态
-
-- `PENDING`
-- `APPROVED`
-- `REJECTED`
-
-### 7.4 服务预约状态
+| `weight` | decimal | 当前体重 |
+| `avatar_url` | varchar | 头像 |
+| `description` | varchar | 简介 |
+| `created_at` / `updated_at` | datetime | 创建/更新时间 |
+
+### 7.2 `pet_vaccines`、`pet_weights`、`pet_albums`
+
+| 表 | 说明 |
+|---|---|
+| `pet_vaccines` | 疫苗名称、接种日期、下次接种日期、备注 |
+| `pet_weights` | 体重、记录时间 |
+| `pet_albums` | 图片 URL、图片说明 |
+
+这些表均通过 `pet_id` 关联 `pets`，用于个人中心成长时间轴。
+
+## 8. 社区
+
+| 表 | 说明 |
+|---|---|
+| `community_posts` | 帖子标题、正文、封面、分类、审核状态、互动计数 |
+| `post_comments` | 帖子评论 |
+| `post_likes` | 点赞关系 |
+| `post_favorites` | 收藏关系 |
+| `tags` | 热门话题和内容标签 |
+| `post_tags` | 帖子与标签多对多关系 |
+
+关键约束：
+
+- 点赞和收藏按 `post_id + user_id` 去重。
+- 公开列表只展示审核通过的帖子。
+- 管理端审核通过后，前台社区和用户主页同步可见。
+
+## 9. 领养
+
+### 9.1 `adoption_pets`
+
+| 字段 | 说明 |
+|---|---|
+| `name`、`type`、`breed`、`gender`、`age_desc` | 宠物基础信息 |
+| `city` | 所在城市 |
+| `health_status` | 健康情况 |
+| `personality` | 性格说明 |
+| `adoption_requirements` | 领养要求 |
+| `story` | 宠物故事 |
+| `status` | `ONLINE` / `OFFLINE` / `ADOPTED` |
+| `cover_url` | 展示图 |
+
+### 9.2 `adoption_applications`
+
+| 字段 | 说明 |
+|---|---|
+| `pet_id` | 申请宠物 |
+| `user_id` | 申请用户 |
+| `experience_desc` | 养宠经验 |
+| `living_condition_desc` | 居住条件 |
+| `contact_phone` | 联系电话 |
+| `status` | `PENDING` / `APPROVED` / `REJECTED` |
+| `review_remark` | 审核备注 |
+| `reviewed_by` / `reviewed_at` | 审核人和审核时间 |
+
+## 10. 服务预约
+
+| 表 | 说明 |
+|---|---|
+| `service_categories` | 服务分类，如医院、美容、寄养、训练 |
+| `merchants` | 商家基础信息、地址、电话、营业时间、评分、状态、图片 |
+| `merchant_services` | 商家服务项目、价格、时长、状态 |
+| `merchant_reviews` | 用户对商家的评价 |
+| `service_bookings` | 预约单、预约时间、联系人、电话、状态、备注 |
+
+预约状态：
 
 - `PENDING`
 - `CONFIRMED`
 - `COMPLETED`
 - `CANCELLED`
 
-### 7.5 商城订单状态
+## 11. 商城
 
-- `PENDING`
-- `PAID`
-- `SHIPPED`
-- `COMPLETED`
-- `CANCELLED`
+### 11.1 商品与购物车
 
----
+| 表 | 说明 |
+|---|---|
+| `product_categories` | 商品分类和适用宠物类型 |
+| `products` | 商品名称、副标题、主图、价格、库存、状态、描述 |
+| `cart_items` | 用户购物车条目、数量、选中状态 |
 
-## 8. 索引与约束建议
+商品状态：
 
-### 8.1 索引建议
+- `ON_SALE`
+- `OFF_SHELF`
 
-- 高频列表字段建立组合索引，如 `status + created_at`
-- 高并发去重关系建立唯一索引，如点赞、收藏、购物车
-- 所有外键字段建立普通索引，如 `user_id`, `post_id`, `order_id`
+### 11.2 地址与优惠券
 
-### 8.2 约束建议
+#### `user_addresses`
 
-- 手机号、订单号等业务标识需要唯一约束
-- 审核类表必须保留审核时间与审核备注
-- 订单明细保留商品快照，避免商品后续修改影响历史订单
-- 点赞、收藏、购物车项采用“用户 + 对象”唯一约束
+| 字段 | 说明 |
+|---|---|
+| `user_id` | 所属用户 |
+| `receiver_name` | 收货人 |
+| `receiver_phone` | 收货电话 |
+| `province` / `city` / `district` | 省市区 |
+| `detail_address` | 详细地址 |
+| `is_default` | 是否默认 |
+| `status` | `ACTIVE` / `DISABLED` |
 
----
+#### `coupons`
 
-## 9. 阶段性结论
+| 字段 | 说明 |
+|---|---|
+| `name` | 优惠券名称 |
+| `type` | 优惠类型，当前为满减金额类 |
+| `discount_amount` | 优惠金额 |
+| `min_amount` | 使用门槛 |
+| `start_at` / `end_at` | 有效期 |
+| `status` | `ACTIVE` / `DISABLED` |
 
-基于当前设计，数据库方案已经能够支撑以下核心业务闭环：
+#### `user_coupons`
 
-- 用户登录与角色识别
-- 社区内容发布、互动与审核
-- 宠物档案维护
-- 领养申请与审核
-- 服务预约与处理
-- 商城下单与订单管理
-- Banner 与推荐位运营配置
+| 字段 | 说明 |
+|---|---|
+| `user_id` | 所属用户 |
+| `coupon_id` | 优惠券 ID |
+| `status` | `UNUSED` / `USED` / `EXPIRED` |
+| `used_order_id` | 使用订单 |
+| `used_at` | 使用时间 |
 
-对于课程项目实现，建议优先落地以下表：
+### 11.3 订单
 
-1. `users`
-2. `pets`
-3. `community_posts`
-4. `post_comments`
-5. `adoption_pets`
-6. `adoption_applications`
-7. `products`
-8. `shop_orders`
-9. `shop_order_items`
-10. `service_bookings`
+#### `shop_orders`
 
-如需进一步收敛 MVP，可先弱化 `messages`、`merchant_reviews`、`recommendations` 等扩展表。
+| 字段 | 说明 |
+|---|---|
+| `user_id` | 下单用户 |
+| `order_no` | 订单号，唯一 |
+| `total_amount` | 商品总额 |
+| `discount_amount` | 优惠金额 |
+| `pay_amount` | 实付金额 |
+| `user_coupon_id` | 使用的用户优惠券 |
+| `status` | `PENDING` / `PAID` / `SHIPPED` / `COMPLETED` / `CANCELLED` |
+| `receiver_name` / `receiver_phone` / `receiver_address` | 收货快照 |
+| `remark` | 用户备注 |
 
-## 商城结算补充表
+#### `shop_order_items`
 
-### `user_addresses`
+| 字段 | 说明 |
+|---|---|
+| `order_id` | 订单 ID |
+| `product_id` | 商品 ID |
+| `product_name` | 商品名称快照 |
+| `product_image_url` | 商品图片快照 |
+| `unit_price` | 下单单价 |
+| `quantity` | 购买数量 |
+| `subtotal_amount` | 小计 |
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `user_id` | bigint | 所属用户 |
-| `receiver_name` | varchar(50) | 收货人 |
-| `receiver_phone` | varchar(20) | 收货电话 |
-| `province` | varchar(50) | 省份 |
-| `city` | varchar(50) | 城市 |
-| `district` | varchar(50) | 区县 |
-| `detail_address` | varchar(255) | 详细地址 |
-| `is_default` | tinyint | 是否默认地址 |
-| `status` | varchar(20) | 状态：`ACTIVE` / `DISABLED` |
+## 12. 运营配置
 
-### `coupons`
+| 表 | 说明 |
+|---|---|
+| `banners` | 首页 Banner，包含标题、图片、链接、状态、排序 |
+| `recommendations` | 推荐位，按 `slot_code + biz_type + biz_id` 指向帖子、服务、商品等业务对象 |
+| `tags` | 标签管理，既用于社区话题，也可用于后台内容配置 |
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键 |
-| `name` | varchar(100) | 优惠券名称 |
-| `type` | varchar(20) | 优惠类型，MVP 使用 `AMOUNT` |
-| `discount_amount` | decimal(10,2) | 优惠金额 |
-| `min_amount` | decimal(10,2) | 使用门槛 |
-| `start_at` | datetime | 生效时间 |
-| `end_at` | datetime | 失效时间 |
-| `status` | varchar(20) | 状态：`ACTIVE` / `DISABLED` |
+## 13. 索引与约束重点
 
-### `user_coupons`
+- `users.phone` 唯一。
+- `shop_orders.order_no` 唯一。
+- `cart_items` 按 `user_id + product_id` 去重。
+- `post_likes`、`post_favorites` 按 `post_id + user_id` 去重。
+- 列表高频查询字段建立组合索引，例如 `user_id + status + created_at`。
+- `shop_orders.user_coupon_id` 建立索引，便于订单与优惠券追踪。
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | bigint | 主键，也是前端下单传入的 `coupon_id` |
-| `user_id` | bigint | 所属用户 |
-| `coupon_id` | bigint | 优惠券 ID |
-| `status` | varchar(20) | 状态：`UNUSED` / `USED` / `EXPIRED` |
-| `used_order_id` | bigint | 使用订单 ID |
-| `used_at` | datetime | 使用时间 |
+## 14. 初始化数据
 
-### `shop_orders` 字段补充
+`seed.sql` 提供演示账号、宠物、帖子、商品、商家、服务、订单、优惠券、消息等数据。演示账号见 `docs/integration.md`。
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `discount_amount` | decimal(10,2) | 订单优惠金额 |
-| `user_coupon_id` | bigint | 使用的用户优惠券 ID |
+图片资源使用 `backend/src/main/resources/static/` 下的静态资源路径，避免正式页面继续展示纯占位图。
+
+## 15. 维护要求
+
+1. 新增或修改表结构后同步更新 `schema.sql`、实体、Mapper、DTO、`docs/database.md`。
+2. 新增接口字段后同步更新 `docs/api.md` 和 `docs/api.yaml`。
+3. 对已有生产表增加列时，需要在 `schema.sql` 中提供幂等迁移逻辑。
+4. 修改种子数据时必须保持 UTF-8 无 BOM，避免 MySQL 解析失败或中文乱码。

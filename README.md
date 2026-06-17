@@ -2,147 +2,149 @@
 [![Backend Coverage](https://codecov.io/gh/Chen-hanyu/PetServicePlatform/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/Chen-hanyu/PetServicePlatform)
 [![Frontend Coverage](https://codecov.io/gh/Chen-hanyu/PetServicePlatform/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/Chen-hanyu/PetServicePlatform)
 
-# 宠物综合服务平台项目说明
+# 宠物综合服务平台
 
-本仓库用于项目主题为宠物综合服务平台，采用“用户 Web 前台 + 管理员后台 + Spring Boot 后端”三端协同架构。
+本项目是一个“用户 Web 前台 + 管理员后台 + Spring Boot 后端”的宠物综合服务平台。用户端覆盖社区、领养、服务预约、商城、宠物档案、消息通知和 AI 宠医助手；管理端覆盖用户、内容、领养、服务、商城、客服、监控等运营能力。
 
 ## 团队成员
-| 姓名 | 学号 | 分工 |
-|------|------|-----|
-| 屈天顺 | 2323040522 | 前端 |
-| 陈涵予 | 2320100624 | 后端 |
 
-## 团队分工
-### 屈天顺（前端）
-| 时间 | 产出类型 | 具体产出 |
+| 姓名 | 学号 | 主要分工 |
 |---|---|---|
-| 2026-03-14 ~ 2026-03-17 | 文档 | 编写/完善 `docs/frontend.md`，补充前端模块说明、MVP 范围、路由与联调建议。 |
-| 2026-03-14 ~ 2026-03-17 | 设计 | 完成用户端与管理端主要页面结构设计（登录注册、首页、宠物档案、预约、商城、宠物圈、个人中心、管理后台框架）。 |
-| 2026-03-14 ~ 2026-03-17 | 规范 | 统一前端页面骨架与交互规范（列表区、筛选区、表单校验提示、状态反馈）。 |
+| qutianshun | 2323040522 | 前端、用户端与管理端页面、前端测试、Vercel 部署 |
+| chenhanyu | 2320100624 | 后端、数据库、接口、安全、测试、Railway 部署 |
 
-### 陈涵予（后端）
-| 时间 | 产出类型 | 具体产出 |
-|---|---|---|
-| 2026-03-10 | 文档基线 | 建立后端文档基线，完成 `docs/backend.md`、`docs/api.md` 初版整理。 |
-| 2026-03-19 | 架构与数据库文档 | 完成 `docs/architecture.md`、`docs/database.md`、`docs/technology-selection.md`，并落地 `backend/src/main/resources/sql/schema.sql` 与 `seed.sql`，明确后端架构、数据模型与技术选型。 |
-| 2026-03-19 | 后端工程搭建 | 初始化 Spring Boot 后端，完成 `application.yml` 配置，搭建分层目录：`controller`、`admin/controller`、`service`、`mapper`、`entity`、`dto`、`config`、`security`、`common`。 |
-| 2026-03-19 ~ 2026-03-21 | 数据库落地 | 创建并对齐数据库脚本：`backend/src/main/resources/sql/schema.sql`、`seed.sql`，覆盖用户、社区、领养、服务预约、商城、消息、运营配置等核心表。 |
-| 2026-03-21 | 业务实现 | 完成用户端与管理端核心接口实现：认证、首页、搜索、社区、领养、宠物档案、服务预约、商城、消息中心、后台管理。 |
-| 2026-03-21 | 基础能力 | 落地统一返回结构 `{code,message,data}`、全局异常处理、JWT 鉴权与用户/管理员权限隔离、Swagger/OpenAPI 文档。 |
-| 2026-03-21 | 测试体系 | 建立并完善自动化测试：WebMvc 接口与权限测试、Service 规则测试、H2 集成测试；覆盖认证权限、首页搜索、社区、领养、服务预约、商城下单、宠物档案、消息中心与后台核心流程。 |
+每周个人贡献记录位于 `docs/contributions/`，按阶段和成员姓名归档。
 
+## 在线与设计
 
-## Figma 链接
-https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%E9%9D%A2?node-id=0-1&t=6aHvhBAU7GApTcti-1
+- Figma：https://www.figma.com/design/gu5MKdueh9c10smfcXSQV0/%E5%AE%A0%E7%89%A9%E9%A1%B5%E9%9D%A2?node-id=0-1&t=6aHvhBAU7GApTcti-1
+- 前端部署：`https://pet-service-platform-7shx.vercel.app/`
+- 后端部署：`https://petserviceplatform-production.up.railway.app`
+- 健康检查：`https://petserviceplatform-production.up.railway.app/health`
 
-## 项目简介
-宠物综合服务平台面向养宠用户和平台运营人员，核心功能包括：
-- 用户 Web 前台：社区交流、领养申请、宠物服务预约、商品购买、宠物档案管理、消息中心。
-- 管理员后台：用户管理、帖子审核、领养审核、商家管理、商品管理、订单处理、Banner 与推荐位维护。
-- 后端服务：统一权限、业务规则、数据存储与接口文档。
+## 技术栈
 
-## 项目目录结构
+| 层级 | 技术 |
+|---|---|
+| 前端 | Vue 3、Vite、TypeScript、Vue Router、Pinia、Axios、SCSS |
+| 后端 | Java 17、Spring Boot 3、Spring MVC、Spring Security、JWT、MyBatis-Plus |
+| 数据库 | MySQL |
+| 测试 | Vitest、Testing Library、JUnit 5、Mockito、Spring Boot Test、JaCoCo |
+| CI/CD | GitHub Actions、Codecov、Docker、Vercel、Railway |
+| AI | DeepSeek / OpenAI 兼容 Chat Completions API |
+
+## 目录结构
 
 ```text
 .
-├── AGENTS.md                 # AI 辅助开发规则文件
+├── CODEX.md                        # Codex 协作与项目规则
 ├── README.md
+├── frontend/                       # Vue 用户前台 + 管理员后台
+├── backend/                        # Spring Boot 后端
 ├── docs/
+│   ├── design/                     # 设计稿与页面截图
+│   ├── contributions/              # 每周个人贡献记录
 │   ├── architecture.md
-│   ├── api.md
-│   ├── backend.md
 │   ├── database.md
+│   ├── api.md
+│   ├── api.yaml
 │   ├── design-spec.md
-│   ├── design-spec-admin.md
-│   ├── frontend.md
-│   ├── information-architecture.md
-│   ├── information-architecture-admin.md
-│   ├── technology-selection.md
-│   ├── user-research.md
-│   ├── design/
-│   └── contributions/
-├── frontend/                 # 用户 Web 前台 + 管理员后台前端
-├── backend/                  # Spring Boot 后端服务
-└── .gitignore
+│   ├── ai-feature.md
+│   ├── security-review.md
+│   ├── deployment.md
+│   └── monitoring.md
+├── compose.yaml                    # Docker 开发环境
+├── compose.prod.yaml               # Docker 生产环境
+├── docker-compose.yml              # 兼容启动配置
+├── railway.toml
+└── vercel.json
 ```
 
-## 系统架构
-- `frontend`：基于 Vue 3 + Vite 的 Web 前端工程，包含用户前台与管理员后台。
-- `backend`：基于 Spring Boot 3 的后端服务，统一提供用户端与管理端 API。
-- `docs`：需求、设计、信息架构、架构设计、数据库设计、技术选型与 API 文档。
+## 核心功能
+
+- 用户认证：手机号密码登录、验证码调试入口、JWT 鉴权。
+- 社区：帖子列表、分类/标签/关键词搜索、发帖、评论、点赞、收藏、个人动态。
+- 领养：宠物浏览、领养流程、申请提交、申请记录、后台审核。
+- 服务：商家分类、服务预约、预约记录、后台预约处理。
+- 商城：商品搜索、购物车、收货地址、优惠券、下单、支付模拟、订单流转。
+- 宠物档案：宠物资料、疫苗、体重、相册、成长时间轴。
+- 消息与客服：系统消息、在线客服咨询、后台客服回复。
+- AI 助手：宠物健康问答、宠物档案上下文选择、快捷咨询。
+- 管理后台：仪表盘、用户、内容、领养、服务、商城、客服、监控。
+
+## 本地运行
+
+### 前端
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+默认访问 `http://localhost:5173`。
+
+### 后端
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+默认访问：
+
+- API：`http://localhost:8080/api/v1`
+- Swagger：`http://localhost:8080/swagger-ui.html`
+- 健康检查：`http://localhost:8080/health`
+
+### Docker
+
+```bash
+docker compose up -d --build
+```
+
+生产配置：
+
+```bash
+docker compose -f compose.prod.yaml up -d --build
+```
+
+## 测试与覆盖率
+
+```bash
+# 后端
+cd backend
+./mvnw test
+
+# 前端
+cd frontend
+npm run test:coverage
+```
+
+最近本地覆盖率：
+
+| 端 | 主要覆盖率 |
+|---|---|
+| 前端 | Statements 84.37%，Lines 85.02% |
+| 后端 | Instructions 75.46%，Lines 76.84% |
 
 ## 核心文档
-- `AGENTS.md`：AI 辅助开发规则文件
-- `docs/user-research.md`：目标用户、核心场景与竞品分析
-- `docs/design-spec.md`：用户端视觉与交互设计规范
-- `docs/design-spec-admin.md`：管理员后台设计规范
-- `docs/information-architecture.md`：用户端信息架构
-- `docs/information-architecture-admin.md`：管理员后台信息架构
-- `docs/frontend.md`：前端模块说明与工程结构
-- `docs/backend.md`：后端模块说明与服务结构
-- `docs/architecture.md`：系统架构设计文档
-- `docs/database.md`：数据库设计文档与 ER 图
-- `docs/api.md`：API 设计文档
-- `docs/technology-selection.md`：技术选型确认与部署建议
 
-## 技术选型
+- [docs/design-spec.md](docs/design-spec.md)：用户端 UI/UX 设计说明
+- [docs/architecture.md](docs/architecture.md)：软件架构设计
+- [docs/database.md](docs/database.md)：数据库设计与 ER 关系
+- [docs/api.md](docs/api.md)：API 使用说明
+- [docs/api.yaml](docs/api.yaml)：OpenAPI 规范
+- [docs/ai-feature.md](docs/ai-feature.md)：AI 功能说明
+- [docs/security-review.md](docs/security-review.md)：安全审查记录
+- [docs/deployment.md](docs/deployment.md)：云服务部署说明
+- [docs/monitoring.md](docs/monitoring.md)：监控与健康检查说明
 
-| 层级 | 选择 | 理由 |
-|---|---|---|
-| 前端框架 | `Vue 3 + Vite + TypeScript` | 组件化能力成熟，适合用户端与管理员端共用一套工程；构建速度快，便于课程项目开发与演示。 |
-| 后端框架 | `Java 17 + Spring Boot 3 + Spring Security + JWT` | 生态成熟，便于实现分层架构、统一鉴权、接口规范和后续扩展。 |
-| 数据库 | `MySQL` | 适合帖子、订单、预约、领养、宠物档案等结构化业务数据，学习和部署成本较低。 |
-| 部署方式 | `本地部署 / Docker 部署 + Spring Boot + MySQL` | 轻量、易实施、便于本地联调和课程项目答辩展示，后续可扩展 Redis 与 MinIO。 |
+## 部署说明
 
-## 部署方式
+- 前端部署在 Vercel，配置文件为 `vercel.json`。
+- 后端部署在 Railway，配置文件为 `railway.toml`。
+- 数据库使用 MySQL，表结构和示例数据位于 `backend/src/main/resources/sql/`。
+- 生产环境变量模板见 `.env.example`。
 
-### 本地部署
-- 前端：在 `frontend/` 目录执行 `npm install` 和 `npm run dev`
-- 后端：在 `backend/` 目录执行 `mvn clean install` 和 `mvn spring-boot:run`
-- 数据库：本地安装并启动 `MySQL`，按 `docs/database.md` 中的数据模型准备数据库
-- 接口联调：前端通过开发环境配置将 `/api/*` 请求转发到本地后端服务
-- 后端接口地址：`http://127.0.0.1:8080`
-- 接口文档地址：`http://127.0.0.1:8080/swagger-ui.html`
-
-### Docker 部署
-- 根目录提供 `docker-compose.yml`，统一启动 `backend` 与 `mysql`
-- 后端通过 `backend/Dockerfile` 构建 Spring Boot 服务镜像
-- 数据库初始化通过挂载 SQL 脚本或启动后手动导入完成
-- 启动命令为 `docker-compose up -d`
-- 服务启动后通过 `docker-compose ps` 检查容器状态
-
-### 云平台部署
-- **后端**：部署在 Railway 平台，通过 `railway.toml` 配置 Docker 构建
-- **前端**：部署在 Vercel 平台
-- 详细部署说明见 [docs/deployment.md](docs/deployment.md)
-- Railway MySQL 建库与初始化见 [docs/railway-mysql.md](docs/railway-mysql.md)
-
-对于当前课程项目，建议优先保证本地部署和 Docker 部署都可运行，再考虑缓存和对象存储等增强能力。
-
-
-
-## 分支策略
-- `main`：稳定版本，保证可演示与可提交。
-- `develop`：日常集成分支。
-- `feature/ccchy-frontend-doc`：前端文档分支。
-- `feature/*`：其他功能分支。
-
-## 协作流程
-1. 从 `develop` 创建个人功能分支。
-2. 在功能分支完成开发和文档编写。
-3. 发起 PR 合并到 `develop`。
-4. 阶段验收后由 `develop` 合并到 `main`。
-
-## 前端运行方式
-1. `cd frontend`
-2. `npm install`
-3. `npm run dev`
-4. `npm run build`
-5. 可通过 `npm run preview` 本地预览构建结果
-
-## 后端运行方式
-1. `cd backend`
-2. `mvn clean install`
-3. `mvn spring-boot:run`
-4. 打开 `http://127.0.0.1:8080/swagger-ui.html` 查看接口文档
-
+详细步骤见 [docs/deployment.md](docs/deployment.md)。

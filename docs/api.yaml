@@ -47,6 +47,10 @@ tags:
     description: 管理端商城接口
   - name: Admin Content
     description: 管理端 Banner、标签与推荐位接口
+  - name: Admin Support
+    description: 管理端客服消息接口
+  - name: Admin Monitoring
+    description: 管理端运行监控接口
 paths:
   /api/v1/home:
     get:
@@ -834,6 +838,30 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/v1/shop/coupons/available:
+    get:
+      tags: [Shop]
+      summary: 获取当前用户可用优惠券
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+          description: 当前订单商品总额，用于判断满减门槛
+      responses:
+        '200':
+          description: 成功，data 为 UserCouponResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/v1/messages:
     get:
       tags: [Messages]
@@ -850,6 +878,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponsePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/messages/support:
+    post:
+      tags: [Messages]
+      summary: 提交在线客服咨询
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                source:
+                  type: string
+                  description: 咨询来源，例如 online_service 或 adoption
+                source_id:
+                  type: integer
+                  format: int64
+                  nullable: true
+                  description: 来源业务对象 ID
+                source_title:
+                  type: string
+                  description: 来源标题
+                content:
+                  type: string
+                  description: 用户咨询内容
+      responses:
+        '200':
+          description: 成功，data 为 MessageResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -2119,6 +2185,119 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseObject'
+
+  /api/v1/admin/support/messages:
+    get:
+      tags: [Admin Support]
+      summary: 获取客服咨询列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, HANDLED]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize50'
+      responses:
+        '200':
+          description: 成功，data 为 PageResponse<AdminSupportMessageResponse>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/admin/support/messages/{messageId}/handle:
+    put:
+      tags: [Admin Support]
+      summary: 回复并标记客服咨询已处理
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MessageId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reply_content:
+                  type: string
+                  description: 管理员回复内容，会同步生成用户消息通知
+      responses:
+        '200':
+          description: 成功，data 为 AdminSupportMessageResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/admin/monitoring/metrics:
+    get:
+      tags: [Admin Monitoring]
+      summary: 获取运行监控汇总指标
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 MonitoringMetricsResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseObject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/admin/monitoring/metrics/paths:
+    get:
+      tags: [Admin Monitoring]
+      summary: 获取各接口路径访问统计
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 PathMetricResponse[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseArray'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/admin/monitoring/metrics/reset:
+    post:
+      tags: [Admin Monitoring]
+      summary: 重置运行监控指标
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功，data 为 null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
 components:
   securitySchemes:

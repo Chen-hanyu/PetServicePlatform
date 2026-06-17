@@ -6,8 +6,8 @@
   builder = "DOCKERFILE"
   # Dockerfile 路径（相对于项目根目录）
   dockerfilePath = "backend/Dockerfile"
-  # 构建上下文目录（使用项目根目录，Dockerfile 使用 backend/ 前缀路径）
-  buildContext = "."
+  # 构建上下文目录（backend/Dockerfile 内部按 backend 目录结构 COPY pom.xml 和 src）
+  buildContext = "backend"
 
 [deploy]
   # 健康检查路径

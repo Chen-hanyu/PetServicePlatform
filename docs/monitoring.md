@@ -129,6 +129,14 @@ const metrics = apiLogger.getMetrics();
 // }
 ```
 
+前端管理端页面 `/admin/monitoring` 会调用后端管理端指标接口展示运行数据。需要使用管理员账号访问：
+
+| 方法 | 端点 | 说明 |
+|---|---|---|
+| `GET` | `/api/v1/admin/monitoring/metrics` | 获取总请求数、成功率、错误数、平均响应时间等汇总指标 |
+| `GET` | `/api/v1/admin/monitoring/metrics/paths` | 获取各 API 路径的访问次数、错误次数和平均耗时 |
+| `POST` | `/api/v1/admin/monitoring/metrics/reset` | 重置内存指标统计 |
+
 ## 5. 目录结构
 
 ```
@@ -175,13 +183,13 @@ docs/
 2. 切换到 Console 面板
 3. 发送 API 请求后，查看 JSON 格式的结构化日志输出
 
-## 5. 后端结构化日志
+## 7. 后端结构化日志
 
-### 5.1 日志系统架构
+### 7.1 日志系统架构
 
 后端日志系统基于 **Logback + Logstash Logback Encoder** 实现，所有日志以 JSON 格式输出到控制台和文件。
 
-### 5.2 日志配置
+### 7.2 日志配置
 
 日志配置文件：`backend/src/main/resources/logback-spring.xml`
 
@@ -223,7 +231,7 @@ docs/
 - 保留最近 7 天的日志文件
 - 开发环境使用文本格式，方便本地调试
 
-### 5.3 API 访问日志
+### 7.3 API 访问日志
 
 `ApiAccessLogFilter` 拦截所有 `/api/*` 请求，自动记录：
 
@@ -232,7 +240,7 @@ docs/
 - 响应状态码
 - 响应时间（毫秒）
 
-### 5.4 异常日志
+### 7.4 异常日志
 
 `GlobalExceptionHandler` 统一捕获并记录异常日志：
 
@@ -240,14 +248,14 @@ docs/
 - 参数校验异常：记录警告日志
 - 未处理异常：记录错误日志（含堆栈信息）
 
-## 6. 后端健康检查
+## 8. 后端健康检查
 
-### 6.1 健康检查端点
+### 8.1 健康检查端点
 
 - **路径**：`GET /health`
 - **控制器**：`backend/src/main/java/com/petplatform/controller/HealthController.java`
 
-### 6.2 响应格式
+### 8.2 响应格式
 
 ```json
 {
@@ -264,7 +272,7 @@ docs/
 }
 ```
 
-### 6.3 检查内容
+### 8.3 检查内容
 
 | 字段 | 说明 |
 |------|------|
@@ -275,7 +283,7 @@ docs/
 | uptime | 应用运行时长 |
 | database | 数据库连接状态（UP / DOWN） |
 
-### 6.4 健康检查配置
+### 8.4 健康检查配置
 
 在 `railway.toml` 中配置了健康检查：
 
@@ -292,15 +300,15 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD wget -qO- http://localhost:8080/health || exit 1
 ```
 
-## 7. 后端指标收集
+## 9. 后端指标收集
 
-### 7.1 指标收集器
+### 9.1 指标收集器
 
 `MetricsCollector` 是一个 Spring 组件，使用线程安全的原子类收集 API 请求指标。
 
 - **文件**：`backend/src/main/java/com/petplatform/common/metrics/MetricsCollector.java`
 
-### 7.2 收集的指标
+### 9.2 收集的指标
 
 | 指标 | 说明 | 计算方式 |
 |------|------|---------|
@@ -312,7 +320,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 | 最慢请求时间 | 耗时最长的请求耗时 | max(耗时) |
 | 最慢请求路径 | 耗时最长的请求路径 | 记录路径 |
 
-### 7.3 管理端指标接口
+### 9.3 管理端指标接口
 
 管理员可通过以下接口查看指标数据：
 
@@ -324,11 +332,11 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 
 所有指标接口需要 ADMIN 角色权限。
 
-### 7.4 指标集成
+### 9.4 指标集成
 
 `ApiAccessLogFilter` 在记录日志的同时，调用 `MetricsCollector.record()` 收集指标数据，实现日志与指标的自动关联。
 
-## 8. 目录结构
+## 10. 目录结构
 
 ```
 frontend/
@@ -369,9 +377,9 @@ docs/
 └── monitoring.md                               # 本文件
 ```
 
-## 9. 使用说明
+## 11. 使用说明
 
-### 9.1 查看健康状态
+### 11.1 查看健康状态
 
 1. 打开用户前台，点击导航栏「系统状态」
 2. 或直接访问后端健康检查端点：
@@ -379,7 +387,7 @@ docs/
 curl https://petserviceplatform-production.up.railway.app/health
 ```
 
-### 9.2 查看监控指标
+### 11.2 查看监控指标
 
 1. 登录管理员账号，进入管理后台，点击侧边栏「监控面板」
 2. 或直接调用后端指标接口：
@@ -388,7 +396,7 @@ curl -H "Authorization: Bearer <admin-token>" \
   https://petserviceplatform-production.up.railway.app/api/v1/admin/monitoring/metrics
 ```
 
-### 9.3 查看结构化日志
+### 11.3 查看结构化日志
 
 - **前端**：打开浏览器开发者工具（F12），切换到 Console 面板
 - **后端**：在 Railway Dashboard 中查看后端服务的日志输出

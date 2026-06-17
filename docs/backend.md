@@ -1,133 +1,187 @@
-# 后端模块说明（宠物综合服务平台）
+# 后端模块说明
 
-> 测试文档入口：[backend-test-plan.md](D:/Code/PetServicePlatform/docs/backend-test-plan.md)
-> 简要说明：当前后端已建立 `MockMvc` 接口/权限测试、`service` 规则测试以及 H2 集成测试，用于验证主流程、权限边界和数据联动。
-> 未完成项与必要性评估：[backend-backlog.md](D:/Code/PetServicePlatform/docs/backend-backlog.md)
+## 1. 文档说明
 
-## 当前状态总览
-- 当前后端接口覆盖清单、实现状态标记与最小自测说明见 [backend-status.md](D:/Code/PetServicePlatform/docs/backend-status.md)。
+本文档说明宠物综合服务平台后端当前实现。后端由 `chenhanyu` 负责，采用 Spring Boot 单体服务，为用户前台、管理后台、AI 助手、文件上传、监控健康检查提供统一 API。
 
-## 1. 模块功能
-后端采用 `Java + Spring Boot` 构建，负责为用户 Web 前台和管理员后台提供统一的业务服务、权限控制和数据持久化能力。
+详细接口以 `docs/api.md` 和 `docs/api.yaml` 为准；本文件只描述后端模块边界、技术栈、目录结构、运行方式和当前能力。
 
-后端承担的核心职责如下：
-- 用户与鉴权：登录、角色区分、用户资料、消息中心、令牌校验。
-- 社区内容：帖子发布、评论、点赞、收藏、内容审核、标签管理、推荐位管理。
-- 领养业务：待领养宠物信息维护、领养申请、审核流转、状态追踪。
-- 宠物服务：服务分类、商家、服务项目、预约单、商家评价、营业状态。
-- 商城交易：商品分类、商品详情、购物车、订单、库存与上下架管理。
-- 宠物档案：宠物基本信息、疫苗记录、体重记录、宠物相册、成长时间轴。
-- 后台管理：仪表盘统计、用户管理、内容审核、订单处理、推荐内容配置。
+## 2. 技术栈
 
-## 2. 技术选型
-- 语言：Java 17
-- 框架：Spring Boot 3
-- Web 框架：Spring MVC
-- 权限认证：Spring Security + JWT
-- 数据持久化：MyBatis-Plus
-- 数据库：MySQL
-- 缓存：Redis
-- 文件存储：MinIO / 本地静态资源目录
-- 接口文档：Springdoc OpenAPI
-- 构建工具：Maven
+| 类型 | 技术 |
+|---|---|
+| 语言 | Java 17 |
+| 框架 | Spring Boot 3 |
+| Web | Spring MVC |
+| 安全 | Spring Security + JWT |
+| ORM | MyBatis-Plus |
+| 数据库 | MySQL |
+| 接口文档 | Springdoc OpenAPI |
+| AI 调用 | OpenAI 兼容 Chat Completions，默认 DeepSeek |
+| 文件存储 | 本地静态资源目录，保留扩展到对象存储的接口边界 |
+| 测试 | JUnit 5、MockMvc、H2 |
+| 构建 | Maven |
 
-选择 Spring Boot 的原因：
-- 适合课程项目展示标准后端分层结构。
-- 生态成熟，便于接入权限、日志、校验、文档和文件上传。
-- 能自然支撑用户端和管理端共用一套服务、按角色授权的模式。
-
-## 3. 当前目录结构
+## 3. 目录结构
 
 ```text
 backend/
-├── .mvn/                                  # Maven Wrapper 配置
-├── mvnw
-├── mvnw.cmd
-├── src/
-│   ├── main/
-│   │   ├── java/com/petplatform/
-│   │   │   ├── PetServicePlatformApplication.java
-│   │   │   ├── controller/          # 用户端接口
-│   │   │   ├── admin/controller/    # 管理端接口
-│   │   │   ├── service/             # 业务逻辑层
-│   │   │   ├── mapper/              # 数据访问层
-│   │   │   ├── entity/              # 实体类
-│   │   │   ├── dto/                 # 请求响应对象
-│   │   │   ├── config/              # 配置类
-│   │   │   ├── security/            # 鉴权与权限
-│   │   │   └── common/              # 通用返回、异常、工具类
-│   │   └── resources/
-│   │       ├── application.yml
-│   │       ├── mapper/
-│   │       └── sql/
-│   └── test/
-│       └── java/com/petplatform/
-│           └── PetServicePlatformApplicationTests.java
+├── Dockerfile
 ├── pom.xml
-└── README.md
+├── mvnw / mvnw.cmd
+└── src/
+    ├── main/
+    │   ├── java/com/petplatform/
+    │   │   ├── PetServicePlatformApplication.java
+    │   │   ├── controller/          # 用户端接口
+    │   │   ├── admin/controller/    # 管理端接口
+    │   │   ├── service/             # 业务逻辑
+    │   │   ├── mapper/              # MyBatis-Plus Mapper
+    │   │   ├── entity/              # 数据库实体
+    │   │   ├── dto/                 # 请求与响应 DTO
+    │   │   ├── config/              # 配置类
+    │   │   ├── security/            # JWT、认证、授权
+    │   │   └── common/              # 统一响应、异常、工具类
+    │   └── resources/
+    │       ├── application.yml
+    │       ├── mapper/
+    │       └── sql/
+    │           ├── schema.sql
+    │           └── seed.sql
+    └── test/
+        └── java/com/petplatform/
 ```
 
-补充说明：
+## 4. API 边界
 
-- `.idea/` 为本地开发环境文件，不作为项目结构的一部分。
-- `target/` 为编译输出目录，不作为源码目录。
-- 当前目录骨架已经与项目设计文档对齐，但各业务包下仍主要是占位结构，等待后续实现。
+| 类型 | 前缀 | 说明 |
+|---|---|---|
+| 用户端 | `/api/v1` | 首页、认证、社区、领养、服务、商城、个人中心、消息、宠物档案、AI、文件上传 |
+| 管理端 | `/api/v1/admin` | 仪表盘、用户、内容、领养、服务、商城、客服、监控 |
+| 健康检查 | `/health`、`/api/v1/health` | 部署健康检查和前端状态页使用 |
+| Swagger | `/swagger-ui.html` | 本地接口调试入口 |
 
-## 4. 部署方式
+统一响应结构：
 
-### 4.1 本地部署
-1. 进入后端目录：`cd backend`
-2. 按本地环境修改 `src/main/resources/application.yml`
-3. 安装依赖并编译：`mvnw.cmd clean install` 或 `mvn clean install`
-4. 启动开发环境：`mvnw.cmd spring-boot:run` 或 `mvn spring-boot:run`
-5. 默认访问地址：`http://127.0.0.1:8080`
-6. 接口文档地址：`http://127.0.0.1:8080/swagger-ui.html`
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```
 
-### 4.2 Docker 部署
-1. 在项目根目录准备 `docker-compose.yml`
-2. 在 `backend/` 目录准备 `Dockerfile`
-3. 通过环境变量注入数据库连接、账号密码和 JWT 密钥
-4. 使用 `docker-compose up -d` 启动 `backend` 与 `mysql`
-5. 使用 `docker-compose ps` 检查服务状态
-6. 服务启动后访问 `http://127.0.0.1:8080/swagger-ui.html`
+分页响应结构：
 
-## 5. 业务模块设计
-### 5.1 用户端业务
-- 首页聚合：Banner、推荐帖子、推荐服务、推荐商品、宠物小贴士。
-- 社区：帖子、评论、点赞、收藏、发布。
-- 领养：待领养宠物、领养详情、领养申请、申请状态。
-- 宠物服务：商家、服务项目、预约、预约记录。
-- 商城：商品、购物车、订单、订单状态。
-- 个人中心：个人信息、我的宠物、宠物档案、我的内容、我的订单、消息中心。
+```json
+{
+  "list": [],
+  "total": 0,
+  "page": 1,
+  "page_size": 10
+}
+```
 
-### 5.2 管理端业务
-- 仪表盘：用户数、帖子数、待审核申请数、订单统计、预约统计。
-- 用户管理：查询用户、禁用账号、查看行为记录。
-- 内容管理：帖子审核、评论处理、Banner 管理、推荐位管理、标签管理。
-- 领养管理：待领养宠物录入、宠物状态维护、领养申请审核。
-- 服务管理：商家信息维护、服务分类、服务项目配置、预约单处理。
-- 商城管理：商品分类、商品上下架、库存管理、订单处理、折扣活动配置。
+## 5. 已实现模块
 
-## 6. 数据与接口约定
-- API 基础路径：`/api/v1`
-- 管理端路径前缀：`/api/v1/admin`
-- 统一响应结构：`{ code, message, data }`
-- 列表响应统一返回：`list`、`total`、`page`、`page_size`
-- 时间字段使用 ISO 8601 格式
-- 用户角色至少包含：`USER`、`ADMIN`
-- 业务状态使用明确枚举值，例如 `PENDING`、`APPROVED`、`REJECTED`、`CANCELLED`
+### 5.1 用户端
 
-## 7. 与前端协作约定
-- 用户端和管理端登录后返回不同角色信息，前端据此控制路由与菜单。
-- 推荐位、标签、状态角标、仪表盘统计数据由后端统一提供。
-- 管理端接口必须支持分页、筛选、排序、批量操作。
-- 所有审核类接口都需要返回清晰的状态流转结果和备注信息。
+- 认证：手机号登录、注册、登出、验证码接口保留。
+- 首页：Banner、推荐帖子、推荐服务、推荐商品、萌宠展示聚合。
+- 搜索：社区、领养、服务、商城的统一搜索。
+- 社区：帖子列表、详情、发布、评论、点赞、收藏、我的收藏。
+- 领养：宠物列表、详情、流程说明、申请、我的申请。
+- 服务：分类、商家、商家详情、预约、我的预约、取消预约。
+- 商城：分类、商品、购物车、收货地址、优惠券、下单、直购、支付、取消、确认收货。
+- 个人中心：用户资料、概览、宠物档案、成长时间轴、消息中心。
+- 客服消息：在线客服和领养咨询提交、管理员回复通知。
+- AI 助手：`POST /api/v1/ai/chat`，默认对接 DeepSeek。
+- 文件上传：图片上传、本地静态资源访问。
 
-## 8. 当前开发状态
+### 5.2 管理端
 
-- 后端 Maven 工程已可正常编译和运行。
-- 后端已完成课程项目 MVP 主流程，用户端与管理端核心业务链路可联调。
-- 统一返回结构、全局异常处理、JWT 鉴权、角色隔离与分页能力均已落地。
-- 自动化测试已覆盖接口、服务规则与 H2 集成链路（当前本地测试报告为 142 个用例全部通过）。
-- 文件上传当前为 MVP 占位方案（本地存储）；验证码接口作为可选增强能力保留（联调占位），主登录流程为手机号+密码；Redis、MinIO、批量操作等为后续增强项。
-- 详细接口覆盖与状态说明以 `docs/backend-status.md` 为准。
+- 管理员认证。
+- 仪表盘：统计数据、待处理事项、最近操作。
+- 用户管理：列表、详情、状态更新。
+- 社区管理：帖子审核、评论删除。
+- 领养管理：待领养宠物维护、申请审核。
+- 服务管理：分类、商家、服务项目、预约、评价。
+- 商城管理：商品、分类、订单处理。
+- 内容管理：Banner、标签、推荐位。
+- 客服消息：查看咨询、回复并标记已处理。
+- 监控面板：汇总指标、路径指标、重置指标。
+
+## 6. 数据库初始化
+
+SQL 文件位于：
+
+- `backend/src/main/resources/sql/schema.sql`
+- `backend/src/main/resources/sql/seed.sql`
+
+本地联调可以使用：
+
+```bash
+SPRING_SQL_INIT_MODE=always
+```
+
+生产环境完成初始化后应使用：
+
+```bash
+SPRING_SQL_INIT_MODE=never
+```
+
+`schema.sql` 中包含部分兼容现有生产表的 `ALTER TABLE` 迁移语句，例如 `shop_orders.discount_amount` 和 `shop_orders.user_coupon_id`，用于避免 `CREATE TABLE IF NOT EXISTS` 跳过已有表时漏列。
+
+## 7. 本地运行
+
+```bash
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+常用地址：
+
+- 健康检查：`http://127.0.0.1:8080/health`
+- API 健康检查：`http://127.0.0.1:8080/api/v1/health`
+- Swagger：`http://127.0.0.1:8080/swagger-ui.html`
+
+## 8. 环境变量
+
+| 变量 | 说明 |
+|---|---|
+| `SPRING_DATASOURCE_URL` | MySQL JDBC 地址 |
+| `SPRING_DATASOURCE_USERNAME` | 数据库用户名 |
+| `SPRING_DATASOURCE_PASSWORD` | 数据库密码 |
+| `SPRING_SQL_INIT_MODE` | SQL 初始化模式，本地 `always`，生产初始化后 `never` |
+| `JWT_SECRET` | JWT 签名密钥 |
+| `JWT_EXPIRATION_SECONDS` | JWT 过期秒数 |
+| `VERIFY_CODE_ALLOW_DEFAULT_CODE` | 是否允许默认验证码，本地演示可 `true`，生产应 `false` |
+| `APP_CORS_ALLOWED_ORIGIN_PATTERNS` | 允许的前端来源，如当前 Vercel 域名 |
+| `AI_API_KEY` / `DEEPSEEK_API_KEY` | AI 接口密钥 |
+| `AI_BASE_URL` | OpenAI 兼容接口地址 |
+| `AI_MODEL` | AI 模型名 |
+| `FILE_STORAGE_TYPE` | 文件存储类型 |
+| `FILE_STORAGE_LOCAL_PATH` | 本地文件存储路径 |
+| `FILE_STORAGE_ACCESS_PATH` | 文件访问前缀 |
+
+## 9. 测试
+
+```bash
+cd backend
+.\mvnw.cmd test
+```
+
+当前测试覆盖方向：
+
+- Controller 与权限边界。
+- Service 业务规则。
+- H2 集成链路。
+- AI、消息、社区、商城、服务、领养等核心模块。
+
+覆盖率配置和 CI 以根目录 README、GitHub Actions、Codecov 报告为准。
+
+## 10. 部署
+
+后端支持 Docker 构建，Railway 部署使用 `backend/Dockerfile`，构建上下文应为 `backend`。生产健康检查路径为 `/health`。
+
+部署细节见 `docs/deployment.md`。
