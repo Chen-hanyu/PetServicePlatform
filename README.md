@@ -2,7 +2,7 @@
 [![Backend Coverage](https://codecov.io/gh/Chen-hanyu/PetServicePlatform/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/Chen-hanyu/PetServicePlatform)
 [![Frontend Coverage](https://codecov.io/gh/Chen-hanyu/PetServicePlatform/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/Chen-hanyu/PetServicePlatform)
 
-# 宠物综合服务平台
+# 宠物之家：宠物综合服务平台
 
 本项目是一个“用户 Web 前台 + 管理员后台 + Spring Boot 后端”的宠物综合服务平台。用户端覆盖社区、领养、服务预约、商城、宠物档案、消息通知和 AI 宠医助手；管理端覆盖用户、内容、领养、服务、商城、客服、监控等运营能力。
 
@@ -21,6 +21,26 @@
 - 前端部署：`https://pet-service-platform-7shx.vercel.app/`
 - 后端部署：`https://petserviceplatform-production.up.railway.app`
 - 健康检查：`https://petserviceplatform-production.up.railway.app/health`
+
+## 最终提交材料
+
+- [最终开发文档](docs/project-report.md)
+- [老师文档模板](docs/文档.md)
+- [期末答辩 PPT](docs/ppt/宠物之家-期末.pptx)
+- [中期验收 PPT](docs/ppt/宠物之家-中期.pptx)
+- [功能演示视频](docs/video/运行视频.mp4)
+
+## 演示账号
+
+普通用户：
+
+- 手机号：`13800000001`
+- 密码：`123456`
+
+管理员：
+
+- 手机号：`13900000000`
+- 密码：`admin123`
 
 ## 技术栈
 
@@ -44,10 +64,17 @@
 ├── docs/
 │   ├── design/                     # 设计稿与页面截图
 │   ├── contributions/              # 每周个人贡献记录
+│   ├── ppt/                        # 中期与期末答辩 PPT
+│   ├── video/                      # 功能演示视频
+│   ├── project-report.md           # 最终开发文档
+│   ├── 文档.md                     # 老师文档模板
 │   ├── architecture.md
+│   ├── frontend.md
+│   ├── backend.md
 │   ├── database.md
 │   ├── api.md
 │   ├── api.yaml
+│   ├── integration.md
 │   ├── design-spec.md
 │   ├── ai-feature.md
 │   ├── security-review.md
@@ -130,11 +157,16 @@ npm run test:coverage
 
 ## 核心文档
 
+- [docs/project-report.md](docs/project-report.md)：最终开发文档
+- [docs/文档.md](docs/文档.md)：老师给定文档模板
 - [docs/design-spec.md](docs/design-spec.md)：用户端 UI/UX 设计说明
 - [docs/architecture.md](docs/architecture.md)：软件架构设计
+- [docs/frontend.md](docs/frontend.md)：前端实现说明
+- [docs/backend.md](docs/backend.md)：后端实现说明
 - [docs/database.md](docs/database.md)：数据库设计与 ER 关系
 - [docs/api.md](docs/api.md)：API 使用说明
 - [docs/api.yaml](docs/api.yaml)：OpenAPI 规范
+- [docs/integration.md](docs/integration.md)：前后端联调记录
 - [docs/ai-feature.md](docs/ai-feature.md)：AI 功能说明
 - [docs/security-review.md](docs/security-review.md)：安全审查记录
 - [docs/deployment.md](docs/deployment.md)：云服务部署说明
